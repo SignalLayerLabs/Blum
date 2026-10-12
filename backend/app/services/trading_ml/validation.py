@@ -222,6 +222,20 @@ class PurgedWalkForwardEvaluator:
         )
 
 
+def score_frozen_predictions(
+    rows: Iterable[TradingMLExample], predictions: Mapping[str, FoldPrediction | float],
+) -> EvaluationMetrics:
+    """Score a pre-frozen holdout using the canonical alignment and metrics.
+
+    This entry point does not fit, select, or change any prediction. The caller
+    owns freezing and withholding the holdout from candidate optimization.
+    """
+    ordered = _ordered_rows(rows)
+    _validate_examples(ordered)
+    aligned = _aligned_predictions(predictions, (), ordered)
+    return _metrics(zip(ordered, aligned))
+
+
 def _ordered_rows(rows: Iterable[TradingMLExample]) -> tuple[TradingMLExample, ...]:
     return tuple(
         sorted(

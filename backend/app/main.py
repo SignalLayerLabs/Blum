@@ -21,6 +21,7 @@ from app.api.routers import (
     forex_trader_router,
 )
 from app.core.config import get_settings
+from app.api.routers.ascent import router as ascent_router
 from app.core.database import SessionLocal
 from app.services.bootstrap import bootstrap_database
 from app.services.performance import performance_recorder
@@ -77,6 +78,7 @@ app.include_router(paper_trading_router)
 app.include_router(alpha_router)
 app.include_router(runtime_router)
 app.include_router(analyst_router)
+app.include_router(ascent_router)
 include_legacy_router_without_duplicate_operations(app, legacy_router)
 app.include_router(forex_trader_router)
 

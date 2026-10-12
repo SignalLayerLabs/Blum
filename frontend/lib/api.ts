@@ -1,6 +1,7 @@
 import { AccuracyOverview, AccuracyProfile, Asset, BrainAccuracy, BrainAssetMemory, BrainEvaluation, BrainStatus, ChartReport, CommunitySentimentPayload, DashboardOverview, DataCoverage, ExecutiveDashboardPayload, FinancialChatResponse, IPORadar, LiveNewsArticle, MacroOverview, MarketBrain, MarketBrainHistoryRow, MarketNarrativePayload, MarketSentiment, OpportunityRadarPayload, PipelineStatus, PortfolioScenarioPayload, RelatedNews, Signal, SignalValidationReport, StockRadar, SystemStatus, WatchlistPayload } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
+import type { AscentSnapshot } from "./ascentView.mjs";
 const inFlightRequests = new Map<string, Promise<any>>();
 const memoryCache = new Map<string, { expiresAt: number; value: any }>();
 const LEARNING_INITIAL_RENDER_GUARD_MS = 4000;
@@ -195,6 +196,7 @@ async function responseError(response: Response) {
 }
 
 export const api = {
+  ascentStatus: () => getJson<AscentSnapshot>("/api/ascent/status"),
   clientRequestStats: () => ({ ...requestStats, initialLearningPage: [...requestStats.initialLearningPage] }),
   performanceDiagnostics: () => getJson<any>("/performance/diagnostics"),
   recordPerformanceWidget: (payload: { name: string; duration_ms: number; status?: string; source?: string; detail?: string }) =>
