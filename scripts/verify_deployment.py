@@ -13,9 +13,16 @@ args = parser.parse_args()
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
 backend = 'https://italianhype-blum.hf.space'
 site = 'https://blum.signallayerlabs.workers.dev'
+verification_headers = {
+    'User-Agent': 'BLUM-Deployment-Verification/2.2.0 (+https://github.com/SignalLayerLabs/Blum)',
+}
+
+def request(url, **kwargs):
+    # Identify the maintained verifier explicitly; workers.dev rejects Python's default agent.
+    return urllib.request.Request(url, headers=verification_headers, **kwargs)
 
 def get_json(origin, path):
-    response = urllib.request.urlopen(origin+path, timeout=15)
+    response = urllib.request.urlopen(request(origin+path), timeout=15)
     if 'application/json' not in response.headers.get('Content-Type', ''):
         raise ValueError('Expected a JSON API response: '+path)
     return json.load(response)
@@ -47,12 +54,12 @@ if not args.backend_only:
         if not isinstance(payload, dict): raise SystemExit('Invalid snapshot: '+path)
         print('Verified JSON snapshot', path, flush=True)
     try:
-        urllib.request.urlopen(urllib.request.Request(site+'/api/ascent/run', data=b'{}', method='POST'), timeout=15)
+        urllib.request.urlopen(request(site+'/api/ascent/run', data=b'{}', method='POST'), timeout=15)
         raise SystemExit('Public research mutation was unexpectedly allowed.')
     except urllib.error.HTTPError as exc:
         if exc.code != 405: raise
     for path in ['/brain/', '/training-ground/', '/paper-trading/', '/alpha/', '/evolution/']:
-        response = urllib.request.urlopen(site+path, timeout=15)
+        response = urllib.request.urlopen(request(site+path), timeout=15)
         if response.status != 200 or 'text/html' not in response.headers.get('Content-Type', ''):
             raise SystemExit('Product page unavailable: '+path)
     print('Cloudflare pages, live API snapshots and write protection verified.', flush=True)
