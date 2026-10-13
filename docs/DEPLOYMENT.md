@@ -1,78 +1,86 @@
-# BLUM Deployment and Repository Synchronization
+# BLUM release and operations
 
-BLUM uses two public Git repositories with distinct responsibilities:
+## Ownership
 
-- `origin`: `https://github.com/BlumFinancialLab/Blum.git`, the canonical
-  source, review and community repository;
-- `hf`: `https://huggingface.co/spaces/Italianhype/Blum`, the public Docker
-  Space deployment.
+- Canonical source, CI, review and releases: GitHub `SignalLayerLabs/Blum`.
+- Public product: `https://blum.signallayerlabs.workers.dev` on Cloudflare.
+- Engine, scheduler and PostgreSQL: Hugging Face Docker Space `Italianhype/Blum`.
+- Persistent evidence and recovery: existing `Italianhype/Blum-storage` bucket.
 
-## Local development
+No workflow imports HF changes directly into GitHub `main`. Publication is one-way and fast-forward-only. Changes made directly on HF must be reviewed and ported into GitHub first.
 
-```bash
-git clone https://github.com/BlumFinancialLab/Blum.git
-cd Blum
-docker build -t blum .
-docker run --rm -p 7860:7860 blum
-```
+## GitHub configuration
 
-Secrets belong in the local environment or deployment secret store. They must
-never be committed.
+The production deployment job consumes:
 
-## Hugging Face to GitHub
+| Name | Store | Purpose |
+| --- | --- | --- |
+| `HF_TOKEN` | Secret | Publish canonical source to the existing Space |
+| `CLOUDFLARE_API_TOKEN` | Secret | Publish Worker and static assets |
+| `CLOUDFLARE_ACCOUNT_ID` | Variable | Select the existing Cloudflare account |
 
-`.github/workflows/sync-huggingface.yml` reads the public Space repository twice
-an hour and can also be dispatched manually. It uses commit ancestry rather
-than timestamps:
+Use deployment tokens with required access only. Never copy a short-lived Wrangler OAuth token into GitHub as a permanent credential. Repository or production-environment secrets can be used. Tokens are passed only to trusted deployment jobs, never PR builds.
 
-| Relationship | Action |
-| --- | --- |
-| Same revision | No change |
-| HF is behind GitHub | No change |
-| HF is strictly ahead | Fast-forward GitHub after LFS transfer |
-| Histories diverged | Update `sync/hf-main` and open a pull request |
-
-The workflow does not use an HF token because the Space Git repository is
-public. It never force-pushes `main`. A rejected fast-forward falls back to the
-review branch.
-
-Manual run:
+`Verify BLUM` runs backend/migration contracts, exact source-data checks, web tests/build and gateway tests/types. `Deploy verified main` starts after successful main verification or a manual dispatch that passes the same preflight. It rejects stale or unverified revisions.
 
 ```bash
-gh workflow run sync-huggingface.yml --repo BlumFinancialLab/Blum
-gh run list --repo BlumFinancialLab/Blum --workflow sync-huggingface.yml
+gh workflow run deploy.yml --repo SignalLayerLabs/Blum --ref main
+gh run list --repo SignalLayerLabs/Blum --workflow deploy.yml
 ```
 
-## GitHub to Hugging Face
+Deployment builds the web product, sets the HF source revision, transfers LFS and fast-forwards HF main. It waits for readiness and the baked backend revision, then publishes Cloudflare and checks all five pages, JSON snapshots and mutation denial.
 
-Deployment remains an explicit maintainer action:
+## Cloudflare gateway
+
+`cloudflare/wrangler.jsonc` serves `frontend/out` using an assets binding and the typed Worker. Keep `NEXT_PUBLIC_API_BASE` empty for same-origin requests. Public requests are GET/HEAD. Persistence/rebuild queries are rejected. Client credentials/cookies are stripped; APIs stream with no-store. Redirects and non-JSON API responses fail explicitly. Asset detail APIs send Accept: application/json so they do not shadow HTML pages at the same path.
 
 ```bash
-git fetch origin main
-git push hf origin/main:main
+npm ci --prefix frontend --workspaces=false
+npm --prefix frontend run build
+npm ci --prefix cloudflare
+npm --prefix cloudflare run types
+npm --prefix cloudflare run typecheck
+npm --prefix cloudflare run deploy -- --var SOURCE_REVISION:$(git rev-parse HEAD)
 ```
 
-Keeping this direction explicit prevents a public GitHub workflow from needing
-an HF write credential. A future automated deploy must use a scoped repository
-secret and a separate reviewed workflow.
+Wrangler authentication is required for publication. A custom domain can be added later. This release does not alter unrelated DNS. Worker observability is enabled. Financial state is not stored in edge cache or a parallel Worker database.
 
-## Startup and readiness
+## HF runtime and readiness
 
-The Space uses startup-light behavior: the UI may become available while the
-persistent database finishes restoring. Check:
+The image remains FastAPI + CPU ML + PostgreSQL with the static product. BLUM_SOURCE_REVISION is passed as a Docker build argument and baked into backend/app/data/build_revision.json. A runtime variable change cannot label an older baked image as the current release.
 
 ```bash
-curl -fsSL https://italianhype-blum.hf.space/startup/status
+curl -fsS https://italianhype-blum.hf.space/startup/status
+curl -fsS https://italianhype-blum.hf.space/api/runtime/release
+curl -fsS https://blum.signallayerlabs.workers.dev/api/release
 ```
 
-The release is ready when `api_ready` and `ui_ready` are true and the runtime
-reports no `last_error`.
+Require api_ready=true, ui_ready=true, no startup last_error, and the exact GitHub source revision. HTML with HTTP200 is not API readiness. `scripts/verify_deployment.py` enforces this contract.
 
-## Recovery
+The existing bucket stays attached. PostgreSQL remains on local disk; object storage holds physical recovery files and atomic logical backups. Embedded PostgreSQL supports one replica. Multiple replicas require an external database. Preserve recovery files and verify startup before declaring data recovery complete.
 
-- Workflow cannot fetch HF: rerun after confirming the Space repository is
-  public and available.
-- LFS transfer fails: GitHub `main` remains unchanged; rerun the workflow.
-- Histories diverge: review the generated pull request and preserve both sides.
-- Space build fails: inspect HF build logs and keep GitHub as the known source
-  revision; do not rewrite history to hide the failure.
+## Research configuration
+
+Fresh installations default to ASCENT disabled. The maintained runtime can enable the existing bounded scheduler:
+
+```text
+BLUM_ASCENT_ENABLED=true
+BLUM_ASCENT_SCHEDULER_ENABLED=true
+BLUM_ASCENT_INTERVAL_MINUTES=360
+BLUM_ASCENT_ARTIFACT_ROOT=/data/ascent
+BLUM_ASCENT_ADMIN_KEY=<runtime secret>
+```
+
+Direct HF POST /api/ascent/run requires X-BLUM-Admin-Key. Cloudflare blocks public mutations even if a caller sends a key. Viewing Evolution never starts research. Candidates remain research-only; deployment automation never promotes their source into application code.
+
+Keep BLUM_FOREX_HISTORY_ENABLED=false, BLUM_HF_TRAINING_ENABLED=false, BLUM_HF_TRAINING_AUTO_LAUNCH=false, BLUM_HF_TRAINING_SCHEDULER_ENABLED=false and BLUM_HF_DATASET_SNAPSHOT_ENABLED=false until those sources pass a replacement audit. The accepted Forex snapshots produce only one causal example. All existing reasoning archive versions remain quarantined. See [data acceptance](DATA_QUALITY.md).
+
+## Recovery and rollback
+
+1. Inspect GitHub deployment logs and HF build/runtime logs. Preserve failed revisions and reports.
+2. If HF diverged, stop publication and review its changes. Do not force-push it from CI or automatically import it into GitHub main.
+3. Restore code with a reviewed GitHub revert and deploy the new verified revision. Preserve the database and recovery files.
+4. For emergency UI rollback, use wrangler rollback to a recorded Worker version. Verify backend schema/API compatibility.
+5. Additive migration 0044_ascent_evolution preserves existing data. Code rollback does not require dropping its tables or erasing evidence.
+
+Report outages and missing evidence explicitly. Do not fill unavailable charts or APIs with fabricated results.

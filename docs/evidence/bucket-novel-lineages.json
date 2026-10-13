@@ -1,0 +1,412 @@
+[
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T12:03:29.056975",
+      "start": "2026-08-31T12:03:29.056975"
+    },
+    "lineage": "281013e1166e8b08b0959d47a5ae0ef9332f9f6026a44b24a71e99d23b445623",
+    "outcome_available_range": {
+      "end": "2026-09-04T07:31:18.580886+00:00",
+      "start": "2026-09-03T22:58:17.728184+00:00"
+    },
+    "outcome_labels": {
+      "correct": 11
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-03626545500f",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd"
+    ],
+    "snapshot_count": 11,
+    "source_record_ids": [
+      11049
+    ],
+    "split_history": [
+      "validation"
+    ],
+    "ticker_values": [
+      "MRK"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T03:00:34.127575",
+      "start": "2026-08-31T03:00:34.127575"
+    },
+    "lineage": "31ecb2623084b9c9caa787c052b3f1a735c762ffdea191bfe1930c1618e2fd0c",
+    "outcome_available_range": {
+      "end": "2026-09-03T17:52:51.238390+00:00",
+      "start": "2026-09-03T17:52:51.238390+00:00"
+    },
+    "outcome_labels": {
+      "correct": 1
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-01144dc0a0c1",
+      "snapshot-03626545500f",
+      "snapshot-2460d3c5c14a",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-99608010b34b",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd",
+      "snapshot-dd0b59901fbd",
+      "snapshot-e6ff2c1b7b45"
+    ],
+    "snapshot_count": 16,
+    "source_record_ids": [
+      10963
+    ],
+    "split_history": [
+      "train"
+    ],
+    "ticker_values": [
+      "XLE"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T05:41:03.652123",
+      "start": "2026-08-31T05:41:03.652123"
+    },
+    "lineage": "3a9617803222c1cd98260e49033b3a0b9ab3a77e32f46b17afc22fa235d811f8",
+    "outcome_available_range": {
+      "end": "2026-09-03T19:53:09.111940+00:00",
+      "start": "2026-09-03T18:52:48.547370+00:00"
+    },
+    "outcome_labels": {
+      "correct": 2
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-01144dc0a0c1",
+      "snapshot-03626545500f",
+      "snapshot-2460d3c5c14a",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-99608010b34b",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd",
+      "snapshot-dd0b59901fbd"
+    ],
+    "snapshot_count": 15,
+    "source_record_ids": [
+      10986
+    ],
+    "split_history": [
+      "test",
+      "train"
+    ],
+    "ticker_values": [
+      "XOM"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T12:03:31.567439",
+      "start": "2026-08-31T12:03:31.567439"
+    },
+    "lineage": "3b2ada61e6690af451140e3c2df24551c4d5354fbdac503fb4933a4306c38ec5",
+    "outcome_available_range": {
+      "end": "2026-09-04T07:31:18.567506+00:00",
+      "start": "2026-09-03T22:58:17.717392+00:00"
+    },
+    "outcome_labels": {
+      "correct": 11
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-03626545500f",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd"
+    ],
+    "snapshot_count": 11,
+    "source_record_ids": [
+      11050
+    ],
+    "split_history": [
+      "test"
+    ],
+    "ticker_values": [
+      "UNH"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T08:32:19.987724",
+      "start": "2026-08-31T08:32:19.987724"
+    },
+    "lineage": "3e611d97f8cc81c6cf3027303a401d1d66e14350743c44160c126482f5fc062f",
+    "outcome_available_range": {
+      "end": "2026-09-03T21:57:36.772568+00:00",
+      "start": "2026-09-03T21:57:36.772568+00:00"
+    },
+    "outcome_labels": {
+      "wrong": 1
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-01144dc0a0c1",
+      "snapshot-03626545500f",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd"
+    ],
+    "snapshot_count": 12,
+    "source_record_ids": [
+      11032
+    ],
+    "split_history": [
+      "test",
+      "train"
+    ],
+    "ticker_values": [
+      "PANW"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T07:12:40.190940",
+      "start": "2026-08-31T07:12:40.190940"
+    },
+    "lineage": "6075a919a2032d827ee2c24cf1fd33d1734274a6317d13eb350eaaffa22f9d57",
+    "outcome_available_range": {
+      "end": "2026-09-03T20:23:21.893627+00:00",
+      "start": "2026-09-03T20:23:21.893627+00:00"
+    },
+    "outcome_labels": {
+      "correct": 1
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-01144dc0a0c1",
+      "snapshot-03626545500f",
+      "snapshot-2460d3c5c14a",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd"
+    ],
+    "snapshot_count": 13,
+    "source_record_ids": [
+      11001
+    ],
+    "split_history": [
+      "test",
+      "train",
+      "validation"
+    ],
+    "ticker_values": [
+      "XLU"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T07:12:28.760219",
+      "start": "2026-08-31T07:12:28.760219"
+    },
+    "lineage": "7de5d3ad844758c05139a342cbf2106ebbad60f959cf4af2ef92f39de00ce9fe",
+    "outcome_available_range": {
+      "end": "2026-09-03T20:23:22.003684+00:00",
+      "start": "2026-09-03T20:23:22.003684+00:00"
+    },
+    "outcome_labels": {
+      "wrong": 1
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-01144dc0a0c1",
+      "snapshot-03626545500f",
+      "snapshot-2460d3c5c14a",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd"
+    ],
+    "snapshot_count": 13,
+    "source_record_ids": [
+      10997
+    ],
+    "split_history": [
+      "train",
+      "validation"
+    ],
+    "ticker_values": [
+      "PLTR"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T07:12:17.431596",
+      "start": "2026-08-31T07:12:17.431596"
+    },
+    "lineage": "8a60d330eea30151461d2445a154b1118fdc68b6893e07fc4d277092b032ddbf",
+    "outcome_available_range": {
+      "end": "2026-09-03T20:23:22.081537+00:00",
+      "start": "2026-09-03T20:23:22.081537+00:00"
+    },
+    "outcome_labels": {
+      "wrong": 1
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-01144dc0a0c1",
+      "snapshot-03626545500f",
+      "snapshot-2460d3c5c14a",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd"
+    ],
+    "snapshot_count": 13,
+    "source_record_ids": [
+      10995
+    ],
+    "split_history": [
+      "train"
+    ],
+    "ticker_values": [
+      "NOW"
+    ]
+  },
+  {
+    "classification": "quarantined",
+    "decision_range": {
+      "end": "2026-08-31T07:12:21.978048",
+      "start": "2026-08-31T07:12:21.978048"
+    },
+    "lineage": "bcf6c492159156bff0cecb25d36c79e5ecaf54928d6e0bf24ded3b8676edc886",
+    "outcome_available_range": {
+      "end": "2026-09-03T20:23:22.019034+00:00",
+      "start": "2026-09-03T20:23:22.019034+00:00"
+    },
+    "outcome_labels": {
+      "wrong": 1
+    },
+    "provenance_nonempty_versions": 0,
+    "reasons": [
+      "EMPTY_SOURCE_PROVENANCE",
+      "ARCHIVE_SNAPSHOT_CUTOFF_AND_HOLDOUT_GATES_FAILED"
+    ],
+    "revisions": [
+      "snapshot-01144dc0a0c1",
+      "snapshot-03626545500f",
+      "snapshot-2460d3c5c14a",
+      "snapshot-2b36510456c1",
+      "snapshot-40dd5345aede",
+      "snapshot-470b460c3cc0",
+      "snapshot-5b7921173694",
+      "snapshot-7701c8ddde91",
+      "snapshot-8fbdee7efb59",
+      "snapshot-a9a77315d392",
+      "snapshot-b75f1aa2e2e8",
+      "snapshot-b84821bbb689",
+      "snapshot-cff22cf33ebd"
+    ],
+    "snapshot_count": 13,
+    "source_record_ids": [
+      10996
+    ],
+    "split_history": [
+      "train"
+    ],
+    "ticker_values": [
+      "ORCL"
+    ]
+  }
+]

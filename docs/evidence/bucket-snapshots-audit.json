@@ -1,0 +1,5281 @@
+{
+  "all_archive_file_hashes_pass": true,
+  "all_snapshot_content_hashes_pass": true,
+  "archive_count": 95,
+  "boundary_crossing_outcome_occurrences_across_versions": 9928,
+  "code_revision_counts": {
+    "44089db1439a0ab5884069fc6c235ed43f308e17": 1,
+    "d78903cd235b0a152f78818124c75c55c3472cc3": 94
+  },
+  "cross_revision_split_migrations": 108,
+  "deduplication_policy": "A repeated lineage is one evidence entity across archives. Record content versions are provenance history, not independent samples. Training/test split migration across revisions requires a fresh global holdout embargo. Root-inherited JSONL aliases are not counted when data/*.jsonl exists.",
+  "detail_ledger": {
+    "bytes": 667839,
+    "note": "Complete member checks, file hashes, time ranges and violation samples for each of95 snapshots.",
+    "path": "work/hf-audit-review/bucket-snapshots-details.json",
+    "sha256": "a2150e6fc56dca24f0a824de9cc655827a7cf9c1f28a1fbbb6b565706096da9c"
+  },
+  "download_complete": true,
+  "downloaded_compressed_bytes": 24652326,
+  "exact_unique_record_jsons": 551,
+  "expected_archive_count": 95,
+  "expected_compressed_bytes": 24652326,
+  "global_ranges": {
+    "created_at": {
+      "end": "2026-08-31T12:03:33.181408+00:00",
+      "start": "2026-06-22T21:41:16.567949+00:00"
+    },
+    "decision": {
+      "end": "2026-08-31T12:03:31.567439",
+      "start": "2026-06-22T21:41:16.333429"
+    },
+    "outcome_available": {
+      "end": "2026-09-04T07:31:18.580886+00:00",
+      "start": "2026-06-24T02:07:27.765932+00:00"
+    }
+  },
+  "integrity_check_counts": {
+    "archive_names_match_manifest_revision_and_hash_prefix": true,
+    "archive_sha256_recorded": 95,
+    "manifest_file_hash_and_size_checks": 285,
+    "snapshot_content_hash_checks": 95
+  },
+  "limitations": [
+    "Bucket total reported by coordinator is about 22.5 GB. Its approximately 5.6 GB logical database dump, 7.9 GB SQL data, physical backups and other bucket objects were not downloaded, opened, certified or covered by this report.",
+    "No model training, candidate execution, production DB ingestion, forward trading or promotion occurred.",
+    "Source provenance and record assertions were audited as packaged; underlying DB prices and original provider observations remain outside scope.",
+    "Cryptographic archive/file integrity does not certify temporal semantics, source correctness, label balance or promotion safety."
+  ],
+  "lineage_ledger": {
+    "entities": 530,
+    "path": "work/hf-audit-review/bucket-lineage-index.json",
+    "sha256": "1640329b371dd713e6a19cb1ae3f3208851775f2929a57d22f7652da24408d50"
+  },
+  "lineages_repeated_across_revisions": 529,
+  "new_lineages_beyond_public_main": 9,
+  "novel_lineages_file": {
+    "path": "work/hf-audit-review/bucket-novel-lineages.json",
+    "records": 9,
+    "sha256": "5bfb15490914471a252db3d16d90ce1691b5ac746dc85b47eb37b40596477c57"
+  },
+  "outcome_entities_with_revised_labels": 0,
+  "outcome_occurrences_after_declared_cutoff_across_versions": 2310,
+  "parent_model_mutable_revision_snapshots": 95,
+  "public_main_lineage_overlap": 521,
+  "quarantined_revisions": [
+    "snapshot-01144dc0a0c1",
+    "snapshot-028297c75ac7",
+    "snapshot-03626545500f",
+    "snapshot-0448166bbd84",
+    "snapshot-047730cfa0d5",
+    "snapshot-0a9b904c5611",
+    "snapshot-0d24d0d0ca4a",
+    "snapshot-12701b49a80e",
+    "snapshot-13729b1bcda0",
+    "snapshot-16886a96611b",
+    "snapshot-19cd4a5e987c",
+    "snapshot-1cb2560ed118",
+    "snapshot-1e2068597982",
+    "snapshot-202e987caebb",
+    "snapshot-2460d3c5c14a",
+    "snapshot-260fa122da48",
+    "snapshot-26a0940acfe0",
+    "snapshot-286c2f783ded",
+    "snapshot-2b36510456c1",
+    "snapshot-2b5169eb055e",
+    "snapshot-2f608b56b0b0",
+    "snapshot-2fa1936078ce",
+    "snapshot-37a0206b5a8c",
+    "snapshot-3e00c6ee6fdd",
+    "snapshot-40dd5345aede",
+    "snapshot-43b42469a05a",
+    "snapshot-44069bfe30ca",
+    "snapshot-443ce7516e48",
+    "snapshot-46e55bb76aad",
+    "snapshot-470b460c3cc0",
+    "snapshot-4a6b12a828bc",
+    "snapshot-4c0dd45b3794",
+    "snapshot-4f04e9f5aace",
+    "snapshot-53335bc8fd42",
+    "snapshot-553844290a68",
+    "snapshot-554af8ac44e9",
+    "snapshot-5aec022e3ee8",
+    "snapshot-5b7921173694",
+    "snapshot-5cba0c6755aa",
+    "snapshot-5e466d3aa21b",
+    "snapshot-613848f1314e",
+    "snapshot-640f4f98aca0",
+    "snapshot-64bd3abf2192",
+    "snapshot-694e0936c352",
+    "snapshot-7192833def26",
+    "snapshot-7316c02c4653",
+    "snapshot-737b87dea858",
+    "snapshot-75e321218eca",
+    "snapshot-764f624fc0dd",
+    "snapshot-7701c8ddde91",
+    "snapshot-7f413995826d",
+    "snapshot-7f976e3844f9",
+    "snapshot-8258573494a0",
+    "snapshot-86747fd74350",
+    "snapshot-884c9b1ad83e",
+    "snapshot-8b5483e5cb85",
+    "snapshot-8f7c9034ee43",
+    "snapshot-8fbdee7efb59",
+    "snapshot-904edf12d2a4",
+    "snapshot-971aff710cd0",
+    "snapshot-982bee7aaca6",
+    "snapshot-9842fe232705",
+    "snapshot-98a3ab474700",
+    "snapshot-99608010b34b",
+    "snapshot-9a5f7eac17f2",
+    "snapshot-9ba6367172de",
+    "snapshot-9d18f1280081",
+    "snapshot-9f7abe54cf1c",
+    "snapshot-a4d75a6cdb81",
+    "snapshot-a65f17823381",
+    "snapshot-a9a77315d392",
+    "snapshot-a9b9003ec6ec",
+    "snapshot-adb6eff7c2a1",
+    "snapshot-b10ca874001c",
+    "snapshot-b1bb8ed163bd",
+    "snapshot-b75f1aa2e2e8",
+    "snapshot-b84821bbb689",
+    "snapshot-b94f94012989",
+    "snapshot-c0549afd465b",
+    "snapshot-c9366793aef7",
+    "snapshot-cb243e55ed5e",
+    "snapshot-cff22cf33ebd",
+    "snapshot-d498e050ddd4",
+    "snapshot-dbc07fafc6e5",
+    "snapshot-dd0b59901fbd",
+    "snapshot-e6ff2c1b7b45",
+    "snapshot-e917495e24f6",
+    "snapshot-eac7ff3f62af",
+    "snapshot-ebc695f15a59",
+    "snapshot-f16d48bb7023",
+    "snapshot-f557951cc4d6",
+    "snapshot-f607108ecb79",
+    "snapshot-f98739933bcb",
+    "snapshot-fc8939c0bc32",
+    "snapshot-fe8a64c39ce0"
+  ],
+  "reason_snapshot_counts": {
+    "EMPTY_SOURCE_PROVENANCE": 95,
+    "EMPTY_TRAIN_OR_HOLDOUT_SPLIT": 3,
+    "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO": 92,
+    "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF": 95,
+    "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE": 94
+  },
+  "recommendation": "Retain the530 lineage entities as quarantined attributable research history. Rebuild a single immutable learning snapshot with actual outcome available_at cutoff, source verification and global lineage holdout embargo. Do not count95 versions or21,424 occurrences as independent evidence; no snapshot currently certifies safe learning or promotion.",
+  "record_occurrences_across_revisions": 21424,
+  "record_time_checks": {
+    "future_input_timestamp_events": 0,
+    "missing_outcome_availability_timestamps": 0,
+    "outcome_available_not_after_decision_events": 0,
+    "unknown_decision_timestamps": 0,
+    "within_snapshot_cross_split_lineage_leaks": 0
+  },
+  "reviewed_at": "2026-10-13T05:48:57.588990+00:00",
+  "root_inherited_alias_records_not_counted": 0,
+  "schema_version": "blum-persistent-bucket-snapshot-audit-v1",
+  "scope": "95 downloaded versioned tar.gz model-learning snapshot archives only; no extraction or execution.",
+  "snapshots": [
+    {
+      "archive": "snapshot-01144dc0a0c1.tar.gz",
+      "archive_bytes": 14018,
+      "archive_sha256": "bad95daa3058c1c4a0c75affc854f3d7fc6faea0857144dd748000cf3d13e1ba",
+      "boundary_crossing_outcome_count": 6,
+      "boundary_crossing_unique_rows": 6,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T08:32:22.204311+00:00",
+      "empty_provenance_rows": 7,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-03T21:57:36.772568+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "8c1981241e2f87c4e449907632df9602766114f75c4d0ad914df531bed779dda",
+      "outcomes_after_cutoff_count": 7,
+      "outcomes_after_cutoff_unique_rows": 7,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "contradicted": 1
+        },
+        "train": {
+          "confirmed": 2,
+          "contradicted": 3
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-01144dc0a0c1",
+      "rows": 7,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "01144dc0a0c11999345e054d34e787436eeac5183c00deb196067e1d66003937",
+      "split_counts": {
+        "test": 1,
+        "train": 5,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-028297c75ac7.tar.gz",
+      "archive_bytes": 175524,
+      "archive_sha256": "1403ef09b847a0fe160b9b86f36529671b640cb6e43a60d88ff6955d09aae4b1",
+      "boundary_crossing_outcome_count": 144,
+      "boundary_crossing_unique_rows": 144,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 174,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "47d87ff16d05164e9af52a0e50dcd6509e37568cfed74595e6ddfc55442e77d5",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 18
+        },
+        "train": {
+          "confirmed": 139
+        },
+        "validation": {
+          "confirmed": 17
+        }
+      },
+      "revision": "snapshot-028297c75ac7",
+      "rows": 174,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "028297c75ac7149e9b6d33f7c9ce53de2bbbe007c0399e7813f3d2aa2cc3d9e2",
+      "split_counts": {
+        "test": 18,
+        "train": 139,
+        "validation": 17
+      }
+    },
+    {
+      "archive": "snapshot-03626545500f.tar.gz",
+      "archive_bytes": 17098,
+      "archive_sha256": "2e4290644dcd33219cea01838dfd644abd3a9f34230c80a9966a5964a3235d76",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T04:14:21.976169+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "0ce842bf6253ce720311801b3172359d01efd88e440e2cdac37152869488d79e",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-03626545500f",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "03626545500f3b23391fa6c5a2dd2646f62b76759d0e42ef0bbdaa98e231662d",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-0448166bbd84.tar.gz",
+      "archive_bytes": 304878,
+      "archive_sha256": "b3eb9be2035a0a8a384d888ff07aa0dce9117fb6b77c06d0b765e562fb8c9975",
+      "boundary_crossing_outcome_count": 140,
+      "boundary_crossing_unique_rows": 140,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 284,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "27c75daa755ea278fe177ae0106b74199162b870d078a909c08f96f75d3e4acc",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 29
+        },
+        "train": {
+          "confirmed": 182,
+          "contradicted": 45
+        },
+        "validation": {
+          "confirmed": 28
+        }
+      },
+      "revision": "snapshot-0448166bbd84",
+      "rows": 284,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "0448166bbd8414ccea449af6db15f25c621c29e62eca493ae2174691151f5f28",
+      "split_counts": {
+        "test": 29,
+        "train": 227,
+        "validation": 28
+      }
+    },
+    {
+      "archive": "snapshot-047730cfa0d5.tar.gz",
+      "archive_bytes": 268557,
+      "archive_sha256": "ac04e6d991f2087aa3dc414f777adaa26d8bc308edcbd91a3b25bb4dcf675a5f",
+      "boundary_crossing_outcome_count": 143,
+      "boundary_crossing_unique_rows": 143,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 256,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "427f3cbbf159d8be32b593efe029a3e77b906323655fcf16e45731b90e1103d0",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 26
+        },
+        "train": {
+          "confirmed": 173,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 26
+        }
+      },
+      "revision": "snapshot-047730cfa0d5",
+      "rows": 256,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "047730cfa0d59af7571b0a123a44b38eb5f61b175b003e5fd88cec091e51a6e3",
+      "split_counts": {
+        "test": 26,
+        "train": 204,
+        "validation": 26
+      }
+    },
+    {
+      "archive": "snapshot-0a9b904c5611.tar.gz",
+      "archive_bytes": 270184,
+      "archive_sha256": "cf1a4eec98bf2d6e126392e7196d986a08efe302f34f4ee635e5ddc59505e377",
+      "boundary_crossing_outcome_count": 143,
+      "boundary_crossing_unique_rows": 143,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 257,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6da10793fed3c5cd515f274c72eea7a3f217758b97b4fafd34b9066ba8ddd0aa",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 26
+        },
+        "train": {
+          "confirmed": 174,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 26
+        }
+      },
+      "revision": "snapshot-0a9b904c5611",
+      "rows": 257,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "0a9b904c561172994e9b4249795c4f2dfc66f0d2995e58a2dda485b28146a3a1",
+      "split_counts": {
+        "test": 26,
+        "train": 205,
+        "validation": 26
+      }
+    },
+    {
+      "archive": "snapshot-0d24d0d0ca4a.tar.gz",
+      "archive_bytes": 42763,
+      "archive_sha256": "c7969ab42351ed331ae35c411ec65f72a8ef16486493d171855f8c084c07c970",
+      "boundary_crossing_outcome_count": 23,
+      "boundary_crossing_unique_rows": 23,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 54,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6f97c183991a9f76b3a7166aad15d9c4265f8164a27675d2e9275e434f5a947d",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 6
+        },
+        "train": {
+          "confirmed": 43
+        },
+        "validation": {
+          "confirmed": 5
+        }
+      },
+      "revision": "snapshot-0d24d0d0ca4a",
+      "rows": 54,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "0d24d0d0ca4a0433f8943c1d2d63c64d9dd763f88f5ec5f1eacaf73cfc7dfc15",
+      "split_counts": {
+        "test": 6,
+        "train": 43,
+        "validation": 5
+      }
+    },
+    {
+      "archive": "snapshot-12701b49a80e.tar.gz",
+      "archive_bytes": 420537,
+      "archive_sha256": "28d3c57e1481be6eef7c3ff70bc10312dd87fea0257f0d28a58b1ef005841218",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 358,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6aea0c99c2399306f43ffb211a3a62f66cc6cc16fbaae4ad86b36c2d45f8df65",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 36
+        },
+        "train": {
+          "confirmed": 232,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 36
+        }
+      },
+      "revision": "snapshot-12701b49a80e",
+      "rows": 358,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "12701b49a80e5b698682be1b613ddc83f68c5f05a7e4d1341f46baff7f1be2fb",
+      "split_counts": {
+        "test": 36,
+        "train": 286,
+        "validation": 36
+      }
+    },
+    {
+      "archive": "snapshot-13729b1bcda0.tar.gz",
+      "archive_bytes": 466221,
+      "archive_sha256": "803e2f5f7f39043037ef9e2c7cffc27cb8e4d71660356908d1ed82a07f76b9e2",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 394,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "427a00dc94f457a295ac0c99811a64964ca13470ce59062de1cc2538a1b94c5b",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 40
+        },
+        "train": {
+          "confirmed": 261,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 39
+        }
+      },
+      "revision": "snapshot-13729b1bcda0",
+      "rows": 394,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "13729b1bcda0168c4fbfabf8f376a5046342b7b8e9d0a88146fc0e9a12af7eaf",
+      "split_counts": {
+        "test": 40,
+        "train": 315,
+        "validation": 39
+      }
+    },
+    {
+      "archive": "snapshot-16886a96611b.tar.gz",
+      "archive_bytes": 381740,
+      "archive_sha256": "5758a625b3c619217db5e824e55c404edf0145372915c1b0606a4079786c1df1",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 332,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "57c6c457ea7144e39573a08d7c76f7b8ea63e7aae5f288510973021b568de680",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 34
+        },
+        "train": {
+          "confirmed": 211,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 33
+        }
+      },
+      "revision": "snapshot-16886a96611b",
+      "rows": 332,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "16886a96611b65378da07bce5715d11785f78c86e739068595ec6820412cb2c4",
+      "split_counts": {
+        "test": 34,
+        "train": 265,
+        "validation": 33
+      }
+    },
+    {
+      "archive": "snapshot-19cd4a5e987c.tar.gz",
+      "archive_bytes": 242370,
+      "archive_sha256": "88e26a88ebfa4269027b7b022793629c2a738eff38723afe4f072dd5a614c6ed",
+      "boundary_crossing_outcome_count": 146,
+      "boundary_crossing_unique_rows": 146,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 230,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "9a9c1e8afa1ab6ba9fd62e9ffd92e54c1c82958d4530975e14b119a05b3e76e7",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 23
+        },
+        "train": {
+          "confirmed": 153,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 23
+        }
+      },
+      "revision": "snapshot-19cd4a5e987c",
+      "rows": 230,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "19cd4a5e987cfd577d4e8dc392da3f96302fb77916a726e91da99a8406537927",
+      "split_counts": {
+        "test": 23,
+        "train": 184,
+        "validation": 23
+      }
+    },
+    {
+      "archive": "snapshot-1cb2560ed118.tar.gz",
+      "archive_bytes": 362614,
+      "archive_sha256": "485e8bfccc55dec2636fdb5d960cfab0ccaaeb42078e80d8c24db0c770d2d392",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 321,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "a27f20f546b1d509b84f79e78b42b2a22bf098365253d448ddd220106094c127",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 33
+        },
+        "train": {
+          "confirmed": 202,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 32
+        }
+      },
+      "revision": "snapshot-1cb2560ed118",
+      "rows": 321,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "1cb2560ed118e380c1f1ca86971518e06ecd0433423a34000817b9fe6993c1ce",
+      "split_counts": {
+        "test": 33,
+        "train": 256,
+        "validation": 32
+      }
+    },
+    {
+      "archive": "snapshot-1e2068597982.tar.gz",
+      "archive_bytes": 252723,
+      "archive_sha256": "dcf5b8590614d346778e33feac5494263fb6f8f508ee60c1ec14b3d75d3a9048",
+      "boundary_crossing_outcome_count": 145,
+      "boundary_crossing_unique_rows": 145,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 238,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "66d374bbfa5b46a5d4933906d3d1e5c8dc0456d6710517ec2fd1a9cfbf82e261",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 24
+        },
+        "train": {
+          "confirmed": 159,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 24
+        }
+      },
+      "revision": "snapshot-1e2068597982",
+      "rows": 238,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "1e20685979823cc3e8492faa19d91ef7e5ffe9d0f3418241202899b0618dead0",
+      "split_counts": {
+        "test": 24,
+        "train": 190,
+        "validation": 24
+      }
+    },
+    {
+      "archive": "snapshot-202e987caebb.tar.gz",
+      "archive_bytes": 598777,
+      "archive_sha256": "d5f5d9c726a14499f1a4d043d718f3a20bede7dbc6b04e5ff5e9a1032cbb130c",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 488,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "b1b54c093bd7c1b12eb784a4fd237e62efa625a23e848fe6d43eef7237aee5cd",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 49
+        },
+        "train": {
+          "confirmed": 305,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 49
+        }
+      },
+      "revision": "snapshot-202e987caebb",
+      "rows": 488,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "202e987caebbfaad0e5ad963fde85dfa48bb9d62d69807df2bfe86dd29993082",
+      "split_counts": {
+        "test": 49,
+        "train": 390,
+        "validation": 49
+      }
+    },
+    {
+      "archive": "snapshot-2460d3c5c14a.tar.gz",
+      "archive_bytes": 12033,
+      "archive_sha256": "47d54e79089a2c1a511019323eab650aac0d482e116704722cebb851d3a09067",
+      "boundary_crossing_outcome_count": 5,
+      "boundary_crossing_unique_rows": 5,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T07:12:41.695656+00:00",
+      "empty_provenance_rows": 6,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-03T20:23:22.081537+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "873d066f3c9d49aa749ced98d050cfbb6830a64b7a3fda54445ecfcc8400286a",
+      "outcomes_after_cutoff_count": 6,
+      "outcomes_after_cutoff_unique_rows": 6,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 2,
+          "contradicted": 2
+        },
+        "validation": {
+          "contradicted": 1
+        }
+      },
+      "revision": "snapshot-2460d3c5c14a",
+      "rows": 6,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "2460d3c5c14ae8cb8d2c58abaa506daad5e5ef9aee0434d664d891e362e83b2e",
+      "split_counts": {
+        "test": 1,
+        "train": 4,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-260fa122da48.tar.gz",
+      "archive_bytes": 279397,
+      "archive_sha256": "c9ec76385aa03c929f6bd17d3b1dde42926d34c5a2c54639d3b9c3879868b090",
+      "boundary_crossing_outcome_count": 142,
+      "boundary_crossing_unique_rows": 142,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 264,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "242e9d14f4c9cf943bd6ad98e51a0a359c36b74e88db6cf88c1daa48286e6d89",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 27
+        },
+        "train": {
+          "confirmed": 176,
+          "contradicted": 35
+        },
+        "validation": {
+          "confirmed": 26
+        }
+      },
+      "revision": "snapshot-260fa122da48",
+      "rows": 264,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "260fa122da482105641e11875d2138fdc0c1fb76387d38e90523b63416dc2988",
+      "split_counts": {
+        "test": 27,
+        "train": 211,
+        "validation": 26
+      }
+    },
+    {
+      "archive": "snapshot-26a0940acfe0.tar.gz",
+      "archive_bytes": 47516,
+      "archive_sha256": "2e5f3d4199696f849e94928d43a79980018780cadacb56e07399963ad3f72843",
+      "boundary_crossing_outcome_count": 23,
+      "boundary_crossing_unique_rows": 23,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 60,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "719cbf5d26311356a86d5ee5ed336b14e8db8aff6258d5497242930dddeacc87",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 6
+        },
+        "train": {
+          "confirmed": 48
+        },
+        "validation": {
+          "confirmed": 6
+        }
+      },
+      "revision": "snapshot-26a0940acfe0",
+      "rows": 60,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "26a0940acfe0e0b3bffb81057325ee7d362f24ea58ed1eb82f5722d5f23b7711",
+      "split_counts": {
+        "test": 6,
+        "train": 48,
+        "validation": 6
+      }
+    },
+    {
+      "archive": "snapshot-286c2f783ded.tar.gz",
+      "archive_bytes": 427172,
+      "archive_sha256": "0ea464bcdc21f028d85200d582c70e20942f3575475647a1968094877165516f",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 363,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "2c65150835ed30af13aab5380ad10e46c0efe5bb70e772ead833445a8cd99338",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 37
+        },
+        "train": {
+          "confirmed": 236,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 36
+        }
+      },
+      "revision": "snapshot-286c2f783ded",
+      "rows": 363,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "286c2f783ded4b35608223bb3b3aaf136d1c8107491157a90db92b65da8d77d7",
+      "split_counts": {
+        "test": 37,
+        "train": 290,
+        "validation": 36
+      }
+    },
+    {
+      "archive": "snapshot-2b36510456c1.tar.gz",
+      "archive_bytes": 17081,
+      "archive_sha256": "16fa8645ff3fd52a8ade70618010f7ed9df84b7eaa6c828752095869a0ddb6d4",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T07:00:57.954164+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "abedaad0ea5c252071241a248b66f7c023e9651a4452934382f14153ca72586f",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-2b36510456c1",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "2b36510456c1bb6319dacf879881d49557de9b89cac37e89aa2865a8095ee296",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-2b5169eb055e.tar.gz",
+      "archive_bytes": 223559,
+      "archive_sha256": "5deb249dbbf99af5e18b6b920db667656f455038714f27a305b863df5e36f3ad",
+      "boundary_crossing_outcome_count": 147,
+      "boundary_crossing_unique_rows": 147,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 212,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "d5477ca79979a7c1d6e74f1ba2a6d80213963332bed4d6c1c2ebbaebb2cc8d82",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 22
+        },
+        "train": {
+          "confirmed": 139,
+          "contradicted": 30
+        },
+        "validation": {
+          "confirmed": 21
+        }
+      },
+      "revision": "snapshot-2b5169eb055e",
+      "rows": 212,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "2b5169eb055e51ecec53e1a2877e189693533ae76a66a3efa2b7be6989f46722",
+      "split_counts": {
+        "test": 22,
+        "train": 169,
+        "validation": 21
+      }
+    },
+    {
+      "archive": "snapshot-2f608b56b0b0.tar.gz",
+      "archive_bytes": 536840,
+      "archive_sha256": "b230e78486d7c9a6fce2249b081f1fe829b90ee9db0aaf7e87ea865a1aeddc7f",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 445,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "b51de1acdcd935cf8f3a943f29f87d322b6645c9af07d0bfbb12c2bb87477aa2",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 45
+        },
+        "train": {
+          "confirmed": 282,
+          "contradicted": 74
+        },
+        "validation": {
+          "confirmed": 44
+        }
+      },
+      "revision": "snapshot-2f608b56b0b0",
+      "rows": 445,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "2f608b56b0b0e76af0f7021d390e0e48aa185db853f2337d0c39dc6bdf11858c",
+      "split_counts": {
+        "test": 45,
+        "train": 356,
+        "validation": 44
+      }
+    },
+    {
+      "archive": "snapshot-2fa1936078ce.tar.gz",
+      "archive_bytes": 212022,
+      "archive_sha256": "c47068ed88a4654fe3f50366c52e6e7d82f7a38369a7f4684c039cc565c5c879",
+      "boundary_crossing_outcome_count": 147,
+      "boundary_crossing_unique_rows": 147,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 202,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "004a949fa315db5950f36a3769e3791cc6f125eeafc426add6a1a645acb16f4a",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 21
+        },
+        "train": {
+          "confirmed": 141,
+          "contradicted": 20
+        },
+        "validation": {
+          "confirmed": 20
+        }
+      },
+      "revision": "snapshot-2fa1936078ce",
+      "rows": 202,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "2fa1936078ce7556a8ce28cb660f756947adfef2c8f4665c1e7ecba439d8d267",
+      "split_counts": {
+        "test": 21,
+        "train": 161,
+        "validation": 20
+      }
+    },
+    {
+      "archive": "snapshot-37a0206b5a8c.tar.gz",
+      "archive_bytes": 241338,
+      "archive_sha256": "3efd4d6abd96601b9b43c79ed6e655f4ace6b4fb5c510c648b73674748c46013",
+      "boundary_crossing_outcome_count": 146,
+      "boundary_crossing_unique_rows": 146,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 229,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "b93885ab97f0b5fc522240eb36a2ab1025bb1948ca2f2ae7b972fc2d9e506608",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 23
+        },
+        "train": {
+          "confirmed": 152,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 23
+        }
+      },
+      "revision": "snapshot-37a0206b5a8c",
+      "rows": 229,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "37a0206b5a8c8385006ff6f22717de527746fa8688540e5304ee84ef2ebdcaf5",
+      "split_counts": {
+        "test": 23,
+        "train": 183,
+        "validation": 23
+      }
+    },
+    {
+      "archive": "snapshot-3e00c6ee6fdd.tar.gz",
+      "archive_bytes": 645746,
+      "archive_sha256": "177d4659c1dfe24c35a070da4e39e281e1b377bc5d52d3cd13c51830d9cea523",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 521,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "ba97344fd3a81828f562d66c4dd3d0921d9d429340f7c1a9752494c0582e8ff0",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 53
+        },
+        "train": {
+          "confirmed": 324,
+          "contradicted": 92
+        },
+        "validation": {
+          "confirmed": 52
+        }
+      },
+      "revision": "snapshot-3e00c6ee6fdd",
+      "rows": 521,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "3e00c6ee6fdd59a770293ed8eda227838a31199b2c4bf9544e5d948d73be0041",
+      "split_counts": {
+        "test": 53,
+        "train": 416,
+        "validation": 52
+      }
+    },
+    {
+      "archive": "snapshot-40dd5345aede.tar.gz",
+      "archive_bytes": 17089,
+      "archive_sha256": "4b9b8738840036bda90dae552384b5c8f18baefa858d64a757f0f2f0805459bb",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T03:23:38.542298+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "58b2b6d22bb80b29c7a655d80ea3ca88d9c2dd76d8d6031a6b3458468e89fc15",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-40dd5345aede",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "40dd5345aede0285131bb95db3730fe89be68f4f8ac6747f0a65c72b5f5764e1",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-43b42469a05a.tar.gz",
+      "archive_bytes": 328926,
+      "archive_sha256": "d277c94204ce6cfe5619c9de99ee443ab6cd410eaf70634539b4d9f5668b21e0",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 299,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "d19752c24919f05816d78e924ecd78c3b95c2a76c5319c79cabb9ece5f44e1ca",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 30
+        },
+        "train": {
+          "confirmed": 187,
+          "contradicted": 52
+        },
+        "validation": {
+          "confirmed": 30
+        }
+      },
+      "revision": "snapshot-43b42469a05a",
+      "rows": 299,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "43b42469a05a331d9dbc7666d4c5e619ecf49bced5898ee576afa936698bcbea",
+      "split_counts": {
+        "test": 30,
+        "train": 239,
+        "validation": 30
+      }
+    },
+    {
+      "archive": "snapshot-44069bfe30ca.tar.gz",
+      "archive_bytes": 169286,
+      "archive_sha256": "f839344d53dab7dcc3ed940942641db452eab4e173c66123c3c7720c95373e87",
+      "boundary_crossing_outcome_count": 144,
+      "boundary_crossing_unique_rows": 144,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 169,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "4929d60afac39df876001b9f8a94d077c7baff5d75544eb1cd295b1dae1aab53",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 17
+        },
+        "train": {
+          "confirmed": 135
+        },
+        "validation": {
+          "confirmed": 17
+        }
+      },
+      "revision": "snapshot-44069bfe30ca",
+      "rows": 169,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "44069bfe30ca373f5d294d0d22cb7d56444123d02e95441a07b20d1e8bee886c",
+      "split_counts": {
+        "test": 17,
+        "train": 135,
+        "validation": 17
+      }
+    },
+    {
+      "archive": "snapshot-443ce7516e48.tar.gz",
+      "archive_bytes": 133779,
+      "archive_sha256": "fd65c8b4e0dcc12ce9069effca6cc48d8a1753d9bc991255438d42f3d7c5608b",
+      "boundary_crossing_outcome_count": 15,
+      "boundary_crossing_unique_rows": 15,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 139,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "3b86fd9c1ee3422c4674df1853ce9d88a7a2c10c509e00fed14b28eb1ac7b12c",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 14
+        },
+        "train": {
+          "confirmed": 111
+        },
+        "validation": {
+          "confirmed": 14
+        }
+      },
+      "revision": "snapshot-443ce7516e48",
+      "rows": 139,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "443ce7516e4864f1dbcc95fbcf13261226f669930fa5dfaaad9ca08bed621090",
+      "split_counts": {
+        "test": 14,
+        "train": 111,
+        "validation": 14
+      }
+    },
+    {
+      "archive": "snapshot-46e55bb76aad.tar.gz",
+      "archive_bytes": 220892,
+      "archive_sha256": "6a81811b7dfd948c3bf582ddfed30ce68bd933c82017b246be85dee2e322048e",
+      "boundary_crossing_outcome_count": 148,
+      "boundary_crossing_unique_rows": 148,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 207,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "fa1933b690f647787341666140bc4e6f6b2fc6717c6e0224946e76d61d7a1bf8",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 21
+        },
+        "train": {
+          "confirmed": 140,
+          "contradicted": 25
+        },
+        "validation": {
+          "confirmed": 21
+        }
+      },
+      "revision": "snapshot-46e55bb76aad",
+      "rows": 207,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "46e55bb76aadf5b329349d05f7f61518488a9f3cf1c4bd62560fd0c375a4543d",
+      "split_counts": {
+        "test": 21,
+        "train": 165,
+        "validation": 21
+      }
+    },
+    {
+      "archive": "snapshot-470b460c3cc0.tar.gz",
+      "archive_bytes": 17081,
+      "archive_sha256": "c361b671ae659610774125a8c0089ecab3b9d1c900f00d4b001d8ed1ed4b7672",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T07:31:18.580886+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "a8803618cf46b31a1ca371075a92ae9fac88cdfb1e010743eb258a45eb830388",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-470b460c3cc0",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "470b460c3cc07ded065e05a6e3b306fdc1e4838ac2f9171f135971bbd86325de",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-4a6b12a828bc.tar.gz",
+      "archive_bytes": 583709,
+      "archive_sha256": "42ef87ce8b4ec8bc0226160cbd78f916c6316e145038dd9fd610a90f4ae57827",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 475,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "71a13a50e57683fa34df3d874159bbf1a2be28d1b70c028cfe82dcc661c2f5df",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 48
+        },
+        "train": {
+          "confirmed": 295,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 47
+        }
+      },
+      "revision": "snapshot-4a6b12a828bc",
+      "rows": 475,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "4a6b12a828bc34245c37756b8af6129a918577d0e938034b7d969dda2b13babc",
+      "split_counts": {
+        "test": 48,
+        "train": 380,
+        "validation": 47
+      }
+    },
+    {
+      "archive": "snapshot-4c0dd45b3794.tar.gz",
+      "archive_bytes": 8221,
+      "archive_sha256": "098dbc0bdaa30774ef4f2883f413012e1244688bae388617a3cc4e7bdab84b7b",
+      "boundary_crossing_outcome_count": 7,
+      "boundary_crossing_unique_rows": 7,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 8,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "423fe22690835216d45a89f3a45c8eece9b1aabf19d49d1efb80686f389e508d",
+      "outcomes_after_cutoff_count": 8,
+      "outcomes_after_cutoff_unique_rows": 8,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 6
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-4c0dd45b3794",
+      "rows": 8,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "4c0dd45b379472e052b45da44d12ae3bbe3ff498f812350775d16f8f3150e0b1",
+      "split_counts": {
+        "test": 1,
+        "train": 6,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-4f04e9f5aace.tar.gz",
+      "archive_bytes": 356834,
+      "archive_sha256": "9b21dbd30b8c4888a175a87b75ad482bf67ba84d085d46bb4bf78649c34b784f",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 316,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "bb5d083a1deec85cd09a67787299a0fb2cc41badcecff55ed8876fa536cb0ee8",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 32
+        },
+        "train": {
+          "confirmed": 198,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 32
+        }
+      },
+      "revision": "snapshot-4f04e9f5aace",
+      "rows": 316,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "4f04e9f5aace63b8ed3a61645a19471656eb4969fd496653aa18f9094ca5d499",
+      "split_counts": {
+        "test": 32,
+        "train": 252,
+        "validation": 32
+      }
+    },
+    {
+      "archive": "snapshot-53335bc8fd42.tar.gz",
+      "archive_bytes": 638445,
+      "archive_sha256": "52e87381d077012f4d6f7cfd70b832fe5544e2a0bfecd89cc5867fad8e07f40e",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 514,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "7d2c492cd61b9b81fd64f91930e455bc132a8b0e1a8a8fcb96d9663c5b47362b",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 52
+        },
+        "train": {
+          "confirmed": 326,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 51
+        }
+      },
+      "revision": "snapshot-53335bc8fd42",
+      "rows": 514,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "53335bc8fd422fc34250a164190a033549635c5564648a3329fe7067f52314be",
+      "split_counts": {
+        "test": 52,
+        "train": 411,
+        "validation": 51
+      }
+    },
+    {
+      "archive": "snapshot-553844290a68.tar.gz",
+      "archive_bytes": 464863,
+      "archive_sha256": "c5337c642bb1b9c7ae3459ee1a94522ba22c1fdcb4905c282f14d9aa8b0eb447",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 393,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "36598c86a839a072dc901fa5c9a123530a1326953363705bceddbf6bae883bd4",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 40
+        },
+        "train": {
+          "confirmed": 260,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 39
+        }
+      },
+      "revision": "snapshot-553844290a68",
+      "rows": 393,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "553844290a68d48c31ac2a33e45a2237fd043a278b5dba0b97138e2dd616dd90",
+      "split_counts": {
+        "test": 40,
+        "train": 314,
+        "validation": 39
+      }
+    },
+    {
+      "archive": "snapshot-554af8ac44e9.tar.gz",
+      "archive_bytes": 128404,
+      "archive_sha256": "bdc5b90c2785cf858ee09388719a0d83cd462c962879836d3c2bf2c9eb7f75cc",
+      "boundary_crossing_outcome_count": 15,
+      "boundary_crossing_unique_rows": 15,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 132,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "7e844bdb11a1dfe72b0876149441793cf59284b2b123a10a184c4df83ae5ffd1",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 14
+        },
+        "train": {
+          "confirmed": 105
+        },
+        "validation": {
+          "confirmed": 13
+        }
+      },
+      "revision": "snapshot-554af8ac44e9",
+      "rows": 132,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "554af8ac44e9b8614f3235ad885f867bd2362ffe677a7809f6102b8b28828ad2",
+      "split_counts": {
+        "test": 14,
+        "train": 105,
+        "validation": 13
+      }
+    },
+    {
+      "archive": "snapshot-5aec022e3ee8.tar.gz",
+      "archive_bytes": 639804,
+      "archive_sha256": "1fb24e4de87b03e48f5d2b3dc4f495a1230b7a1dd16c8d0c9393d748c58df7fa",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 515,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "92fd52afcd71837639c0476556180ab85b03dfbf4c67aeb66e3a409b92fa45e3",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 52
+        },
+        "train": {
+          "confirmed": 326,
+          "contradicted": 86
+        },
+        "validation": {
+          "confirmed": 51
+        }
+      },
+      "revision": "snapshot-5aec022e3ee8",
+      "rows": 515,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "5aec022e3ee82e7acbeb4f7a777d5e4fbbe9c96f262ceaf19d48215855f182df",
+      "split_counts": {
+        "test": 52,
+        "train": 412,
+        "validation": 51
+      }
+    },
+    {
+      "archive": "snapshot-5b7921173694.tar.gz",
+      "archive_bytes": 17091,
+      "archive_sha256": "dcfbb381da72e620e51c0c4c25233866b7416d4e85bea5fc8806e371b1949007",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T01:43:11.102882+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "c20284928b43b969bf8e1ca36def120c62e24f14cff9a1f6d6d09eab0ad12121",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-5b7921173694",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "5b7921173694516ec4bfd447784a83eb828d83f6da098369f5fdd068367ff4b2",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-5cba0c6755aa.tar.gz",
+      "archive_bytes": 336340,
+      "archive_sha256": "27589605b2f2ded39f999ed58e834353c8077c039f665c4fe3de02b19fa6c204",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 304,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "b56b6e22ce3880c4ec47d63ec95cc85ea91a03066badd48259cbabefee296a76",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 31
+        },
+        "train": {
+          "confirmed": 189,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 30
+        }
+      },
+      "revision": "snapshot-5cba0c6755aa",
+      "rows": 304,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "5cba0c6755aa617e63e43c1b8a9f969115211361ee27950325d4d97ec4786c09",
+      "split_counts": {
+        "test": 31,
+        "train": 243,
+        "validation": 30
+      }
+    },
+    {
+      "archive": "snapshot-5e466d3aa21b.tar.gz",
+      "archive_bytes": 231424,
+      "archive_sha256": "0728d63f43b96fbe6576970db0bc4069dfd5d005e8747dad56fa13272e4d1e86",
+      "boundary_crossing_outcome_count": 147,
+      "boundary_crossing_unique_rows": 147,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 219,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "f7ae57555036154be4623a89269e47ae1d21d4e5aa65664ae3ac8e1489d7700b",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 22
+        },
+        "train": {
+          "confirmed": 144,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 22
+        }
+      },
+      "revision": "snapshot-5e466d3aa21b",
+      "rows": 219,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "5e466d3aa21bf645ead96d9fd704a695321e05e503bea1ea2d9327e06a5386ca",
+      "split_counts": {
+        "test": 22,
+        "train": 175,
+        "validation": 22
+      }
+    },
+    {
+      "archive": "snapshot-613848f1314e.tar.gz",
+      "archive_bytes": 22669,
+      "archive_sha256": "f066ccb563751b5907b516771832938c41e91884e50d657b685f95d8038d4415",
+      "boundary_crossing_outcome_count": 25,
+      "boundary_crossing_unique_rows": 25,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 32,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "36524ab2791837730f5fae4d1bdf5ded9ad12189154c0eb0fec44ebcfda600e1",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 4
+        },
+        "train": {
+          "confirmed": 25
+        },
+        "validation": {
+          "confirmed": 3
+        }
+      },
+      "revision": "snapshot-613848f1314e",
+      "rows": 32,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "613848f1314e0ea577cc56cec01e9476acd011a90d79063ceb9ed812ce394e4a",
+      "split_counts": {
+        "test": 4,
+        "train": 25,
+        "validation": 3
+      }
+    },
+    {
+      "archive": "snapshot-640f4f98aca0.tar.gz",
+      "archive_bytes": 195162,
+      "archive_sha256": "a14b6cf90515b6a0c2c2aed239e102aeb75c47976659ba30ef1d767a54747575",
+      "boundary_crossing_outcome_count": 146,
+      "boundary_crossing_unique_rows": 146,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 188,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "afe49f99b08c9d0743071c35338567b8191ced6d344c33aad32b4447403373ea",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 19
+        },
+        "train": {
+          "confirmed": 144,
+          "contradicted": 6
+        },
+        "validation": {
+          "confirmed": 19
+        }
+      },
+      "revision": "snapshot-640f4f98aca0",
+      "rows": 188,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "640f4f98aca0d9694e2301e6dd9b481341e3ad5a6961591a5e3c864557c9b269",
+      "split_counts": {
+        "test": 19,
+        "train": 150,
+        "validation": 19
+      }
+    },
+    {
+      "archive": "snapshot-64bd3abf2192.tar.gz",
+      "archive_bytes": 386184,
+      "archive_sha256": "d7b8efdd5cb4398bac149efe39ec72a0cd17d480e69428b3aa4ed23cd3f28e62",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 335,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "9004f3ad7d9adb07efea1d43b59866a3b50a9856d073c59c7f4fe116c2508c39",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 34
+        },
+        "train": {
+          "confirmed": 214,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 33
+        }
+      },
+      "revision": "snapshot-64bd3abf2192",
+      "rows": 335,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "64bd3abf219272f690f40cc1bdaafce17ccbd36a64a0b779018fff0bbb94657d",
+      "split_counts": {
+        "test": 34,
+        "train": 268,
+        "validation": 33
+      }
+    },
+    {
+      "archive": "snapshot-694e0936c352.tar.gz",
+      "archive_bytes": 566293,
+      "archive_sha256": "ea1bb1c968d37fe2eafd1f73e21fd8bc9ad6b0a79ff7afa4eada0de752c6cb11",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 465,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "39840de14fef2cc7613f530de1026f8450f8018cfe3f5a07de35b8e1deb87cdd",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 47
+        },
+        "train": {
+          "confirmed": 288,
+          "contradicted": 84
+        },
+        "validation": {
+          "confirmed": 46
+        }
+      },
+      "revision": "snapshot-694e0936c352",
+      "rows": 465,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "694e0936c352fe50e8fc9086efc74a1b6a6158cc184525d1c022326202401b5d",
+      "split_counts": {
+        "test": 47,
+        "train": 372,
+        "validation": 46
+      }
+    },
+    {
+      "archive": "snapshot-7192833def26.tar.gz",
+      "archive_bytes": 646093,
+      "archive_sha256": "268aced847c19e9884a70fb8bc595fab06fc4ca343bd3f5eeacae7c58efd5db7",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 520,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "48a9beeb537df5cb7dbecb4bf4eccbb938f3225c0ca0a91d80c5942ba79ec216",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 52
+        },
+        "train": {
+          "confirmed": 325,
+          "contradicted": 91
+        },
+        "validation": {
+          "confirmed": 52
+        }
+      },
+      "revision": "snapshot-7192833def26",
+      "rows": 520,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "7192833def261ec057270bb842b88678c2a16dbcf10304a80e1a698be7ed0f6d",
+      "split_counts": {
+        "test": 52,
+        "train": 416,
+        "validation": 52
+      }
+    },
+    {
+      "archive": "snapshot-7316c02c4653.tar.gz",
+      "archive_bytes": 405293,
+      "archive_sha256": "fb6369c41f9f5943511eca1d6764fe96f9b92fadd1602d4e9a1e68a9d72ee058",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 348,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "766f43f7d3608f378f2a5ef7c85e681069045b9f687661ccd6988765e52cb2bc",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 35
+        },
+        "train": {
+          "confirmed": 224,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 35
+        }
+      },
+      "revision": "snapshot-7316c02c4653",
+      "rows": 348,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "7316c02c465350b6ff78954a5d4ff2eee72cb8b178ca4433232ce11614b6c348",
+      "split_counts": {
+        "test": 35,
+        "train": 278,
+        "validation": 35
+      }
+    },
+    {
+      "archive": "snapshot-737b87dea858.tar.gz",
+      "archive_bytes": 381340,
+      "archive_sha256": "a7575af77fb5849482c3352fb38ac4ce6e4641fab3a1c8fbb68a441127886dfe",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 331,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6c3c1dcae063c4b663429e4c84e59b4af3e240a9bac176b1a07f6951eecbef20",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 34
+        },
+        "train": {
+          "confirmed": 210,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 33
+        }
+      },
+      "revision": "snapshot-737b87dea858",
+      "rows": 331,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "737b87dea858b725e4cacf70f6899d2f520f76befcd9084e0de31ad1ce2baaab",
+      "split_counts": {
+        "test": 34,
+        "train": 264,
+        "validation": 33
+      }
+    },
+    {
+      "archive": "snapshot-75e321218eca.tar.gz",
+      "archive_bytes": 593324,
+      "archive_sha256": "f99b043ef5f134a4c16bbf25eb6e103bf2f24e195ed0c5c4e80c4179a99b7097",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 485,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "1d69bca5862aece58f2793776cd960bfa6a42cff02940612c7cd199e2825b9e6",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 49
+        },
+        "train": {
+          "confirmed": 303,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 48
+        }
+      },
+      "revision": "snapshot-75e321218eca",
+      "rows": 485,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "75e321218ecafca23f30d5f01ec5b5d3ab818f997d5177b91ecd8a8e32b2e388",
+      "split_counts": {
+        "test": 49,
+        "train": 388,
+        "validation": 48
+      }
+    },
+    {
+      "archive": "snapshot-764f624fc0dd.tar.gz",
+      "archive_bytes": 28802,
+      "archive_sha256": "26c76c0166ac338802929f27293a3cba260114c497c6f5949dd280aa8b475dab",
+      "boundary_crossing_outcome_count": 25,
+      "boundary_crossing_unique_rows": 25,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 37,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "0984ca47552a661ee0b780e9f09719c532784a32c204e7f209dd6dc79d009c64",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 4
+        },
+        "train": {
+          "confirmed": 29
+        },
+        "validation": {
+          "confirmed": 4
+        }
+      },
+      "revision": "snapshot-764f624fc0dd",
+      "rows": 37,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "764f624fc0dd5a46b1456ab96ca739699cebdabab195ad2bf33e659132bcbb80",
+      "split_counts": {
+        "test": 4,
+        "train": 29,
+        "validation": 4
+      }
+    },
+    {
+      "archive": "snapshot-7701c8ddde91.tar.gz",
+      "archive_bytes": 17110,
+      "archive_sha256": "cb3279828e60b28205b4568dfad44fb234a4ccd8ef9f0afc2f10e09c716a5253",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T06:00:18.248747+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "68cedd9538613f908c1ace422c152a0d000d575cc18711e5fe2bb32791290f6b",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-7701c8ddde91",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "7701c8ddde91e861f6c28ecb789c19d9e15efc44b88dd3713c92edb814cd1b25",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-7f413995826d.tar.gz",
+      "archive_bytes": 608260,
+      "archive_sha256": "0fd1fab01481fb9f782eb7df32ff9aa9e16bdb3dd26dc212935aa3d06181fe3d",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 493,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "c213067f4665e106ec6bd0615021d8ba85e423c38937326eee7ea97c7fb7609a",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 50
+        },
+        "train": {
+          "confirmed": 309,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 49
+        }
+      },
+      "revision": "snapshot-7f413995826d",
+      "rows": 493,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "7f413995826dc1827cbaec5c8a1f6dfd058855fd10d4da4d2d75ff7932129312",
+      "split_counts": {
+        "test": 50,
+        "train": 394,
+        "validation": 49
+      }
+    },
+    {
+      "archive": "snapshot-7f976e3844f9.tar.gz",
+      "archive_bytes": 39381,
+      "archive_sha256": "3e9a2f9d4707aa38662df2f7bad5b45518a34953cd88bbd3b70f1691213d2bb2",
+      "boundary_crossing_outcome_count": 24,
+      "boundary_crossing_unique_rows": 24,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 49,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6057a644cf6c5d3c6e992849bc0f3814c62e5ea9a9efaabf9149245a180178e9",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 5
+        },
+        "train": {
+          "confirmed": 39
+        },
+        "validation": {
+          "confirmed": 5
+        }
+      },
+      "revision": "snapshot-7f976e3844f9",
+      "rows": 49,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "7f976e3844f90d83cbda8c8dc972fecbf7e2dd58130a98057207f8fb7abd16a7",
+      "split_counts": {
+        "test": 5,
+        "train": 39,
+        "validation": 5
+      }
+    },
+    {
+      "archive": "snapshot-8258573494a0.tar.gz",
+      "archive_bytes": 159751,
+      "archive_sha256": "d5f46ce4d49fc82fd3ca47afd9922b5bb81691f56a533176ba08b0e9f13c6611",
+      "boundary_crossing_outcome_count": 140,
+      "boundary_crossing_unique_rows": 140,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 159,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "9fd0b13f92a009faf69ea87fbc11d881b9e5234d1de9d97a5f3dcad01f9b37b3",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 16
+        },
+        "train": {
+          "confirmed": 127
+        },
+        "validation": {
+          "confirmed": 16
+        }
+      },
+      "revision": "snapshot-8258573494a0",
+      "rows": 159,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "8258573494a09fbcd110dc217ce0eaca3d44b35c98a842b8ec87c1780eb1beaa",
+      "split_counts": {
+        "test": 16,
+        "train": 127,
+        "validation": 16
+      }
+    },
+    {
+      "archive": "snapshot-86747fd74350.tar.gz",
+      "archive_bytes": 201410,
+      "archive_sha256": "5de5b8aff0e293f57007c9ec023e5976830a112dd4d4766ce192fa7c208edc38",
+      "boundary_crossing_outcome_count": 146,
+      "boundary_crossing_unique_rows": 146,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 194,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "5e4c5442bbb73c99187fcf5843a7991e9e2d945f2378e019e3d9b2be20bced92",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 20
+        },
+        "train": {
+          "confirmed": 143,
+          "contradicted": 12
+        },
+        "validation": {
+          "confirmed": 19
+        }
+      },
+      "revision": "snapshot-86747fd74350",
+      "rows": 194,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "86747fd7435079ef903f437739e6f33f80e1d358d8be8992726cf6b2b93b7155",
+      "split_counts": {
+        "test": 20,
+        "train": 155,
+        "validation": 19
+      }
+    },
+    {
+      "archive": "snapshot-884c9b1ad83e.tar.gz",
+      "archive_bytes": 35895,
+      "archive_sha256": "8b9059a08510a10f792d5b759bfc44577bd15a6e6b72b0dc5cf804a29b07dadc",
+      "boundary_crossing_outcome_count": 24,
+      "boundary_crossing_unique_rows": 24,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 44,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "5d8c3bbad12800dabfb28f1394aa925b103122048ce4f998f618b8cdf679692a",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 5
+        },
+        "train": {
+          "confirmed": 35
+        },
+        "validation": {
+          "confirmed": 4
+        }
+      },
+      "revision": "snapshot-884c9b1ad83e",
+      "rows": 44,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "884c9b1ad83e5558c7eacd7e97aa0a09891942f1b95e52f7e560db87bc2e3792",
+      "split_counts": {
+        "test": 5,
+        "train": 35,
+        "validation": 4
+      }
+    },
+    {
+      "archive": "snapshot-8b5483e5cb85.tar.gz",
+      "archive_bytes": 47215,
+      "archive_sha256": "616321fca640753d9ae0d8f6a9e2b97e958d464db27fc4e0a90c7dcb4a704bc0",
+      "boundary_crossing_outcome_count": 23,
+      "boundary_crossing_unique_rows": 23,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 59,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "fec724fe4890ca77451707e84ca3c22db00ac4563f2ddf6bb4fdea0c8d821cdd",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 6
+        },
+        "train": {
+          "confirmed": 47
+        },
+        "validation": {
+          "confirmed": 6
+        }
+      },
+      "revision": "snapshot-8b5483e5cb85",
+      "rows": 59,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "8b5483e5cb85a069f1e9739d16d36e808dde963e2cb61bad47ba6a9d2d70c660",
+      "split_counts": {
+        "test": 6,
+        "train": 47,
+        "validation": 6
+      }
+    },
+    {
+      "archive": "snapshot-8f7c9034ee43.tar.gz",
+      "archive_bytes": 574639,
+      "archive_sha256": "9ef1d56a4b1333cd61bb8cd07a01471f1dde6a5831f87eb5f1b7e334d6cf5abd",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 470,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "7ab338b9e34efeebb6912cbdd08f05fa52d47c1a30250286564165fce3dbcb60",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 47
+        },
+        "train": {
+          "confirmed": 291,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 47
+        }
+      },
+      "revision": "snapshot-8f7c9034ee43",
+      "rows": 470,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "8f7c9034ee43423dc6914413595213a073faf4d62535922e321c4a010a3bf675",
+      "split_counts": {
+        "test": 47,
+        "train": 376,
+        "validation": 47
+      }
+    },
+    {
+      "archive": "snapshot-8fbdee7efb59.tar.gz",
+      "archive_bytes": 17091,
+      "archive_sha256": "a0ffeaa8d04ce61fc2838662a678fcff047dfb9d928fc08c8f87a9379194b805",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-03T22:58:17.728184+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "a539847315934f10fb9851ed083bb0e889e05904454338a2ff9e0b24b9bb46a7",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-8fbdee7efb59",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "8fbdee7efb593c6ab451ea5ef7fb4d4f0e6d1cdaf400798086be9e81c402af75",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-904edf12d2a4.tar.gz",
+      "archive_bytes": 620815,
+      "archive_sha256": "7f61f567e781b9f235424c292231c9b64b1f7284ff304d103c5e0db987e6d61d",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 503,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "53342aa30c7470b66e05d35c1158b6cb760f9a4c93e065ead9cf85211c0a67ff",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 51
+        },
+        "train": {
+          "confirmed": 317,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 50
+        }
+      },
+      "revision": "snapshot-904edf12d2a4",
+      "rows": 503,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "904edf12d2a45091c4968ffc9e7afa3c881385e3ea6b3f26f6a819914362f7a3",
+      "split_counts": {
+        "test": 51,
+        "train": 402,
+        "validation": 50
+      }
+    },
+    {
+      "archive": "snapshot-971aff710cd0.tar.gz",
+      "archive_bytes": 17034,
+      "archive_sha256": "73f5fe022d1233aad259c8c2a7a535b9a4a43f4928e733b107cd1c2650c13476",
+      "boundary_crossing_outcome_count": 26,
+      "boundary_crossing_unique_rows": 26,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 29,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6f52f3f57bbf447f935ba341e1e9830e038046db6a84ff65af26a10ced0a5da9",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 3
+        },
+        "train": {
+          "confirmed": 23
+        },
+        "validation": {
+          "confirmed": 3
+        }
+      },
+      "revision": "snapshot-971aff710cd0",
+      "rows": 29,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "971aff710cd0a4a2fff87ded5efa1fee938f4b6fea851625590fef99bc037e36",
+      "split_counts": {
+        "test": 3,
+        "train": 23,
+        "validation": 3
+      }
+    },
+    {
+      "archive": "snapshot-982bee7aaca6.tar.gz",
+      "archive_bytes": 258404,
+      "archive_sha256": "147ae03a8a177f388bb29d9b6362f90e3d52e8f7e9874219aa1516c5039f901d",
+      "boundary_crossing_outcome_count": 144,
+      "boundary_crossing_unique_rows": 144,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 243,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "e2c1f70d5160f311246de400b2671c5d1ddc380c2cdc3a839c81d4489570b380",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 25
+        },
+        "train": {
+          "confirmed": 163,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 24
+        }
+      },
+      "revision": "snapshot-982bee7aaca6",
+      "rows": 243,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "982bee7aaca6523d961db835b9e3c240eae469db44ad1a120bf52f85fddbea63",
+      "split_counts": {
+        "test": 25,
+        "train": 194,
+        "validation": 24
+      }
+    },
+    {
+      "archive": "snapshot-9842fe232705.tar.gz",
+      "archive_bytes": 72400,
+      "archive_sha256": "45632b2128148dcbf4dee407a1e911a0bc7349de1b54b63df9883f228d781dff",
+      "boundary_crossing_outcome_count": 21,
+      "boundary_crossing_unique_rows": 21,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 76,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "af842f70a2ed5f1f321ada74e0c1810a05ef70bde5fbb7d3db069e3962da2ad1",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 8
+        },
+        "train": {
+          "confirmed": 60
+        },
+        "validation": {
+          "confirmed": 8
+        }
+      },
+      "revision": "snapshot-9842fe232705",
+      "rows": 76,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "9842fe2327052184c57ff46b5ad0f160eddd9738b90175fc6621f279fb32550a",
+      "split_counts": {
+        "test": 8,
+        "train": 60,
+        "validation": 8
+      }
+    },
+    {
+      "archive": "snapshot-98a3ab474700.tar.gz",
+      "archive_bytes": 16100,
+      "archive_sha256": "9aacd0f09ab01af1d14ad3308f9326e1f29039af5138447fb79be5ab2973284c",
+      "boundary_crossing_outcome_count": 24,
+      "boundary_crossing_unique_rows": 24,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 27,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "427a69de64710ec8eb708058c5be35d980013915f19d4403786c9c5610ae08a2",
+      "outcomes_after_cutoff_count": 27,
+      "outcomes_after_cutoff_unique_rows": 27,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 3
+        },
+        "train": {
+          "confirmed": 21
+        },
+        "validation": {
+          "confirmed": 3
+        }
+      },
+      "revision": "snapshot-98a3ab474700",
+      "rows": 27,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "98a3ab47470019af1efa5a8155b99840553da19ac5fffa12577e667a1a9b0618",
+      "split_counts": {
+        "test": 3,
+        "train": 21,
+        "validation": 3
+      }
+    },
+    {
+      "archive": "snapshot-99608010b34b.tar.gz",
+      "archive_bytes": 6582,
+      "archive_sha256": "084c517bd650ce1a05bebb5b24ccd8835500d7349fde67eab20f4de73f96ba17",
+      "boundary_crossing_outcome_count": 0,
+      "boundary_crossing_unique_rows": 0,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T05:41:04.009454+00:00",
+      "empty_provenance_rows": 2,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-03T19:53:09.111940+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "EMPTY_TRAIN_OR_HOLDOUT_SPLIT",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "a4edfbd32329c1ff5503d3f4c18ec6b65f92782a08c87c5a4dad3184cc3e911c",
+      "outcomes_after_cutoff_count": 2,
+      "outcomes_after_cutoff_unique_rows": 2,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "EMPTY_TRAIN_OR_HOLDOUT_SPLIT",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 1
+        },
+        "validation": {}
+      },
+      "revision": "snapshot-99608010b34b",
+      "rows": 2,
+      "single_class_holdout_splits": [
+        "test"
+      ],
+      "snapshot_hash": "99608010b34bccf66407984289b97d1f0352ad872a9eed179eb6fb77b44fad5b",
+      "split_counts": {
+        "test": 1,
+        "train": 1,
+        "validation": 0
+      }
+    },
+    {
+      "archive": "snapshot-9a5f7eac17f2.tar.gz",
+      "archive_bytes": 625632,
+      "archive_sha256": "2d0179b00553d14ff6a48c93361dae72f6b6dd1c660cb8f0a4c597c0f159433f",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 506,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "2535436e939ecc34e0389661fd20ce1d641a9e6b3a9eae7271734c1a1ace49c1",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 51
+        },
+        "train": {
+          "confirmed": 319,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 51
+        }
+      },
+      "revision": "snapshot-9a5f7eac17f2",
+      "rows": 506,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "9a5f7eac17f2c2102f076efa0dde45371578c8541f81d70ba54186b099bee759",
+      "split_counts": {
+        "test": 51,
+        "train": 404,
+        "validation": 51
+      }
+    },
+    {
+      "archive": "snapshot-9ba6367172de.tar.gz",
+      "archive_bytes": 201057,
+      "archive_sha256": "b5f4f5f7337cf4f5049c2c3c78481781fa707618762c2bd96dd96e725e0cfa69",
+      "boundary_crossing_outcome_count": 146,
+      "boundary_crossing_unique_rows": 146,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 193,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "1c6043a4713ab8692559a6bdff8fe6f55af751c7a589ea6d8239e313ffb60e38",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 20
+        },
+        "train": {
+          "confirmed": 143,
+          "contradicted": 11
+        },
+        "validation": {
+          "confirmed": 19
+        }
+      },
+      "revision": "snapshot-9ba6367172de",
+      "rows": 193,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "9ba6367172deeb8344a0d6c962d58a4f7a09314a67882c2833b98f5a20b9f3f9",
+      "split_counts": {
+        "test": 20,
+        "train": 154,
+        "validation": 19
+      }
+    },
+    {
+      "archive": "snapshot-9d18f1280081.tar.gz",
+      "archive_bytes": 290823,
+      "archive_sha256": "c311309dedde930444abd4b61d2828510f1d39142007b971ef09eab836ef9b68",
+      "boundary_crossing_outcome_count": 141,
+      "boundary_crossing_unique_rows": 141,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 274,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "21f76fba0a975fb9d9aa353009ec190148da530a2e34bbda448744aec2746aa1",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 28
+        },
+        "train": {
+          "confirmed": 179,
+          "contradicted": 40
+        },
+        "validation": {
+          "confirmed": 27
+        }
+      },
+      "revision": "snapshot-9d18f1280081",
+      "rows": 274,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "9d18f1280081bc114db8e507563d5d52be5db07b6b975e1645b0923a642f4e40",
+      "split_counts": {
+        "test": 28,
+        "train": 219,
+        "validation": 27
+      }
+    },
+    {
+      "archive": "snapshot-9f7abe54cf1c.tar.gz",
+      "archive_bytes": 501905,
+      "archive_sha256": "77314f6b000f68938835d109b282a351f43c87c03ceca8f71e157977ff0550ec",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 420,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "f50045c2048f3d358bbca2fd6604f520e086c04289d7dac8339442b6ec8173a3",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 42
+        },
+        "train": {
+          "confirmed": 275,
+          "contradicted": 61
+        },
+        "validation": {
+          "confirmed": 42
+        }
+      },
+      "revision": "snapshot-9f7abe54cf1c",
+      "rows": 420,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "9f7abe54cf1c13bcf0cc008d18965e0c7bee7abe9c96bbbcb2131977e72bb5e4",
+      "split_counts": {
+        "test": 42,
+        "train": 336,
+        "validation": 42
+      }
+    },
+    {
+      "archive": "snapshot-a4d75a6cdb81.tar.gz",
+      "archive_bytes": 619782,
+      "archive_sha256": "467fa209eae386eb9ac9ee8e48da551cba4436a1d9324dbe8cd76190411503fa",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 502,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "bfb86052a396f2cefa98086bce3f54627b59d20a8128914cb899a506dfe300ef",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 51
+        },
+        "train": {
+          "confirmed": 316,
+          "contradicted": 85
+        },
+        "validation": {
+          "confirmed": 50
+        }
+      },
+      "revision": "snapshot-a4d75a6cdb81",
+      "rows": 502,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "a4d75a6cdb8105a674bc60f0dd75c6254522e75987717e8bcb7f3d6563e85824",
+      "split_counts": {
+        "test": 51,
+        "train": 401,
+        "validation": 50
+      }
+    },
+    {
+      "archive": "snapshot-a65f17823381.tar.gz",
+      "archive_bytes": 237264,
+      "archive_sha256": "518a01caf309f4946da7f3d6517f2116d368c52465170a83783a78ba38407bad",
+      "boundary_crossing_outcome_count": 146,
+      "boundary_crossing_unique_rows": 146,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 224,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "e574cb7a3cbcb60e4e5ca249626b3ae566c51bc8a41004abf369e3cca9cfa23c",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 23
+        },
+        "train": {
+          "confirmed": 148,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 22
+        }
+      },
+      "revision": "snapshot-a65f17823381",
+      "rows": 224,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "a65f17823381c05e1696b993bc7a8d8d248e1bb397d588d0d50179e80068b242",
+      "split_counts": {
+        "test": 23,
+        "train": 179,
+        "validation": 22
+      }
+    },
+    {
+      "archive": "snapshot-a9a77315d392.tar.gz",
+      "archive_bytes": 17105,
+      "archive_sha256": "41d9cc0f58c04c82efbb506ca47cffc9722a603e91915f90d770ad3afd5b481c",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T02:53:26.788611+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "69792782fbfc208ae116f9129f1a60b760e0e024fa3a43c3a5172ebcd07378c5",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-a9a77315d392",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "a9a77315d39204a0a356021443d464af01309deb168c5f92cce82de7e8f37619",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-a9b9003ec6ec.tar.gz",
+      "archive_bytes": 127377,
+      "archive_sha256": "3e7d7328d4d1f63ac42c4d9030a3ef3ff940546b52008e96d1d8c3fd616e591b",
+      "boundary_crossing_outcome_count": 15,
+      "boundary_crossing_unique_rows": 15,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 131,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6f4871d0d12c34c358b8b5519c6143bad80de7a6383bd71a7576e2ab190234a8",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 14
+        },
+        "train": {
+          "confirmed": 104
+        },
+        "validation": {
+          "confirmed": 13
+        }
+      },
+      "revision": "snapshot-a9b9003ec6ec",
+      "rows": 131,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "a9b9003ec6ecd52d479bdcfb82aef187e0b516838b05d50d8d3687dc09717eaf",
+      "split_counts": {
+        "test": 14,
+        "train": 104,
+        "validation": 13
+      }
+    },
+    {
+      "archive": "snapshot-adb6eff7c2a1.tar.gz",
+      "archive_bytes": 485380,
+      "archive_sha256": "70dd99ef0d2b8725e9edc755c30a158839208539c8eda86b39d52d2370bc4484",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 410,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "d05c016010031f40e2866a82f4e73a3d7d7b2b0841dc6ea4b9683ee3ac349b67",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 41
+        },
+        "train": {
+          "confirmed": 272,
+          "contradicted": 56
+        },
+        "validation": {
+          "confirmed": 41
+        }
+      },
+      "revision": "snapshot-adb6eff7c2a1",
+      "rows": 410,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "adb6eff7c2a1cf20c988d447b5dd9d69bc58f5fc2e7e0daa32b1fee4503144a1",
+      "split_counts": {
+        "test": 41,
+        "train": 328,
+        "validation": 41
+      }
+    },
+    {
+      "archive": "snapshot-b10ca874001c.tar.gz",
+      "archive_bytes": 449792,
+      "archive_sha256": "193e2fc3c74c94769b6a19fc1fe3ce97c03beb98b9bb205e2e7c8446b2c4ac9b",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 383,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "4e50785d2980dd7e49eb2ed72df35defbde6c405a274c67d9b46436ec3e8ba26",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 39
+        },
+        "train": {
+          "confirmed": 252,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 38
+        }
+      },
+      "revision": "snapshot-b10ca874001c",
+      "rows": 383,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "b10ca874001ce6e31bb92c8e41ce9a1ece022643fe1df65ce74888df32586f8a",
+      "split_counts": {
+        "test": 39,
+        "train": 306,
+        "validation": 38
+      }
+    },
+    {
+      "archive": "snapshot-b1bb8ed163bd.tar.gz",
+      "archive_bytes": 344132,
+      "archive_sha256": "0b95138eca89d4048efbb1d960d25a88895a20e9e1c91681798b61c96a1cee9c",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 309,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "7d9bdb9bf5154720e222bdd324641b676298db2dbd6a414bed13186c293f6aa5",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 31
+        },
+        "train": {
+          "confirmed": 193,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 31
+        }
+      },
+      "revision": "snapshot-b1bb8ed163bd",
+      "rows": 309,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "b1bb8ed163bd8a858cca0d4920bf1ec86c4034651269c7aa63d2ff543e74941b",
+      "split_counts": {
+        "test": 31,
+        "train": 247,
+        "validation": 31
+      }
+    },
+    {
+      "archive": "snapshot-b75f1aa2e2e8.tar.gz",
+      "archive_bytes": 17105,
+      "archive_sha256": "bff5e68b100336b74468df74915559a2c26e9fb3aca22942ea8c7874bb018807",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T01:12:47.775050+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "3386bd038263f4c11c0dbd9b0f5f14e19fc1f60868f71d27fa6bc41caa8d032e",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-b75f1aa2e2e8",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "b75f1aa2e2e827e24213000f788ada570d8251b23d7c824d08476a4c4e39077b",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-b84821bbb689.tar.gz",
+      "archive_bytes": 17092,
+      "archive_sha256": "dc54fd05259aae3849877e5fde87115c903301f882e9198d7064c67d80b2154f",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T02:13:36.459588+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "70386f34941b19c6eb978977d0f935314d695158cfed3c4bd13ce6dba86e540e",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-b84821bbb689",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "b84821bbb689ba043dec835a91311b835a1c7f48e4d14283ed840d93bbef3eb7",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-b94f94012989.tar.gz",
+      "archive_bytes": 335139,
+      "archive_sha256": "82615b22910a191bd489715e3d4f2be5fe160156a29ad4c8e2ff45013ed5c2f7",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 303,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "20dbbe259c7aea85b7f053d244a74c73d5e44e1c26ffe06b5a9c72203b657648",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 31
+        },
+        "train": {
+          "confirmed": 188,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 30
+        }
+      },
+      "revision": "snapshot-b94f94012989",
+      "rows": 303,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "b94f9401298915d15c8f263c0d5586d844e2939109e24da28c2e0e320d8f738a",
+      "split_counts": {
+        "test": 31,
+        "train": 242,
+        "validation": 30
+      }
+    },
+    {
+      "archive": "snapshot-c0549afd465b.tar.gz",
+      "archive_bytes": 371950,
+      "archive_sha256": "64d7bc0d8e0eed39809bb3c53a3c177e9158df4d5c7762e21ab54ec8e9b52ab3",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 326,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "cf8b4d4c9d7b400df4b02bff0d3b34dac5f220134d6f7ee59218c62ba9e47cc0",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 33
+        },
+        "train": {
+          "confirmed": 206,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 33
+        }
+      },
+      "revision": "snapshot-c0549afd465b",
+      "rows": 326,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "c0549afd465bc383f06b6ce6006aa9243d84c136e3a315ff9f9b8da90a7de634",
+      "split_counts": {
+        "test": 33,
+        "train": 260,
+        "validation": 33
+      }
+    },
+    {
+      "archive": "snapshot-c9366793aef7.tar.gz",
+      "archive_bytes": 9932,
+      "archive_sha256": "1559c723d5dc274ab2f8b7299caf39f7b37a647e8c3c1e53a108812c7c9036b2",
+      "boundary_crossing_outcome_count": 10,
+      "boundary_crossing_unique_rows": 10,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 12,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "a9761847dca9231afffcf000c85e705d5550d0b8dfeac05d703f73576f3e1d82",
+      "outcomes_after_cutoff_count": 12,
+      "outcomes_after_cutoff_unique_rows": 12,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 2
+        },
+        "train": {
+          "confirmed": 9
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-c9366793aef7",
+      "rows": 12,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "c9366793aef77b01ab42be0271d30806621577e929d97417b339dcd1ade71f2c",
+      "split_counts": {
+        "test": 2,
+        "train": 9,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-cb243e55ed5e.tar.gz",
+      "archive_bytes": 437771,
+      "archive_sha256": "48ea35d5f571fed999091997efd2382542ce0e1ca582e59d55ff139dd064cf0f",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 373,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "5c411061970387bec83779ed127ef5194ebdefb2e702da43c53a4df48cf1c6dd",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 38
+        },
+        "train": {
+          "confirmed": 244,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 37
+        }
+      },
+      "revision": "snapshot-cb243e55ed5e",
+      "rows": 373,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "cb243e55ed5e3acf8157c3d92af293225c162e5184ebc7c64c1b6ff6f943d5f3",
+      "split_counts": {
+        "test": 38,
+        "train": 298,
+        "validation": 37
+      }
+    },
+    {
+      "archive": "snapshot-cff22cf33ebd.tar.gz",
+      "archive_bytes": 17096,
+      "archive_sha256": "428a0594dfaebc23c30581fca02ad726c62459f784aef30ac21f7741eb4c93fa",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T12:03:33.181408+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-04T04:44:12.650398+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "8b3af526ba38bb64dfe32d30fcd20ef4590b7682a675472380c5bf5dfefb9a2f",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 3,
+          "contradicted": 4
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-cff22cf33ebd",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "cff22cf33ebd1c999e51db92cdda1aa06a1cecd7c3ee57f2f50e07cd30bbe953",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-d498e050ddd4.tar.gz",
+      "archive_bytes": 248208,
+      "archive_sha256": "f92699d0ec158a6ceb6e0b99776385571ffeda6476831bd22c6f17c726625dad",
+      "boundary_crossing_outcome_count": 145,
+      "boundary_crossing_unique_rows": 145,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 233,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "e3f1ed2292b0c3731d71660f9a86672f43268e6f7054e57e994a1e83148d4d71",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 24
+        },
+        "train": {
+          "confirmed": 155,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 23
+        }
+      },
+      "revision": "snapshot-d498e050ddd4",
+      "rows": 233,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "d498e050ddd41db7ddaea087a6d0a148a3e59a1067c5497d0c8babf794c6dbbf",
+      "split_counts": {
+        "test": 24,
+        "train": 186,
+        "validation": 23
+      }
+    },
+    {
+      "archive": "snapshot-dbc07fafc6e5.tar.gz",
+      "archive_bytes": 11916,
+      "archive_sha256": "d499a9108c160fad39211e6fc8dfd7b4f3f3949b7e25ae29745bb0a435fa52e3",
+      "boundary_crossing_outcome_count": 15,
+      "boundary_crossing_unique_rows": 15,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 17,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "bf20238ad9fb043b54d1d7f2135bcd083513700ae263dd810475871518f3e93d",
+      "outcomes_after_cutoff_count": 17,
+      "outcomes_after_cutoff_unique_rows": 17,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 2
+        },
+        "train": {
+          "confirmed": 13
+        },
+        "validation": {
+          "confirmed": 2
+        }
+      },
+      "revision": "snapshot-dbc07fafc6e5",
+      "rows": 17,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "dbc07fafc6e592f0007a6689a343e57bbfdf2a76825b3516ee735ca24359fca4",
+      "split_counts": {
+        "test": 2,
+        "train": 13,
+        "validation": 2
+      }
+    },
+    {
+      "archive": "snapshot-dd0b59901fbd.tar.gz",
+      "archive_bytes": 6604,
+      "archive_sha256": "225d99cc9f6663d34ae0554fb76ca154582892ac1cbc60ccb682892cb9fc5f71",
+      "boundary_crossing_outcome_count": 0,
+      "boundary_crossing_unique_rows": 0,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T05:41:04.009454+00:00",
+      "empty_provenance_rows": 2,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-03T18:52:48.547370+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "EMPTY_TRAIN_OR_HOLDOUT_SPLIT",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "3ea02350491c20ec628fdbe744617032bfe8f65f3b8bf1344264b68449d204a6",
+      "outcomes_after_cutoff_count": 2,
+      "outcomes_after_cutoff_unique_rows": 2,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "EMPTY_TRAIN_OR_HOLDOUT_SPLIT",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 1
+        },
+        "validation": {}
+      },
+      "revision": "snapshot-dd0b59901fbd",
+      "rows": 2,
+      "single_class_holdout_splits": [
+        "test"
+      ],
+      "snapshot_hash": "dd0b59901fbd27bd5598a2191997ae0c618abfd17fabbce856196320a3920105",
+      "split_counts": {
+        "test": 1,
+        "train": 1,
+        "validation": 0
+      }
+    },
+    {
+      "archive": "snapshot-e6ff2c1b7b45.tar.gz",
+      "archive_bytes": 5071,
+      "archive_sha256": "bfeace71a2f67b8cc2a328cf1597f98f37c8c208e9ba521b36ba3292a9861ba7",
+      "boundary_crossing_outcome_count": 0,
+      "boundary_crossing_unique_rows": 0,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-08-31T03:00:35.637279+00:00",
+      "empty_provenance_rows": 1,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-09-03T17:52:51.238390+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "EMPTY_TRAIN_OR_HOLDOUT_SPLIT",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "9fe6e10c2092977075a3e1260bf52e1e4d7726bb85d5e811a4327e674c00ede0",
+      "outcomes_after_cutoff_count": 1,
+      "outcomes_after_cutoff_unique_rows": 1,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "EMPTY_TRAIN_OR_HOLDOUT_SPLIT",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "reflection_assessments": {
+        "test": {},
+        "train": {
+          "confirmed": 1
+        },
+        "validation": {}
+      },
+      "revision": "snapshot-e6ff2c1b7b45",
+      "rows": 1,
+      "single_class_holdout_splits": [],
+      "snapshot_hash": "e6ff2c1b7b45a2a989ac8201c0a5074569257e608f2614388412280ed59a3b1e",
+      "split_counts": {
+        "test": 0,
+        "train": 1,
+        "validation": 0
+      }
+    },
+    {
+      "archive": "snapshot-e917495e24f6.tar.gz",
+      "archive_bytes": 568422,
+      "archive_sha256": "86c81f0fac7ec28e8322bc540eca16572f1ded282e558531005a9744409a71b2",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 466,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "e29b710e45f5a7971f1df0c5e888d12f46c5873e05714725d6e29327f7a8a594",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 47
+        },
+        "train": {
+          "confirmed": 288,
+          "contradicted": 84
+        },
+        "validation": {
+          "confirmed": 47
+        }
+      },
+      "revision": "snapshot-e917495e24f6",
+      "rows": 466,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "e917495e24f6e4c937b9a90d0329738f629df004d22720b60bc060586691dbe7",
+      "split_counts": {
+        "test": 47,
+        "train": 372,
+        "validation": 47
+      }
+    },
+    {
+      "archive": "snapshot-eac7ff3f62af.tar.gz",
+      "archive_bytes": 6091,
+      "archive_sha256": "c94feea07b70c91be955e82ffa469f6749c6e6c0e1a709b9597067140ea799ef",
+      "boundary_crossing_outcome_count": 2,
+      "boundary_crossing_unique_rows": 2,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 3,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "317aa07ab55b5c14d06c301f8abe20f080abcbf1898aefb0d656f223ebd7ad8c",
+      "outcomes_after_cutoff_count": 3,
+      "outcomes_after_cutoff_unique_rows": 3,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 1
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-eac7ff3f62af",
+      "rows": 3,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "eac7ff3f62afd832c4af8cc8860c658efbf86e46d0dda87d430c48aaacecebd3",
+      "split_counts": {
+        "test": 1,
+        "train": 1,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-ebc695f15a59.tar.gz",
+      "archive_bytes": 100726,
+      "archive_sha256": "5c50c8965f953d876f8dd9b50d1871be99c4e608ce8b5ddd0b48d95661d2bca4",
+      "boundary_crossing_outcome_count": 18,
+      "boundary_crossing_unique_rows": 18,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 101,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "fa744decdd3992da92725e06423c2da8eba10f658f4f5300cd1a82180be76995",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 11
+        },
+        "train": {
+          "confirmed": 80
+        },
+        "validation": {
+          "confirmed": 10
+        }
+      },
+      "revision": "snapshot-ebc695f15a59",
+      "rows": 101,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "ebc695f15a5997f79ab073fdf12b131fb1fe1b6a120bff8cc85dc2ff50e1c0fc",
+      "split_counts": {
+        "test": 11,
+        "train": 80,
+        "validation": 10
+      }
+    },
+    {
+      "archive": "snapshot-f16d48bb7023.tar.gz",
+      "archive_bytes": 524141,
+      "archive_sha256": "ec8fe98bc23d3f0c34c55a16b5ed9c4e361f0b1393a043e7f3cbb866ae2413e9",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 435,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "d963b31fb725a94f6326c0c1449da6409fd545f19b2c7871a48931495b1df315",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 44
+        },
+        "train": {
+          "confirmed": 279,
+          "contradicted": 69
+        },
+        "validation": {
+          "confirmed": 43
+        }
+      },
+      "revision": "snapshot-f16d48bb7023",
+      "rows": 435,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "f16d48bb7023ac29a470e1e38a980376fbbb4c728103cfc8813d08385dfcd6c9",
+      "split_counts": {
+        "test": 44,
+        "train": 348,
+        "validation": 43
+      }
+    },
+    {
+      "archive": "snapshot-f557951cc4d6.tar.gz",
+      "archive_bytes": 264769,
+      "archive_sha256": "ac98231739d4e4b6c8fe32cb82acec3b20757d91d1cb4b66e39a557b740fcfb1",
+      "boundary_crossing_outcome_count": 143,
+      "boundary_crossing_unique_rows": 143,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 251,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "a7a6d983756cb95d45fe60a25a1f0f09e9b4edf27a76a389e8d7b46fb65518a9",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 26
+        },
+        "train": {
+          "confirmed": 169,
+          "contradicted": 31
+        },
+        "validation": {
+          "confirmed": 25
+        }
+      },
+      "revision": "snapshot-f557951cc4d6",
+      "rows": 251,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "f557951cc4d65ebd5157236418ab91e74f4a5507ffb3d0001f602a57ba21633e",
+      "split_counts": {
+        "test": 26,
+        "train": 200,
+        "validation": 25
+      }
+    },
+    {
+      "archive": "snapshot-f607108ecb79.tar.gz",
+      "archive_bytes": 8631,
+      "archive_sha256": "0e3558e4d7d9fad5b4dbd9dc5c118683055da9ce38d5f2c7bfaead18daff8f54",
+      "boundary_crossing_outcome_count": 8,
+      "boundary_crossing_unique_rows": 8,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 9,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "d07b998891a67c3f5496593f74a268b7267f8bba4a77fd329d98a1fdfcba0aae",
+      "outcomes_after_cutoff_count": 9,
+      "outcomes_after_cutoff_unique_rows": 9,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 1
+        },
+        "train": {
+          "confirmed": 7
+        },
+        "validation": {
+          "confirmed": 1
+        }
+      },
+      "revision": "snapshot-f607108ecb79",
+      "rows": 9,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "f607108ecb79a9549f9ff97c43258d79ed1a87339e9a92cf9268dfb9f451bfce",
+      "split_counts": {
+        "test": 1,
+        "train": 7,
+        "validation": 1
+      }
+    },
+    {
+      "archive": "snapshot-f98739933bcb.tar.gz",
+      "archive_bytes": 474257,
+      "archive_sha256": "84039923b713d739cf6c1cb60a3d642a73e6ee2946ff1553b50a8620fbe53d49",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 401,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "e8c81541cf3f936354dbfb01e87062bc314858c3569499d1ff6b90d1e4e0feec",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 41
+        },
+        "train": {
+          "confirmed": 266,
+          "contradicted": 54
+        },
+        "validation": {
+          "confirmed": 40
+        }
+      },
+      "revision": "snapshot-f98739933bcb",
+      "rows": 401,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "f98739933bcb333bca01592307890a8ebab540dda1a57459c7ec3fe3ca8a6f3a",
+      "split_counts": {
+        "test": 41,
+        "train": 320,
+        "validation": 40
+      }
+    },
+    {
+      "archive": "snapshot-fc8939c0bc32.tar.gz",
+      "archive_bytes": 548168,
+      "archive_sha256": "72587097831e3a7c9d45c6e5183f5dbb4c8f25910a85599c862b36f106338a50",
+      "boundary_crossing_outcome_count": 170,
+      "boundary_crossing_unique_rows": 170,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 455,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "ef3d5a0893a564d1bf63cf96d06d628e45975b261ee10081c8abde39af742259",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 46
+        },
+        "train": {
+          "confirmed": 285,
+          "contradicted": 79
+        },
+        "validation": {
+          "confirmed": 45
+        }
+      },
+      "revision": "snapshot-fc8939c0bc32",
+      "rows": 455,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "fc8939c0bc32ce42e0dd26abcd86478c0e47e3f9f02404f352248697c87890e1",
+      "split_counts": {
+        "test": 46,
+        "train": 364,
+        "validation": 45
+      }
+    },
+    {
+      "archive": "snapshot-fe8a64c39ce0.tar.gz",
+      "archive_bytes": 108845,
+      "archive_sha256": "fa5204d9cd7ad2670d24cea60de9338cba7772845d9367e650e4b714b0adeec3",
+      "boundary_crossing_outcome_count": 17,
+      "boundary_crossing_unique_rows": 17,
+      "classification": "quarantined",
+      "declared_snapshot_as_of": "2026-07-13T23:47:19.712705+00:00",
+      "empty_provenance_rows": 111,
+      "file_and_snapshot_hashes_pass": true,
+      "latest_included_outcome_available_at": "2026-07-15T11:15:42.204973+00:00",
+      "learning_blockers": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF"
+      ],
+      "manifest_sha256": "6bbc08d9168f706b891a0d8e3e62d2ee7584b0512ff4ca7032d8cf85cf742ad8",
+      "outcomes_after_cutoff_count": 29,
+      "outcomes_after_cutoff_unique_rows": 29,
+      "promotion_blockers": [
+        "MUTABLE_PARENT_MODEL_MAIN_REVISION",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reasons": [
+        "EMPTY_SOURCE_PROVENANCE",
+        "LABEL_AVAILABILITY_CROSSES_NEXT_SPLIT_NO_EMBARGO",
+        "OUTCOMES_AFTER_DECLARED_SNAPSHOT_CUTOFF",
+        "SINGLE_CLASS_HOLDOUT_NOT_PROMOTION_EVIDENCE"
+      ],
+      "reflection_assessments": {
+        "test": {
+          "confirmed": 12
+        },
+        "train": {
+          "confirmed": 88
+        },
+        "validation": {
+          "confirmed": 11
+        }
+      },
+      "revision": "snapshot-fe8a64c39ce0",
+      "rows": 111,
+      "single_class_holdout_splits": [
+        "validation",
+        "test"
+      ],
+      "snapshot_hash": "fe8a64c39ce0bd98b24b3b0f1da5ef7db2e15314b4b67be16570705adce33676",
+      "split_counts": {
+        "test": 12,
+        "train": 88,
+        "validation": 11
+      }
+    }
+  ],
+  "timestamp_policy": "Naive timestamps compared as UTC because stored BLUM convention is UTC. Outcome updated_at is a conservative available_at proxy, not certification of original market event time. Snapshot cutoff must encompass every included label availability; purged training labels must precede the next holdout decision boundary.",
+  "unique_lineage_content_versions": 551,
+  "unique_lineages": 530,
+  "unique_mature_outcome_content_versions": 660,
+  "unique_mature_outcome_entities": 639,
+  "unique_source_record_ids": 530,
+  "unsafe_tar_member_paths_count": 0,
+  "valid_for_learning_revisions": []
+}

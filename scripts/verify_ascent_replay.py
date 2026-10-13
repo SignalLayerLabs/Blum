@@ -20,10 +20,14 @@ from app.services.technical_analysis_engine import TechnicalAnalysisEngine
 from app.services.learning_loop import PredictionEngine, OutcomeEvaluator, infer_market_regime, infer_volatility_regime, data_quality_score
 from app.services.trading_ml.contracts import TradingMLExample
 from app.services.ascent.engine import AscentEvolutionEngine
+from app.services.bootstrap import price_row_from_cache
 
 cache = repo / 'backend/app/data/historical_prices_seed.csv.gz'
 cache_sha256 = hashlib.sha256(cache.read_bytes()).hexdigest()
 prices = pd.read_csv(cache)
+raw_price_rows = len(prices)
+prices = prices[[price_row_from_cache(1, {key: (None if pd.isna(value) else value)
+                 for key, value in row.items()}) is not None for row in prices.to_dict('records')]].copy()
 prices['date'] = pd.to_datetime(prices['date'])
 benchmark = prices[prices.ticker == 'SPY'].set_index('date')['close']
 analyzer, predictor, evaluator = TechnicalAnalysisEngine(), PredictionEngine(), OutcomeEvaluator()
@@ -74,6 +78,7 @@ with Session(db_engine) as db:
     snapshot = service.snapshot(db)
 report = {'verification_kind':'REPRODUCIBILITY_CHECK_NOT_PROMOTION_EVIDENCE', 'verification_scope':'Price-only historical calibration research using existing BLUM deterministic forecasts and cost model. Not forward evidence or a production promotion.',
     'cache_sha256':hashlib.sha256(cache.read_bytes()).hexdigest(),'price_rows':len(prices),
+    'raw_price_rows':raw_price_rows,'quarantined_price_rows':raw_price_rows-len(prices),
     'forecast_rows':len(examples),'quality_metric':'Observed OHLCV completeness; existing broader context-quality score is not overridden.',
     'benchmark':'Same-period SPY return converted to each stored risk unit; not portfolio benchmark returns.',
     'generation':result,'observatory':snapshot}

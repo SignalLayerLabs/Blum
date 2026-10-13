@@ -9,3 +9,6 @@ frontend/node_modules/
 frontend/.next/
 backend/app/static/*
 !backend/app/static/.gitkeep
+work/
+.artifacts/
+cloudflare/

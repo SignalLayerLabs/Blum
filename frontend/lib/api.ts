@@ -42,7 +42,7 @@ let learningPagePath = "";
 let learningPageStartedAt: number | null = null;
 
 async function getJson<T>(path: string): Promise<T> {
-  const response = await fetchBlum(path, { method: "GET", cacheTtlMs: 2500, timeoutMs: 12000 });
+  const response = await fetchBlum(path, { method: "GET", headers: { Accept: "application/json" }, cacheTtlMs: 2500, timeoutMs: 12000 });
   if (!response.ok) {
     throw new Error(await responseError(response));
   }
@@ -140,7 +140,7 @@ async function fetchBlum(path: string, options: RequestInit & { timeoutMs?: numb
 function reportFrontendTiming(path: string, method: string, duration_ms: number, status: string, force = false) {
   if (path.includes("/performance/frontend-widget") || path.includes("/api/performance/frontend-widget")) return;
   const onLearningPage = typeof location !== "undefined" && location.pathname.startsWith("/learning");
-  const onReadOnlyProductSurface = typeof location !== "undefined" && ["/paper-trading", "/copy-trading", "/brain", "/training-ground", "/alpha"].some((prefix) => location.pathname.startsWith(prefix));
+  const onReadOnlyProductSurface = typeof location !== "undefined" && ["/paper-trading", "/copy-trading", "/brain", "/training-ground", "/alpha", "/evolution"].some((prefix) => location.pathname.startsWith(prefix));
   const route = typeof location !== "undefined" ? `${location.pathname}${location.search}` : "";
   const initialLearningWindow = onLearningPage && isWithinLearningInitialWindow();
   if (!force && onReadOnlyProductSurface) return;

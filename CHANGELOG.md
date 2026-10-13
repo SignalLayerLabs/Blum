@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.2.0 | ASCENT and canonical release
+
+- Added bounded ASCENT calibration source experiments, frozen temporal holdouts, independent gates, persistent lineage and Evolution.
+- Added Cloudflare static product delivery and a typed same-origin read-only API gateway to the persistent HF Engine.
+- Made GitHub canonical for CI, release documentation and one-way verified deployment; removed automatic HF-to-main imports.
+- Added locked web dependencies, gateway regression tests, exact revision readiness and production smoke checks.
+- Audited packaged history, public HF data and all 95 persistent reasoning archives. Rejected five incoherent price bars, contradictory/weekend Forex records and unverifiable reasoning snapshots.
+- Preserved missing volume, prevented invented daily candles and rejected old external Forex projections/advice. Accepted Forex data yields one causal example, below validation gates.
+- Fixed historical test fixture timestamps without weakening production point-in-time rules.
+- Preserved paper-only authority; no automatic source/model promotion or paid GPU training.
+
 ## v2.1.0 | clean-core
 
 - Tightened the product architecture around the four primary surfaces: Brain, Training Ground, Paper Trading and Alpha.

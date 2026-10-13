@@ -23,6 +23,7 @@ from sqlalchemy import desc, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.release import source_revision
 from app.models import (AscentEvidenceUse, AscentExperiment, AscentGeneration,
                         StrategyCandidateVariant, TradingMLModelVersion)
 from app.services.trading_ml.contracts import TradingMLExample
@@ -63,17 +64,6 @@ def trusted_code_hash() -> str:
     files = [Path(__file__), Path(__file__).with_name("kernel.py"), Path(__file__).with_name("evaluation.py"),
              Path(__file__).with_name("dataset.py"), Path(__file__).parents[1] / "trading_ml" / "validation.py"]
     return digest({path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in files})
-
-
-def source_revision() -> str:
-    configured = os.environ.get("BLUM_SOURCE_REVISION", "")
-    if re.fullmatch(r"[0-9a-f]{40}", configured):
-        return configured
-    try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=Path(__file__).parents[4],
-                                       stderr=subprocess.DEVNULL, timeout=2, env={"PATH": os.defpath}).decode().strip()
-    except (OSError, subprocess.SubprocessError):
-        return "unavailable"
 
 
 class AscentEvolutionEngine:

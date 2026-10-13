@@ -15,6 +15,7 @@ from app.core.database import Base, engine
 from app.data.seed_assets import SEED_ASSETS
 from app.models import Asset, PriceHistory, SignalSnapshot
 from app.services.accuracy import run_accuracy_audit
+from app.services.market_data_quality import valid_ohlcv
 from app.signals.engine import SignalEngine
 
 
@@ -172,14 +173,17 @@ def invalid_historical_cache_response(cache_status: str, message: str, diagnosti
 def price_row_from_cache(asset_id: int, item: dict) -> dict | None:
     try:
         close = float(item["close"])
+        opened, high, low, volume = (float_or_none(item.get(name)) for name in ("open", "high", "low", "volume"))
+        if not valid_ohlcv(opened, high, low, close, volume):
+            return None
         return {
             "asset_id": asset_id,
             "date": date.fromisoformat(item["date"]),
-            "open": float_or_none(item.get("open")),
-            "high": float_or_none(item.get("high")),
-            "low": float_or_none(item.get("low")),
+            "open": opened,
+            "high": high,
+            "low": low,
             "close": close,
-            "volume": float_or_none(item.get("volume")),
+            "volume": volume,
             "provider": item.get("provider") or "historical_cache",
         }
     except Exception:

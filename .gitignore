@@ -13,3 +13,7 @@ backend/app/static/
 .worktrees/
 .artifacts/
 model_release/.cache/
+work/
+cloudflare/worker-configuration.d.ts
+cloudflare/.wrangler/
+*.tsbuildinfo

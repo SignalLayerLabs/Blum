@@ -1,0 +1,14 @@
+{
+  "policy_version": "historical-quality-v2",
+  "price_cache_sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2",
+  "accepted_price_rows": 75381,
+  "accepted_price_rows_with_missing_volume": 8,
+  "rejected_price_rows": 5,
+  "forex_source_sha256": "def896b19b80b36fdd154a0de1ef001c05fd774769d5896a414959010896428c",
+  "accepted_forex_snapshots": 71,
+  "forex_conflicting_rows_quarantined": 632,
+  "forex_weekend_rows_quarantined": 223,
+  "forex_causal_examples": 1,
+  "reasoning_raw_training_eligible": false,
+  "historical_promotion_eligible": false
+}

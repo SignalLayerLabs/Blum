@@ -1,24 +1,24 @@
 # Default ownership
-* @BlumFinancialLab
+* @SignalLayerLabs
 
 # Financial source of truth
-/backend/app/engine/ @BlumFinancialLab
-/backend/app/services/ @BlumFinancialLab
-/backend/app/models.py @BlumFinancialLab
+/backend/app/engine/ @SignalLayerLabs
+/backend/app/services/ @SignalLayerLabs
+/backend/app/models.py @SignalLayerLabs
 
 # Runtime and product delivery
-/backend/app/api/ @BlumFinancialLab
-/backend/app/runtime/ @BlumFinancialLab
-/frontend/ @BlumFinancialLab
-/Dockerfile @BlumFinancialLab
+/backend/app/api/ @SignalLayerLabs
+/backend/app/runtime/ @SignalLayerLabs
+/frontend/ @SignalLayerLabs
+/Dockerfile @SignalLayerLabs
 
 # Models, datasets and release governance
-/model_release/ @BlumFinancialLab
-/scripts/ @BlumFinancialLab
-/backend/app/data/ @BlumFinancialLab
+/model_release/ @SignalLayerLabs
+/scripts/ @SignalLayerLabs
+/backend/app/data/ @SignalLayerLabs
 
 # Public operations and documentation
-/.github/ @BlumFinancialLab
-/docs/ @BlumFinancialLab
-/README.md @BlumFinancialLab
-/SECURITY.md @BlumFinancialLab
+/.github/ @SignalLayerLabs
+/docs/ @SignalLayerLabs
+/README.md @SignalLayerLabs
+/SECURITY.md @SignalLayerLabs

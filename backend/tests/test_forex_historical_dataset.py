@@ -24,6 +24,12 @@ def _write_dataset(path: Path, *, future_multiplier: float = 1.0) -> None:
         "RSI_Category,ATR,Support,Resistance"
     ]
     start = datetime(2025, 1, 1, tzinfo=UTC)
+    dates = []
+    cursor = start
+    while len(dates) < 90:
+        if cursor.weekday() < 5:
+            dates.append(cursor)
+        cursor += timedelta(days=1)
     pairs = {
         "EUR/USD": 1.05,
         "GBP/USD": 1.24,
@@ -38,7 +44,7 @@ def _write_dataset(path: Path, *, future_multiplier: float = 1.0) -> None:
             opened = close * 0.9995
             high = max(opened, close) * 1.001
             low = min(opened, close) * 0.999
-            stamp = (start + timedelta(days=index)).strftime("%-m/%-d/%Y")
+            stamp = dates[index].strftime("%-m/%-d/%Y")
             rows.append(
                 f"{stamp},{pair},{opened:.8f},{high:.8f},{low:.8f},0.01,"
                 f"{close:.8f},999,999,99,Overbought,999,0,999"
@@ -77,7 +83,7 @@ def test_import_recomputes_indicators_and_creates_point_in_time_outcomes(tmp_pat
     assert "EURUSD=X" in bundle.knowledge["correlation_matrix"]
 
 
-def test_duplicate_date_rows_are_consolidated_as_daily_bars(tmp_path):
+def test_conflicting_duplicate_date_rows_are_quarantined_without_inventing_a_bar(tmp_path):
     source = tmp_path / "forex.csv"
     _write_dataset(source)
     rows = source.read_text(encoding="utf-8").splitlines()
@@ -90,8 +96,18 @@ def test_duplicate_date_rows_are_consolidated_as_daily_bars(tmp_path):
 
     bundle = _service(source).prepare()
 
-    assert bundle.provenance["duplicate_rows_consolidated"] == 1
-    assert bundle.provenance["daily_bars_created"] == 270
+    assert bundle.provenance["conflicting_groups_quarantined"] == 1
+    assert bundle.provenance["conflicting_rows_quarantined"] == 2
+    assert all(bar["date"] != "2025-01-01" or bar["pair"] != "EURUSD=X"
+               for bar in bundle.provenance["accepted_keys"])
+
+
+def test_bundled_forex_only_accepts_unambiguous_weekday_snapshots():
+    bundle = _service(bundled_forex_history_path()).prepare()
+    assert bundle.provenance["daily_bars_created"] == 71
+    assert bundle.provenance["conflicting_rows_quarantined"] == 632
+    assert bundle.provenance["weekend_rows_quarantined"] == 223
+    assert len(bundle.examples) == 1  # One continuous causal window; far below validation minimums.
 
 
 def test_future_rows_cannot_change_earlier_historical_features(tmp_path):
@@ -102,7 +118,7 @@ def test_future_rows_cannot_change_earlier_historical_features(tmp_path):
 
     first = _service(original).prepare()
     second = _service(altered).prepare()
-    cutoff = datetime(2025, 3, 12)
+    cutoff = datetime(2025, 4, 1)
     first_rows = {
         example.source_object_id: dict(example.features)
         for example in first.examples
@@ -186,7 +202,26 @@ def test_bundled_kaggle_source_is_pinned_and_prepares_without_fabrication():
         "def896b19b80b36fdd154a0de1ef001c05fd774769d5896a414959010896428c"
     )
     assert bundle.provenance["rows_read"] == 926
-    assert bundle.provenance["daily_bars_created"] == 269
-    assert bundle.provenance["duplicate_rows_consolidated"] == 657
-    assert len(bundle.examples) == 116
-    assert {example.label_positive_r for example in bundle.examples} == {0, 1}
+    assert bundle.provenance["daily_bars_created"] == 71
+    assert bundle.provenance["duplicate_rows_observed"] == 657
+    assert bundle.provenance["conflicting_groups_quarantined"] == 146
+    assert len(bundle.examples) == 1
+
+
+def test_rejected_old_external_rows_remain_auditable_but_cannot_train_either_reader(tmp_path):
+    from dataclasses import replace
+    from app.services.trading_ml.finrlx_runner import _load_feature_rows, _market_dataset_hash
+    source = tmp_path / 'source.csv'
+    _write_dataset(source)
+    bundle = _service(source).prepare()
+    store = TradingMLFeatureStoreProjector(root=tmp_path / 'store')
+    old = tuple(replace(row, source_object_id='old:' + row.source_object_id.replace('blum-forex-daily-quality-v2:', ''))
+                for row in bundle.examples)
+    store.append_external(old, source_id='old-external', provenance={**bundle.provenance,'transformation_version':'blum-forex-daily-causal-v1'})
+    assert store.manifest()['partitions']
+    assert store.scan(market_family='forex').collect().is_empty()
+    assert _load_feature_rows(store.root, 'forex', max_rows=1000) == []
+    store.append_external(bundle.examples, source_id=bundle.provenance['source_id'], provenance=bundle.provenance)
+    assert store.scan(market_family='forex').collect().height == len(bundle.examples)
+    assert len(_load_feature_rows(store.root, 'forex', max_rows=1000)) == len(bundle.examples)
+    assert _market_dataset_hash(store.root, 'forex') == store.market_dataset_hash('forex')

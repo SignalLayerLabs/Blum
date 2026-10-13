@@ -1,0 +1,263 @@
+[
+  {
+    "decision_timestamp": "2026-07-13T00:40:49.671423",
+    "example_id": 2463,
+    "horizon_days": 1,
+    "knowledge_record_id": 2838,
+    "outcome_updated_at": "2026-07-15T07:29:39.514143+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T11:12:52.684914",
+    "example_id": 2494,
+    "horizon_days": 1,
+    "knowledge_record_id": 2876,
+    "outcome_updated_at": "2026-07-15T07:29:39.275557+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T02:43:17.076809",
+    "example_id": 2472,
+    "horizon_days": 1,
+    "knowledge_record_id": 2850,
+    "outcome_updated_at": "2026-07-15T07:29:39.454129+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T02:01:50.654325",
+    "example_id": 2469,
+    "horizon_days": 1,
+    "knowledge_record_id": 2846,
+    "outcome_updated_at": "2026-07-15T07:29:39.473009+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T11:53:18.612914",
+    "example_id": 2497,
+    "horizon_days": 1,
+    "knowledge_record_id": 2880,
+    "outcome_updated_at": "2026-07-15T07:29:39.256965+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T10:32:36.905205",
+    "example_id": 2491,
+    "horizon_days": 1,
+    "knowledge_record_id": 2872,
+    "outcome_updated_at": "2026-07-15T07:29:39.294623+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T13:15:09.613147",
+    "example_id": 2503,
+    "horizon_days": 1,
+    "knowledge_record_id": 2888,
+    "outcome_updated_at": "2026-07-15T07:29:39.217492+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T00:00:34.547916",
+    "example_id": 2460,
+    "horizon_days": 1,
+    "knowledge_record_id": 2834,
+    "outcome_updated_at": "2026-07-15T07:29:39.533518+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T19:41:41.366264",
+    "example_id": 2527,
+    "horizon_days": 1,
+    "knowledge_record_id": 2920,
+    "outcome_updated_at": "2026-07-15T09:21:05.798971+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T16:17:37.299425",
+    "example_id": 2515,
+    "horizon_days": 1,
+    "knowledge_record_id": 2904,
+    "outcome_updated_at": "2026-07-15T07:29:39.126025+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T03:43:50.117357",
+    "example_id": 2475,
+    "horizon_days": 1,
+    "knowledge_record_id": 2854,
+    "outcome_updated_at": "2026-07-15T07:29:39.432673+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T20:22:36.122421",
+    "example_id": 2529,
+    "horizon_days": 1,
+    "knowledge_record_id": 2922,
+    "outcome_updated_at": "2026-07-15T09:21:05.767584+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T14:36:04.610699",
+    "example_id": 2509,
+    "horizon_days": 1,
+    "knowledge_record_id": 2896,
+    "outcome_updated_at": "2026-07-15T07:29:39.171496+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T17:39:00.554648",
+    "example_id": 2521,
+    "horizon_days": 1,
+    "knowledge_record_id": 2912,
+    "outcome_updated_at": "2026-07-15T07:29:39.087433+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T09:52:09.715368",
+    "example_id": 2489,
+    "horizon_days": 1,
+    "knowledge_record_id": 2870,
+    "outcome_updated_at": "2026-07-15T07:29:39.314727+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T13:54:40.502617",
+    "example_id": 2506,
+    "horizon_days": 1,
+    "knowledge_record_id": 2892,
+    "outcome_updated_at": "2026-07-15T07:29:39.195831+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T06:33:18.747273",
+    "example_id": 2482,
+    "horizon_days": 1,
+    "knowledge_record_id": 2862,
+    "outcome_updated_at": "2026-07-15T07:29:39.371881+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T01:21:04.197554",
+    "example_id": 2466,
+    "horizon_days": 1,
+    "knowledge_record_id": 2842,
+    "outcome_updated_at": "2026-07-15T07:29:39.491867+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T16:58:23.062593",
+    "example_id": 2518,
+    "horizon_days": 1,
+    "knowledge_record_id": 2908,
+    "outcome_updated_at": "2026-07-15T07:29:39.107749+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T23:47:19.522568",
+    "example_id": 2540,
+    "horizon_days": 1,
+    "knowledge_record_id": 2938,
+    "outcome_updated_at": "2026-07-15T11:15:42.204973+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T18:20:24.186038",
+    "example_id": 2524,
+    "horizon_days": 1,
+    "knowledge_record_id": 2916,
+    "outcome_updated_at": "2026-07-15T09:21:05.821475+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T05:53:03.842939",
+    "example_id": 2480,
+    "horizon_days": 1,
+    "knowledge_record_id": 2860,
+    "outcome_updated_at": "2026-07-15T07:29:39.389616+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T12:34:42.108422",
+    "example_id": 2500,
+    "horizon_days": 1,
+    "knowledge_record_id": 2884,
+    "outcome_updated_at": "2026-07-15T07:29:39.237836+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T23:06:47.027838",
+    "example_id": 2537,
+    "horizon_days": 1,
+    "knowledge_record_id": 2934,
+    "outcome_updated_at": "2026-07-15T09:21:05.730249+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T15:36:49.805755",
+    "example_id": 2512,
+    "horizon_days": 1,
+    "knowledge_record_id": 2900,
+    "outcome_updated_at": "2026-07-15T07:29:39.145242+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T09:11:03.734212",
+    "example_id": 2487,
+    "horizon_days": 1,
+    "knowledge_record_id": 2868,
+    "outcome_updated_at": "2026-07-15T07:29:39.333083+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T04:24:18.760054",
+    "example_id": 2478,
+    "horizon_days": 1,
+    "knowledge_record_id": 2858,
+    "outcome_updated_at": "2026-07-15T07:29:39.410414+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T21:04:36.863923",
+    "example_id": 2532,
+    "horizon_days": 1,
+    "knowledge_record_id": 2926,
+    "outcome_updated_at": "2026-07-15T09:21:05.748568+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  },
+  {
+    "decision_timestamp": "2026-07-13T07:12:57.351876",
+    "example_id": 2484,
+    "horizon_days": 1,
+    "knowledge_record_id": 2864,
+    "outcome_updated_at": "2026-07-15T07:29:39.351875+00:00",
+    "reason": "OUTCOME_AFTER_DECLARED_SNAPSHOT_AS_OF",
+    "split": "test"
+  }
+]

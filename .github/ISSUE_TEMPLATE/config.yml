@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 contact_links:
   - name: BLUM Discussions
-    url: https://github.com/BlumFinancialLab/Blum/discussions
+    url: https://github.com/SignalLayerLabs/Blum/discussions
     about: Ask usage, architecture and research-methodology questions.
   - name: Private security report
-    url: https://github.com/BlumFinancialLab/Blum/security/advisories/new
+    url: https://github.com/SignalLayerLabs/Blum/security/advisories/new
     about: Report vulnerabilities without disclosing them publicly.
   - name: Live application status
     url: https://italianhype-blum.hf.space/startup/status

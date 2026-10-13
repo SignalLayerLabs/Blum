@@ -1,0 +1,62 @@
+[
+  {
+    "close": "179.58",
+    "date": "2023-06-05",
+    "high": "180.8199",
+    "line": 6788,
+    "low": "178.44",
+    "open": "181.26",
+    "provider": "nasdaq_api",
+    "reason": "OHLC_GEOMETRY",
+    "ticker": "IWM",
+    "volume": "34465800.0"
+  },
+  {
+    "close": "32.63",
+    "date": "2023-06-05",
+    "high": "32.75",
+    "line": 16848,
+    "low": "32.48",
+    "open": "32.84",
+    "provider": "nasdaq_api",
+    "reason": "OHLC_GEOMETRY",
+    "ticker": "XLF",
+    "volume": "50531440.0"
+  },
+  {
+    "close": "39.685",
+    "date": "2023-06-05",
+    "high": "40.3075",
+    "line": 19363,
+    "low": "39.615",
+    "open": "40.5325",
+    "provider": "nasdaq_api",
+    "reason": "OHLC_GEOMETRY",
+    "ticker": "XLE",
+    "volume": "37826200.0"
+  },
+  {
+    "close": "139.09",
+    "date": "2023-06-05",
+    "high": "139.31",
+    "line": 62054,
+    "low": "138.13",
+    "open": "140.11",
+    "provider": "nasdaq_api",
+    "reason": "OHLC_GEOMETRY",
+    "ticker": "JPM",
+    "volume": "8511902.0"
+  },
+  {
+    "close": "105.29",
+    "date": "2023-06-05",
+    "high": "107.025",
+    "line": 64569,
+    "low": "105.09",
+    "open": "107.19",
+    "provider": "nasdaq_api",
+    "reason": "OHLC_GEOMETRY",
+    "ticker": "XOM",
+    "volume": "10628000.0"
+  }
+]

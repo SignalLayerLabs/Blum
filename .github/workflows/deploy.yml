@@ -1,0 +1,67 @@
+name: Deploy verified main
+on:
+  workflow_run:
+    workflows: [Verify BLUM]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: deploy-blum-production
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    steps:
+      - name: Check out the verified source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+      - name: Reject stale or unverified revisions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/check_release_revision.py
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build the identical product and check the gateway
+        run: |
+          npm ci --prefix frontend --workspaces=false
+          npm --prefix frontend test
+          npm --prefix frontend run build
+          npm ci --prefix cloudflare
+          npm --prefix cloudflare test
+          npm --prefix cloudflare run types
+          npm --prefix cloudflare run typecheck
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+      - name: Deploy canonical source to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          pip install huggingface_hub==2.2.0
+          python scripts/deploy_huggingface.py
+      - name: Wait for the backend revision and readiness
+        run: python scripts/verify_deployment.py --backend-only --timeout 1800
+      - name: Deploy Cloudflare observatory
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "Configure the production Cloudflare deployment secret."; exit 1; }
+          npm --prefix cloudflare run deploy -- --var "SOURCE_REVISION:$(git rev-parse HEAD)"
+      - name: Verify public release
+        run: python scripts/verify_deployment.py --timeout 120

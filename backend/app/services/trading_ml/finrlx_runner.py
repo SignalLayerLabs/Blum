@@ -33,6 +33,8 @@ from app.services.trading_ml.finrlx import (
     FINRLX_UPSTREAM_REPOSITORY,
     FINRLX_UPSTREAM_REVISION,
 )
+from app.services.trading_ml.forex_history import FOREX_HISTORY_TRANSFORM_VERSION
+from app.services.trading_ml.feature_store import quality_adjusted_hash
 
 
 class FinRLXRunnerError(RuntimeError):
@@ -235,6 +237,8 @@ def _load_feature_rows(root: Path, market_family: str, *, max_rows: int) -> list
     frame = (
         pl.scan_parquet([str(path) for path in paths], hive_partitioning=False)
         .filter(pl.col("market_family") == market_family)
+        .filter((pl.col("source_object_type") != "external_forex_history")
+                | pl.col("source_object_id").str.contains(FOREX_HISTORY_TRANSFORM_VERSION, literal=True))
         .select(required_columns)
         .sort(["decision_timestamp", "outcome_timestamp", "source_uid"])
         .tail(max_rows)
@@ -310,7 +314,7 @@ def _market_dataset_hash(root: Path, market_family: str) -> str:
                 sort_keys=True,
                 separators=(",", ":"),
             )
-            return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+            return quality_adjusted_hash(hashlib.sha256(payload.encode("utf-8")).hexdigest(), market_family, manifest)
     except (OSError, KeyError, TypeError, json.JSONDecodeError):
         pass
     digest = hashlib.sha256()

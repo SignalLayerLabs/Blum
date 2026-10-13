@@ -1,7 +1,7 @@
 FROM node:20-bookworm-slim AS frontend
 WORKDIR /workspace/frontend
-COPY frontend/package.json ./
-RUN npm install
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
 COPY frontend ./
 RUN npm run build
 
@@ -39,12 +39,14 @@ RUN pip install --no-cache-dir --no-deps \
 
 COPY backend ./backend
 COPY scripts ./scripts
+ARG BLUM_SOURCE_REVISION=unavailable
+RUN python -c 'import json,os; from pathlib import Path; Path("backend/app/data/build_revision.json").write_text(json.dumps({"source_revision":os.environ.get("BLUM_SOURCE_REVISION","unavailable")}))'
 COPY --from=frontend /workspace/frontend/out ./backend/app/static
 
 ENV BLUM_FINRLX_ENABLED=true \
     BLUM_FINRLX_RUNNER_COMMAND=/app/scripts/finrlx_runner.py \
     BLUM_FINRLX_ARTIFACT_ROOT=/data/trading_ml/finrlx \
-    BLUM_FOREX_HISTORY_ENABLED=true \
+    BLUM_FOREX_HISTORY_ENABLED=false \
     BLUM_FOREX_HISTORY_SOURCE_PATH=/app/backend/app/data/forex/Forex_sample_dataset.csv \
     BLUM_NAUTILUS_ENABLED=true \
     BLUM_NAUTILUS_MODE=shadow \
