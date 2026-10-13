@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: HF Space card contract
+        run: python scripts/check_space_metadata.py
           cache: pip
       - run: pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -r requirements-dev.txt
