@@ -1,0 +1,586 @@
+[
+  {
+    "date": "2025-05-21",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-05-23",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-05-28",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-05-30",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-13",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-14",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-16",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-17",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-18",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-19",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-20",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-23",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-24",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-25",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-26",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-27",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-06-30",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-01",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-02",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-03",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-04",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-07",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-08",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-09",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-10",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-11",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-14",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-15",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-16",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-17",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-18",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-21",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-22",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-23",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-24",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-25",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-28",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-29",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-30",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-07-31",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-01",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-04",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-05",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-06",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-07",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-08",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-11",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-12",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-08-13",
+    "pair": "EUR/USD"
+  },
+  {
+    "date": "2025-05-21",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-05-23",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-05-28",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-05-30",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-13",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-14",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-16",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-17",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-18",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-19",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-20",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-23",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-24",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-25",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-26",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-27",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-06-30",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-01",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-02",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-03",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-04",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-07",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-08",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-09",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-10",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-11",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-14",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-15",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-16",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-17",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-18",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-21",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-22",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-23",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-24",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-25",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-28",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-29",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-30",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-07-31",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-01",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-04",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-05",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-06",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-07",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-08",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-11",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-12",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-08-13",
+    "pair": "GBP/USD"
+  },
+  {
+    "date": "2025-05-21",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-05-23",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-05-28",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-05-30",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-13",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-16",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-17",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-18",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-19",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-20",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-23",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-24",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-25",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-26",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-27",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-06-30",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-01",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-02",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-03",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-04",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-07",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-08",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-09",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-10",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-11",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-14",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-15",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-16",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-17",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-18",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-21",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-22",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-23",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-24",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-25",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-28",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-29",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-30",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-07-31",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-01",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-04",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-05",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-06",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-07",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-08",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-11",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-12",
+    "pair": "USD/JPY"
+  },
+  {
+    "date": "2025-08-13",
+    "pair": "USD/JPY"
+  }
+]

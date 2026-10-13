@@ -33,6 +33,7 @@ from app.services.live_forward_paper_trading import LiveForwardPaperTradingServi
 from app.services.intraday_paper_engine import BlumIntradayPaperEngine
 from app.services.forex_trader import BlumForexTradingScheduler
 from app.services.trading_ml.worker import TradingMLLearningWorker
+from app.services.ascent.engine import AscentEvolutionEngine
 from app.services.alpha_strategy_factory import AlphaStrategyFactory
 from app.services.worker_runtime import runtime_worker_coordinator
 from app.services.adaptive_replay_training import BlumAdaptiveTrainingController, refresh_strategy_factory_state
@@ -121,6 +122,9 @@ def start_realtime_services() -> None:
     _add_interval_job(run_macro_refresh, minutes=settings.macro_refresh_minutes, job_id="macro_refresh", delay_seconds=720, jitter_seconds=45)
     _add_interval_job(run_fundamentals_refresh, minutes=settings.fundamentals_refresh_minutes, job_id="fundamentals_refresh", delay_seconds=840, jitter_seconds=45)
     _add_interval_job(run_ipo_refresh, minutes=settings.ipo_refresh_minutes, job_id="ipo_refresh", delay_seconds=960, jitter_seconds=45)
+    if settings.ascent_enabled and settings.ascent_scheduler_enabled:
+        _add_interval_job(run_ascent_research_job, minutes=settings.ascent_interval_minutes,
+            job_id="blum_ascent_research", delay_seconds=600, jitter_seconds=30)
     if settings.hf_training_scheduler_enabled or settings.hf_dataset_snapshot_enabled:
         _add_interval_job(
             run_hf_training_supervisor_job,
@@ -479,6 +483,12 @@ def run_professional_trading_game_job() -> None:
 
 def run_hf_training_supervisor_job() -> None:
     _run_job("blum_hf_training_supervisor", lambda db: BlumHFTrainingService().supervise(db))
+
+
+def run_ascent_research_job() -> None:
+    if not (settings.ascent_enabled and settings.ascent_scheduler_enabled):
+        return
+    _run_job("blum_ascent_research", lambda db: AscentEvolutionEngine().run_once(db))
 
 
 def run_live_forward_paper_trading_job() -> None:

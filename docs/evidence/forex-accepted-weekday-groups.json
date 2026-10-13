@@ -1,0 +1,996 @@
+[
+  {
+    "Close": 1.08857,
+    "High": 1.09314,
+    "Low": 1.08754,
+    "Rate": 1.09111,
+    "date": "2025-03-12",
+    "pair": "EUR/USD",
+    "selected_source_line": 2,
+    "source_line_numbers": [
+      2
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.0851,
+    "High": 1.08972,
+    "Low": 1.08222,
+    "Rate": 1.08856,
+    "date": "2025-03-13",
+    "pair": "EUR/USD",
+    "selected_source_line": 3,
+    "source_line_numbers": [
+      3
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.08765,
+    "High": 1.09127,
+    "Low": 1.08304,
+    "Rate": 1.08515,
+    "date": "2025-03-14",
+    "pair": "EUR/USD",
+    "selected_source_line": 4,
+    "source_line_numbers": [
+      4
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.09212,
+    "High": 1.09297,
+    "Low": 1.0868,
+    "Rate": 1.088,
+    "date": "2025-03-17",
+    "pair": "EUR/USD",
+    "selected_source_line": 5,
+    "source_line_numbers": [
+      5
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.09442,
+    "High": 1.09547,
+    "Low": 1.08921,
+    "Rate": 1.09214,
+    "date": "2025-03-18",
+    "pair": "EUR/USD",
+    "selected_source_line": 6,
+    "source_line_numbers": [
+      6
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.09033,
+    "High": 1.0946,
+    "Low": 1.08603,
+    "Rate": 1.09436,
+    "date": "2025-03-19",
+    "pair": "EUR/USD",
+    "selected_source_line": 7,
+    "source_line_numbers": [
+      7
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.08539,
+    "High": 1.09173,
+    "Low": 1.08143,
+    "Rate": 1.09045,
+    "date": "2025-03-20",
+    "pair": "EUR/USD",
+    "selected_source_line": 8,
+    "source_line_numbers": [
+      8
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.08121,
+    "High": 1.08613,
+    "Low": 1.07962,
+    "Rate": 1.08535,
+    "date": "2025-03-21",
+    "pair": "EUR/USD",
+    "selected_source_line": 9,
+    "source_line_numbers": [
+      9
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.07995,
+    "High": 1.08582,
+    "Low": 1.07813,
+    "Rate": 1.08168,
+    "date": "2025-03-24",
+    "pair": "EUR/USD",
+    "selected_source_line": 10,
+    "source_line_numbers": [
+      10
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.07908,
+    "High": 1.08301,
+    "Low": 1.07765,
+    "Rate": 1.07991,
+    "date": "2025-03-25",
+    "pair": "EUR/USD",
+    "selected_source_line": 11,
+    "source_line_numbers": [
+      11
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.07362,
+    "High": 1.0803,
+    "Low": 1.07342,
+    "Rate": 1.07921,
+    "date": "2025-03-26",
+    "pair": "EUR/USD",
+    "selected_source_line": 12,
+    "source_line_numbers": [
+      12
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.07974,
+    "High": 1.08212,
+    "Low": 1.07327,
+    "Rate": 1.07365,
+    "date": "2025-03-27",
+    "pair": "EUR/USD",
+    "selected_source_line": 13,
+    "source_line_numbers": [
+      13
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.08237,
+    "High": 1.08448,
+    "Low": 1.07644,
+    "Rate": 1.07971,
+    "date": "2025-03-28",
+    "pair": "EUR/USD",
+    "selected_source_line": 14,
+    "source_line_numbers": [
+      14
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.08184,
+    "High": 1.08494,
+    "Low": 1.07837,
+    "Rate": 1.08144,
+    "date": "2025-03-31",
+    "pair": "EUR/USD",
+    "selected_source_line": 15,
+    "source_line_numbers": [
+      15
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.07929,
+    "High": 1.08301,
+    "Low": 1.07779,
+    "Rate": 1.08181,
+    "date": "2025-04-01",
+    "pair": "EUR/USD",
+    "selected_source_line": 16,
+    "source_line_numbers": [
+      16
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.08264,
+    "High": 1.09243,
+    "Low": 1.078,
+    "Rate": 1.07929,
+    "date": "2025-04-02",
+    "pair": "EUR/USD",
+    "selected_source_line": 17,
+    "source_line_numbers": [
+      17
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.10505,
+    "High": 1.11466,
+    "Low": 1.08046,
+    "Rate": 1.08262,
+    "date": "2025-04-03",
+    "pair": "EUR/USD",
+    "selected_source_line": 18,
+    "source_line_numbers": [
+      18
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.09573,
+    "High": 1.11076,
+    "Low": 1.09242,
+    "Rate": 1.10509,
+    "date": "2025-04-04",
+    "pair": "EUR/USD",
+    "selected_source_line": 19,
+    "source_line_numbers": [
+      19
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.09112,
+    "High": 1.105,
+    "Low": 1.09007,
+    "Rate": 1.09148,
+    "date": "2025-04-07",
+    "pair": "EUR/USD",
+    "selected_source_line": 20,
+    "source_line_numbers": [
+      20
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.09565,
+    "High": 1.09918,
+    "Low": 1.08881,
+    "Rate": 1.09112,
+    "date": "2025-04-08",
+    "pair": "EUR/USD",
+    "selected_source_line": 21,
+    "source_line_numbers": [
+      21
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.09503,
+    "High": 1.10952,
+    "Low": 1.0913,
+    "Rate": 1.09564,
+    "date": "2025-04-09",
+    "pair": "EUR/USD",
+    "selected_source_line": 22,
+    "source_line_numbers": [
+      22
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.11888,
+    "High": 1.12414,
+    "Low": 1.09426,
+    "Rate": 1.09497,
+    "date": "2025-04-10",
+    "pair": "EUR/USD",
+    "selected_source_line": 23,
+    "source_line_numbers": [
+      23
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13586,
+    "High": 1.14736,
+    "Low": 1.11918,
+    "Rate": 1.11918,
+    "date": "2025-04-11",
+    "pair": "EUR/USD",
+    "selected_source_line": 24,
+    "source_line_numbers": [
+      24
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13522,
+    "High": 1.14246,
+    "Low": 1.12956,
+    "Rate": 1.13177,
+    "date": "2025-04-14",
+    "pair": "EUR/USD",
+    "selected_source_line": 25,
+    "source_line_numbers": [
+      25
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.12812,
+    "High": 1.13789,
+    "Low": 1.12638,
+    "Rate": 1.13531,
+    "date": "2025-04-15",
+    "pair": "EUR/USD",
+    "selected_source_line": 26,
+    "source_line_numbers": [
+      26
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.1397,
+    "High": 1.14127,
+    "Low": 1.12805,
+    "Rate": 1.12806,
+    "date": "2025-04-16",
+    "pair": "EUR/USD",
+    "selected_source_line": 27,
+    "source_line_numbers": [
+      27
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13668,
+    "High": 1.14091,
+    "Low": 1.13349,
+    "Rate": 1.13965,
+    "date": "2025-04-17",
+    "pair": "EUR/USD",
+    "selected_source_line": 28,
+    "source_line_numbers": [
+      28
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13913,
+    "High": 1.1398,
+    "Low": 1.13576,
+    "Rate": 1.1367,
+    "date": "2025-04-18",
+    "pair": "EUR/USD",
+    "selected_source_line": 29,
+    "source_line_numbers": [
+      29
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.15085,
+    "High": 1.15733,
+    "Low": 1.139,
+    "Rate": 1.14072,
+    "date": "2025-04-21",
+    "pair": "EUR/USD",
+    "selected_source_line": 30,
+    "source_line_numbers": [
+      30
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13623,
+    "High": 1.15473,
+    "Low": 1.13613,
+    "Rate": 1.15085,
+    "date": "2025-04-22",
+    "pair": "EUR/USD",
+    "selected_source_line": 31,
+    "source_line_numbers": [
+      31
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13236,
+    "High": 1.144,
+    "Low": 1.13072,
+    "Rate": 1.13651,
+    "date": "2025-04-23",
+    "pair": "EUR/USD",
+    "selected_source_line": 32,
+    "source_line_numbers": [
+      32
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13857,
+    "High": 1.1398,
+    "Low": 1.13194,
+    "Rate": 1.13223,
+    "date": "2025-04-24",
+    "pair": "EUR/USD",
+    "selected_source_line": 33,
+    "source_line_numbers": [
+      33
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.1364,
+    "High": 1.13912,
+    "Low": 1.13155,
+    "Rate": 1.13849,
+    "date": "2025-04-25",
+    "pair": "EUR/USD",
+    "selected_source_line": 34,
+    "source_line_numbers": [
+      34
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.14198,
+    "High": 1.1425,
+    "Low": 1.1329,
+    "Rate": 1.13601,
+    "date": "2025-04-28",
+    "pair": "EUR/USD",
+    "selected_source_line": 35,
+    "source_line_numbers": [
+      35
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13846,
+    "High": 1.1422,
+    "Low": 1.13698,
+    "Rate": 1.14202,
+    "date": "2025-04-29",
+    "pair": "EUR/USD",
+    "selected_source_line": 36,
+    "source_line_numbers": [
+      36
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13253,
+    "High": 1.13994,
+    "Low": 1.13168,
+    "Rate": 1.13861,
+    "date": "2025-04-30",
+    "pair": "EUR/USD",
+    "selected_source_line": 37,
+    "source_line_numbers": [
+      37
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.12857,
+    "High": 1.13411,
+    "Low": 1.12655,
+    "Rate": 1.13253,
+    "date": "2025-05-01",
+    "pair": "EUR/USD",
+    "selected_source_line": 38,
+    "source_line_numbers": [
+      38
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.12952,
+    "High": 1.1381,
+    "Low": 1.12739,
+    "Rate": 1.12865,
+    "date": "2025-05-02",
+    "pair": "EUR/USD",
+    "selected_source_line": 39,
+    "source_line_numbers": [
+      39
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13143,
+    "High": 1.13648,
+    "Low": 1.12968,
+    "Rate": 1.1299,
+    "date": "2025-05-05",
+    "pair": "EUR/USD",
+    "selected_source_line": 40,
+    "source_line_numbers": [
+      40
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13715,
+    "High": 1.13811,
+    "Low": 1.12796,
+    "Rate": 1.13157,
+    "date": "2025-05-06",
+    "pair": "EUR/USD",
+    "selected_source_line": 41,
+    "source_line_numbers": [
+      41
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.13106,
+    "High": 1.13782,
+    "Low": 1.12914,
+    "Rate": 1.13721,
+    "date": "2025-05-07",
+    "pair": "EUR/USD",
+    "selected_source_line": 42,
+    "source_line_numbers": [
+      42
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.12261,
+    "High": 1.13362,
+    "Low": 1.12116,
+    "Rate": 1.1312,
+    "date": "2025-05-08",
+    "pair": "EUR/USD",
+    "selected_source_line": 43,
+    "source_line_numbers": [
+      43
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.1246,
+    "High": 1.12929,
+    "Low": 1.11964,
+    "Rate": 1.12268,
+    "date": "2025-05-09",
+    "pair": "EUR/USD",
+    "selected_source_line": 44,
+    "source_line_numbers": [
+      44
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.1088,
+    "High": 1.12428,
+    "Low": 1.10651,
+    "Rate": 1.12136,
+    "date": "2025-05-12",
+    "pair": "EUR/USD",
+    "selected_source_line": 45,
+    "source_line_numbers": [
+      45
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.11856,
+    "High": 1.11947,
+    "Low": 1.10868,
+    "Rate": 1.10878,
+    "date": "2025-05-13",
+    "pair": "EUR/USD",
+    "selected_source_line": 46,
+    "source_line_numbers": [
+      46
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.11749,
+    "High": 1.12658,
+    "Low": 1.11643,
+    "Rate": 1.11855,
+    "date": "2025-05-14",
+    "pair": "EUR/USD",
+    "selected_source_line": 47,
+    "source_line_numbers": [
+      47
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.11872,
+    "High": 1.1228,
+    "Low": 1.117,
+    "Rate": 1.11763,
+    "date": "2025-05-15",
+    "pair": "EUR/USD",
+    "selected_source_line": 48,
+    "source_line_numbers": [
+      48
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.1164,
+    "High": 1.12196,
+    "Low": 1.11307,
+    "Rate": 1.11883,
+    "date": "2025-05-16",
+    "pair": "EUR/USD",
+    "selected_source_line": 49,
+    "source_line_numbers": [
+      49
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.12431,
+    "High": 1.12881,
+    "Low": 1.11711,
+    "Rate": 1.11737,
+    "date": "2025-05-19",
+    "pair": "EUR/USD",
+    "selected_source_line": 50,
+    "source_line_numbers": [
+      50
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.12822,
+    "High": 1.12858,
+    "Low": 1.12177,
+    "Rate": 1.12433,
+    "date": "2025-05-20",
+    "pair": "EUR/USD",
+    "selected_source_line": 51,
+    "source_line_numbers": [
+      51
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.1304,
+    "High": 1.1345,
+    "Low": 1.1295,
+    "Rate": 1.13282,
+    "date": "2025-05-22",
+    "pair": "EUR/USD",
+    "selected_source_line": 76,
+    "source_line_numbers": [
+      76
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.138,
+    "High": 1.14187,
+    "Low": 1.13617,
+    "Rate": 1.13667,
+    "date": "2025-05-26",
+    "pair": "EUR/USD",
+    "selected_source_line": 85,
+    "source_line_numbers": [
+      85
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.1358,
+    "High": 1.13599,
+    "Low": 1.13454,
+    "Rate": 1.13494,
+    "date": "2025-06-02",
+    "pair": "EUR/USD",
+    "selected_source_line": 103,
+    "source_line_numbers": [
+      103
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.29604,
+    "High": 1.29892,
+    "Low": 1.29132,
+    "Rate": 1.29428,
+    "date": "2025-03-12",
+    "pair": "GBP/USD",
+    "selected_source_line": 53,
+    "source_line_numbers": [
+      53
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.29488,
+    "High": 1.29733,
+    "Low": 1.29205,
+    "Rate": 1.29617,
+    "date": "2025-03-13",
+    "pair": "GBP/USD",
+    "selected_source_line": 54,
+    "source_line_numbers": [
+      54
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.2932,
+    "High": 1.29587,
+    "Low": 1.29106,
+    "Rate": 1.2949,
+    "date": "2025-03-14",
+    "pair": "GBP/USD",
+    "selected_source_line": 55,
+    "source_line_numbers": [
+      55
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.29864,
+    "High": 1.29986,
+    "Low": 1.29247,
+    "Rate": 1.29294,
+    "date": "2025-03-17",
+    "pair": "GBP/USD",
+    "selected_source_line": 56,
+    "source_line_numbers": [
+      56
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.30014,
+    "High": 1.30096,
+    "Low": 1.29512,
+    "Rate": 1.29869,
+    "date": "2025-03-18",
+    "pair": "GBP/USD",
+    "selected_source_line": 57,
+    "source_line_numbers": [
+      57
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.3003,
+    "High": 1.3011,
+    "Low": 1.29548,
+    "Rate": 1.30008,
+    "date": "2025-03-19",
+    "pair": "GBP/USD",
+    "selected_source_line": 58,
+    "source_line_numbers": [
+      58
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.29684,
+    "High": 1.30145,
+    "Low": 1.29356,
+    "Rate": 1.30029,
+    "date": "2025-03-20",
+    "pair": "GBP/USD",
+    "selected_source_line": 59,
+    "source_line_numbers": [
+      59
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.2911,
+    "High": 1.29703,
+    "Low": 1.28873,
+    "Rate": 1.29684,
+    "date": "2025-03-21",
+    "pair": "GBP/USD",
+    "selected_source_line": 60,
+    "source_line_numbers": [
+      60
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.29208,
+    "High": 1.2974,
+    "Low": 1.2895,
+    "Rate": 1.29025,
+    "date": "2025-03-24",
+    "pair": "GBP/USD",
+    "selected_source_line": 61,
+    "source_line_numbers": [
+      61
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.2945,
+    "High": 1.29667,
+    "Low": 1.29017,
+    "Rate": 1.29203,
+    "date": "2025-03-25",
+    "pair": "GBP/USD",
+    "selected_source_line": 62,
+    "source_line_numbers": [
+      62
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.28744,
+    "High": 1.2949,
+    "Low": 1.28711,
+    "Rate": 1.2945,
+    "date": "2025-03-26",
+    "pair": "GBP/USD",
+    "selected_source_line": 63,
+    "source_line_numbers": [
+      63
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.29512,
+    "High": 1.2992,
+    "Low": 1.28704,
+    "Rate": 1.28744,
+    "date": "2025-03-27",
+    "pair": "GBP/USD",
+    "selected_source_line": 64,
+    "source_line_numbers": [
+      64
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.3402,
+    "High": 1.34408,
+    "Low": 1.34013,
+    "Rate": 1.34157,
+    "date": "2025-05-22",
+    "pair": "GBP/USD",
+    "selected_source_line": 77,
+    "source_line_numbers": [
+      77
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.3561,
+    "High": 1.35932,
+    "Low": 1.35223,
+    "Rate": 1.3526,
+    "date": "2025-05-26",
+    "pair": "GBP/USD",
+    "selected_source_line": 86,
+    "source_line_numbers": [
+      86
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 1.3467,
+    "High": 1.34687,
+    "Low": 1.345,
+    "Rate": 1.34537,
+    "date": "2025-06-02",
+    "pair": "GBP/USD",
+    "selected_source_line": 104,
+    "source_line_numbers": [
+      104
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 143.263,
+    "High": 144.398,
+    "Low": 142.798,
+    "Rate": 143.636,
+    "date": "2025-05-22",
+    "pair": "USD/JPY",
+    "selected_source_line": 78,
+    "source_line_numbers": [
+      78
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 142.842,
+    "High": 143.08,
+    "Low": 142.222,
+    "Rate": 142.476,
+    "date": "2025-05-26",
+    "pair": "USD/JPY",
+    "selected_source_line": 87,
+    "source_line_numbers": [
+      87
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  },
+  {
+    "Close": 143.827,
+    "High": 143.986,
+    "Low": 143.749,
+    "Rate": 143.805,
+    "date": "2025-06-02",
+    "pair": "USD/JPY",
+    "selected_source_line": 105,
+    "source_line_numbers": [
+      105
+    ],
+    "source_rows": 1,
+    "weekend_flag": false
+  }
+]

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,6 +8,47 @@ from app.core.database import Base
 
 
 JsonType = JSON().with_variant(JSONB, "postgresql")
+
+
+class AscentGeneration(Base):
+    __tablename__ = "ascent_generations"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    generation_uid: Mapped[str] = mapped_column(String(80), unique=True)
+    parent_uid: Mapped[str | None] = mapped_column(String(80))
+    market_family: Mapped[str] = mapped_column(String(24))
+    evidence_lane: Mapped[str] = mapped_column(String(40))
+    status: Mapped[str] = mapped_column(String(40), index=True)
+    source_revision: Mapped[str] = mapped_column(String(80))
+    seed: Mapped[int] = mapped_column(Integer, default=3407)
+    hypothesis: Mapped[str] = mapped_column(Text, default="")
+    snapshot_json: Mapped[dict] = mapped_column(JsonType, default=dict)
+    manifest_json: Mapped[dict] = mapped_column(JsonType, default=dict)
+    summary_json: Mapped[dict] = mapped_column(JsonType, default=dict)
+    selected_experiment_uid: Mapped[str | None] = mapped_column(String(100))
+    holdout_opened: Mapped[bool] = mapped_column(Boolean, default=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None), index=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class AscentExperiment(Base):
+    __tablename__ = "ascent_experiments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    experiment_uid: Mapped[str] = mapped_column(String(100), unique=True)
+    generation_uid: Mapped[str] = mapped_column(ForeignKey("ascent_generations.generation_uid", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(40))
+    source_text: Mapped[str] = mapped_column(Text)
+    source_sha256: Mapped[str] = mapped_column(String(64))
+    development_json: Mapped[dict] = mapped_column(JsonType, default=dict)
+    result_json: Mapped[dict] = mapped_column(JsonType, default=dict)
+
+
+class AscentEvidenceUse(Base):
+    __tablename__ = "ascent_evidence_use"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_uid: Mapped[str] = mapped_column(String(200), unique=True)
+    decision_identity: Mapped[str] = mapped_column(String(64), unique=True)
+    generation_uid: Mapped[str] = mapped_column(ForeignKey("ascent_generations.generation_uid", ondelete="RESTRICT"), index=True)
+    partition: Mapped[str] = mapped_column(String(24))
 
 
 class Asset(Base):

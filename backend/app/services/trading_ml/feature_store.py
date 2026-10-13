@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 
 from .contracts import CATEGORICAL_FEATURES, FeatureSchema, NUMERIC_FEATURES, TradingMLExample
 from .dataset import DatasetSlice, TradingMLDatasetRepository
+from .forex_history import FOREX_HISTORY_TRANSFORM_VERSION
 
 
 MarketFamily = Literal["equity", "forex"]
@@ -202,6 +203,11 @@ class TradingMLFeatureStoreProjector:
             frame = pl.LazyFrame(schema=_POLARS_SCHEMA)
         else:
             frame = pl.scan_parquet(paths)
+        # Keep old immutable files for audit while excluding their rejected data.
+        frame = frame.filter(
+            (pl.col("source_object_type") != "external_forex_history")
+            | pl.col("source_object_id").str.contains(FOREX_HISTORY_TRANSFORM_VERSION, literal=True)
+        )
         if predicate is not None:
             frame = frame.filter(predicate)
         if columns is not None:
@@ -215,11 +221,12 @@ class TradingMLFeatureStoreProjector:
 
     def market_dataset_hash(self, market_family: MarketFamily) -> str:
         manifest = self._load_manifest()
-        return self._dataset_hash(
+        partition_hash = self._dataset_hash(
             partition
             for partition in manifest["partitions"]
             if partition.get("market_family") == market_family
         )
+        return quality_adjusted_hash(partition_hash, market_family, manifest)
 
     def _write_partitions(self, examples: tuple[TradingMLExample, ...], market_family: MarketFamily) -> list[dict]:
         partitions: list[dict] = []
@@ -470,6 +477,12 @@ def _dataset_hash(partitions: Iterable[dict]) -> str:
         for partition in partitions
     ]
     return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def quality_adjusted_hash(partition_hash: str, market_family: str, manifest: dict) -> str:
+    if market_family == "forex" and manifest.get("external_sources"):
+        return hashlib.sha256(f"{FOREX_HISTORY_TRANSFORM_VERSION}:{partition_hash}".encode()).hexdigest()
+    return partition_hash
 
 
 def _lane_counts(rows: list[dict]) -> dict[str, int]:

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.release import source_revision
 from app.core.database import get_db
 from app.runtime.facade import BlumRuntimeFacade
 from app.services.central_brain_runtime import CentralBrainRuntime, LearningHealthService, SnapshotProducerService, SnapshotWatchdogService
@@ -13,6 +14,12 @@ from app.services.learning_summary import LearningSummaryService
 
 settings = get_settings()
 router = APIRouter(tags=["Runtime"])
+
+
+@router.get("/api/runtime/release")
+def runtime_release() -> dict:
+    return {"version": settings.app_version, "source_revision": source_revision(),
+            "mode": "paper_research", "github": "https://github.com/SignalLayerLabs/Blum"}
 
 
 @router.get("/brain/runtime-state")

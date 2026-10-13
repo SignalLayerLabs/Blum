@@ -1,7 +1,7 @@
 # BLUM Governance
 
 BLUM is developed in public under the Apache-2.0 license. The canonical source
-repository is `BlumFinancialLab/Blum`; Hugging Face hosts the public deployment,
+repository is `SignalLayerLabs/Blum`; Hugging Face hosts the public deployment,
 model artifacts and governed datasets.
 
 ## Decision principles

@@ -1,0 +1,1509 @@
+{
+  "audit_use_boundary": "Source integrity and data admissibility review; not investment performance evidence.",
+  "corporate_actions": {
+    "adjustment_limitations": [
+      "No explicit adjusted/unadjusted indicator, adjustment factor, split history or dividend history is packaged.",
+      "Sampled event-day continuity is consistent with split-adjusted quotes; it does not certify all corporate-action adjustments or point-in-time availability.",
+      "Use for price-based replay with a declared split policy; do not calculate total return/dividend-inclusive P&L or historical nominal share amounts from this file alone."
+    ],
+    "fields": [
+      "ticker",
+      "date",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "provider"
+    ],
+    "inference": "Continuous archived pre/post-split prices around these issuer-confirmed events are consistent with prices back-adjusted for later splits. Volume adjustment is not certified; no dividend-adjustment assumptions are justified.",
+    "large_close_ratio_events": [],
+    "primary_verified_events": [
+      {
+        "ratio": "4-for-1",
+        "source_url": "https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/",
+        "ticker": "AAPL",
+        "trade_date": "2020-08-31"
+      },
+      {
+        "ratio": "10-for-1",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000144/nvda-20240607.htm",
+        "ticker": "NVDA",
+        "trade_date": "2024-06-10"
+      },
+      {
+        "date_note": "Issuer states legal effective June3 2022; June6 is first sampled post-weekend trading day.",
+        "ratio": "20-for-1",
+        "source_url": "https://ir.aboutamazon.com/faqs/default.aspx",
+        "ticker": "AMZN"
+      }
+    ],
+    "split_event_samples": [
+      {
+        "close": 129.04,
+        "close_to_prior_ratio": 1.0339122248262322,
+        "event_date": "2020-08-31",
+        "open": 127.58,
+        "prior_close": 124.8075,
+        "prior_date": "2020-08-28",
+        "ticker": "AAPL"
+      },
+      {
+        "close": 121.79,
+        "close_to_prior_ratio": 1.0074614519224405,
+        "event_date": "2024-06-10",
+        "open": 120.37,
+        "prior_close": 120.888,
+        "prior_date": "2024-06-07",
+        "ticker": "NVDA"
+      },
+      {
+        "close": 171.42,
+        "close_to_prior_ratio": 1.0079556880523557,
+        "event_date": "2024-07-15",
+        "open": 170.0,
+        "prior_close": 170.067,
+        "prior_date": "2024-07-12",
+        "ticker": "AVGO"
+      },
+      {
+        "close": 124.79,
+        "close_to_prior_ratio": 1.019942787086228,
+        "event_date": "2022-06-06",
+        "open": 125.245,
+        "prior_close": 122.35,
+        "prior_date": "2022-06-03",
+        "ticker": "AMZN"
+      },
+      {
+        "close": 109.03,
+        "close_to_prior_ratio": 0.9754199190355841,
+        "event_date": "2022-07-18",
+        "open": 112.64,
+        "prior_close": 111.7775,
+        "prior_date": "2022-07-15",
+        "ticker": "GOOGL"
+      },
+      {
+        "close": 296.07,
+        "close_to_prior_ratio": 0.9965445582345943,
+        "event_date": "2022-08-25",
+        "open": 302.36,
+        "prior_close": 297.0966,
+        "prior_date": "2022-08-24",
+        "ticker": "TSLA"
+      }
+    ]
+  },
+  "discovery": {
+    "additional_space": "Italianhype/Seed@3ad5bcd52887f141a78648b7512c2e10045c243c has no data assets relevant to Blum historical replay in siblings list.",
+    "dataset_refs_checked": [
+      "Reasoning main",
+      "Reasoning snapshot-3e00c6ee6fdd",
+      "Memory main"
+    ],
+    "owner_public_datasets": 2,
+    "owner_public_models": 3,
+    "owner_public_spaces": 2,
+    "parquet_refs": "Derived automatic conversions; do not double-count as additional data.",
+    "persistent_bucket_inventory_accessed": true,
+    "private_data_not_accessed": true,
+    "runtime_database_backup_content_audited": false,
+    "runtime_persistent_bucket_not_accessed": true
+  },
+  "findings": [
+    {
+      "code_path": "backend/app/services/trading_ml/forex_history.py",
+      "consequence": "CSV order becomes invented market chronology; synthetic consolidated bars can produce invalid labels and inflated evidence.",
+      "id": "P1-FOREX-CONFLICTS",
+      "line": 179,
+      "priority": 1,
+      "remedy": "Quarantine all 632 rows from conflicting groups and the additional 223 unambiguous weekend rows; use only 71 attributable weekday snapshots with explicit replay-only limits.",
+      "risk": "Domain Model Distortion",
+      "source": "Evans \u2014 Domain-Driven Design, bounded context / domain model fidelity",
+      "symptom": "926 source rows contain 178 exact full-row duplicate excess and collapse to 269 pair/date keys, including 146 conflicting-OHLC groups. _bars constructs first-open/max-high/min-low/last-close from same-day rows without intraday timestamps."
+    },
+    {
+      "code_path": "backend/app/analyst/hf_training.py",
+      "consequence": "Manifest falsely certifies information availability and a retrospective outcome dataset can be mistaken for leakage-free forecasting evidence.",
+      "id": "P1-SNAPSHOT-AVAILABILITY",
+      "line": 227,
+      "priority": 1,
+      "remedy": "Use outcome available_at to derive the true snapshot cutoff; freeze at a verified time, purge/embargo boundaries, preserve outcomes only in explicitly later reflection turns, and revalidate independent holdout distributions.",
+      "risk": "Domain Model Distortion",
+      "source": "Brooks \u2014 The Mythical Man-Month, conceptual integrity",
+      "symptom": "Snapshot as_of derives solely from example.created_at; 29 outcome events occur after its cutoff and 170 outcomes cross next-split decision starts. temporal_leakage:false is assigned without proving label availability."
+    },
+    {
+      "code_path": "backend/app/services/bootstrap.py",
+      "consequence": "Invalid range bars can enter historical storage, affect indicators, stops and replay.",
+      "id": "P1-PRICE-IMPORT",
+      "line": 172,
+      "priority": 1,
+      "remedy": "Reject nonfinite/nonpositive OHLC and inconsistent OHLC geometry before ingestion, keep an immutable reject ledger; preserve eight null-volume flags for price-only replay.",
+      "risk": "Domain Model Distortion",
+      "source": "McConnell \u2014 Code Complete, defensive programming / data validation",
+      "symptom": "price_row_from_cache accepts finite-or-nonfinite float close and parses other fields without OHLC geometry checks; five bundled bars have open > high."
+    },
+    {
+      "code_path": "scripts/audit_blum_release_dataset.py",
+      "consequence": "A structural/privacy pass can be mistaken for semantic safety, dataset integrity or model promotion approval.",
+      "id": "P1-AUDIT-SCOPE",
+      "line": 44,
+      "priority": 1,
+      "remedy": "Report separate integrity, privacy, point-in-time grounding, maturity and promotion verdicts; raw rows remain quarantined, and the reproducible sanitized derivative is eligible only for reasoning research pending licensing and independent evaluation.",
+      "risk": "Domain Model Distortion",
+      "source": "Brooks \u2014 The Mythical Man-Month, conceptual integrity",
+      "symptom": "Official audit returns passed for all 521 raw examples even though every target contains unavailable price levels/scores and all market outcomes are inconclusive. It also does not compare dataset_sha256, per-row content hashes, split-specific counts or date bounds."
+    }
+  ],
+  "forex": {
+    "ambiguous_group_samples": [
+      {
+        "ohlc_variants": 4,
+        "pair": "EUR/USD",
+        "rows": 5,
+        "timestamp": "5/21/2025"
+      },
+      {
+        "ohlc_variants": 3,
+        "pair": "GBP/USD",
+        "rows": 3,
+        "timestamp": "5/21/2025"
+      },
+      {
+        "ohlc_variants": 4,
+        "pair": "USD/JPY",
+        "rows": 4,
+        "timestamp": "5/21/2025"
+      },
+      {
+        "ohlc_variants": 2,
+        "pair": "EUR/USD",
+        "rows": 2,
+        "timestamp": "5/23/2025"
+      },
+      {
+        "ohlc_variants": 2,
+        "pair": "GBP/USD",
+        "rows": 2,
+        "timestamp": "5/23/2025"
+      }
+    ],
+    "ambiguous_group_source_rows": 632,
+    "ambiguous_pair_date_groups": 146,
+    "ambiguous_pairs": {
+      "EUR/USD": 49,
+      "GBP/USD": 49,
+      "USD/JPY": 48
+    },
+    "documented_sha_matches": true,
+    "duplicate_conflict_samples": [
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 52,
+        "line": 65,
+        "ohlc_diff": true,
+        "pair": "EUR/USD",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 52,
+        "line": 68,
+        "ohlc_diff": true,
+        "pair": "EUR/USD",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 66,
+        "line": 69,
+        "ohlc_diff": true,
+        "pair": "GBP/USD",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 67,
+        "line": 70,
+        "ohlc_diff": true,
+        "pair": "USD/JPY",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "High",
+          "Daily_Range",
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI",
+          "ATR"
+        ],
+        "first_line": 52,
+        "line": 71,
+        "ohlc_diff": true,
+        "pair": "EUR/USD",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 67,
+        "line": 72,
+        "ohlc_diff": true,
+        "pair": "USD/JPY",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "High",
+          "Daily_Range",
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI",
+          "ATR"
+        ],
+        "first_line": 52,
+        "line": 73,
+        "ohlc_diff": true,
+        "pair": "EUR/USD",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 66,
+        "line": 74,
+        "ohlc_diff": true,
+        "pair": "GBP/USD",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 67,
+        "line": 75,
+        "ohlc_diff": true,
+        "pair": "USD/JPY",
+        "timestamp": "5/21/2025"
+      },
+      {
+        "fields": [
+          "Close",
+          "EMA_10",
+          "EMA_50",
+          "RSI"
+        ],
+        "first_line": 79,
+        "line": 82,
+        "ohlc_diff": true,
+        "pair": "EUR/USD",
+        "timestamp": "5/23/2025"
+      }
+    ],
+    "duplicate_key_different_from_first_full_row_excess": 488,
+    "duplicate_key_different_from_first_ohlc_excess": 484,
+    "duplicate_key_excess": 657,
+    "duplicate_key_same_as_first_full_row_excess": 169,
+    "exact_duplicate_excess": 178,
+    "geometry_rejected_rows": 0,
+    "geometry_rejection_reasons": {},
+    "local_file_matches_hf": true,
+    "market_session_policy": {
+      "conditionally_accepted_source_rows": 71,
+      "conditionally_accepted_weekday_keys": 71,
+      "quarantined_conflict_source_rows": 632,
+      "quarantined_total_source_rows": 855,
+      "quarantined_weekend_unambiguous_keys": 52,
+      "quarantined_weekend_unambiguous_source_rows": 223,
+      "rule": "Reject all structurally conflicting pair/date groups; additionally quarantine every Saturday/Sunday date until source session and timezone are verified. Retain the first original source row for each remaining numeric-OHLC-identical weekday group. Do not average, widen ranges, choose latest from CSV order, use source indicators, fill missing sessions, or assert a fixed calendar-day horizon.",
+      "scope": "Attributable, structurally valid weekday price snapshots; external_historical_replay only, no paper or alpha authority. Source defines Rate, not independently documented Open.",
+      "weekday_keys_by_pair": {
+        "EUR/USD": 53,
+        "GBP/USD": 15,
+        "USD/JPY": 3
+      }
+    },
+    "per_pair": {
+      "EUR/USD": {
+        "end": "2025-08-13",
+        "rows": 340,
+        "start": "2025-03-12",
+        "unique_dates": 119
+      },
+      "GBP/USD": {
+        "end": "2025-08-13",
+        "rows": 298,
+        "start": "2025-03-12",
+        "unique_dates": 81
+      },
+      "USD/JPY": {
+        "end": "2025-08-13",
+        "rows": 288,
+        "start": "2025-05-21",
+        "unique_dates": 69
+      }
+    },
+    "rejected_conflict_policy": "Quarantine every row of each conflicting pair/date group; a daily timestamp has no within-day ordering. Do not invent open/close by CSV order.",
+    "rejection_samples": [],
+    "reverse_order_events": 0,
+    "rows": 926,
+    "same_pair_date_ohlc_duplicate_excess": 184,
+    "sha256": "def896b19b80b36fdd154a0de1ef001c05fd774769d5896a414959010896428c",
+    "single_row_groups": 71,
+    "unambiguous_by_pair": {
+      "EUR/USD": 70,
+      "GBP/USD": 32,
+      "USD/JPY": 21
+    },
+    "unambiguous_group_source_rows": 294,
+    "unambiguous_ohlc_groups": 123,
+    "unique_full_rows": 748,
+    "unique_pair_date_ohlc_rows": 742,
+    "unique_pair_dates": 269
+  },
+  "historical_prices": {
+    "asset_count_matches": true,
+    "assets": 30,
+    "caution": "Missing volume is a feature-availability issue, not an invalid finite price. Preserve as null; exclude only volume-dependent analyses.",
+    "compressed_sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2",
+    "flat_ohlc_rows": 10,
+    "local_files_match_hf": {
+      "historical_prices_seed.csv.gz": true,
+      "historical_prices_seed_manifest.json": true
+    },
+    "manifest_diagnostic_mismatches": [],
+    "manifest_sha256": "de2310adeb62aaa3831088d85427da072e5a242726f3ed252d4312482b53e92f",
+    "max_date": "2026-06-12",
+    "min_date": "2016-06-13",
+    "missing_assets": [
+      "SIE.DE",
+      "AIR.PA",
+      "RHM.DE",
+      "MC.PA",
+      "ENR.DE"
+    ],
+    "missing_volume_rows": 8,
+    "missing_volume_samples": [
+      {
+        "close": "710.14",
+        "date": "2026-04-20",
+        "high": "710.14",
+        "line": 2478,
+        "low": "710.14",
+        "open": "710.14",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "SPY",
+        "volume": ""
+      },
+      {
+        "close": "14.76",
+        "date": "2016-09-14",
+        "high": "14.76",
+        "line": 25153,
+        "low": "14.76",
+        "open": "14.76",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "BOTZ",
+        "volume": ""
+      },
+      {
+        "close": "14.76",
+        "date": "2016-09-15",
+        "high": "14.76",
+        "line": 25154,
+        "low": "14.76",
+        "open": "14.76",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "BOTZ",
+        "volume": ""
+      },
+      {
+        "close": "14.97",
+        "date": "2016-09-21",
+        "high": "14.97",
+        "line": 25158,
+        "low": "14.97",
+        "open": "14.97",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "BOTZ",
+        "volume": ""
+      },
+      {
+        "close": "63.39",
+        "date": "2024-01-29",
+        "high": "63.39",
+        "line": 29522,
+        "low": "63.39",
+        "open": "63.39",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "HACK",
+        "volume": ""
+      },
+      {
+        "close": "63.39",
+        "date": "2024-01-30",
+        "high": "63.39",
+        "line": 29523,
+        "low": "63.39",
+        "open": "63.39",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "HACK",
+        "volume": ""
+      },
+      {
+        "close": "78.57",
+        "date": "2026-04-20",
+        "high": "78.57",
+        "line": 30079,
+        "low": "78.57",
+        "open": "78.57",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "HACK",
+        "volume": ""
+      },
+      {
+        "close": "445.93",
+        "date": "2026-04-20",
+        "high": "445.93",
+        "line": 37624,
+        "low": "445.93",
+        "open": "445.93",
+        "provider": "nasdaq_api",
+        "reason": "MISSING_VOLUME",
+        "ticker": "GLD",
+        "volume": ""
+      }
+    ],
+    "ohlc_geometry_rejected_rows": 5,
+    "ohlc_geometry_rejections": [
+      {
+        "close": "179.58",
+        "date": "2023-06-05",
+        "high": "180.8199",
+        "line": 6788,
+        "low": "178.44",
+        "open": "181.26",
+        "provider": "nasdaq_api",
+        "reason": "OHLC_GEOMETRY",
+        "ticker": "IWM",
+        "volume": "34465800.0"
+      },
+      {
+        "close": "32.63",
+        "date": "2023-06-05",
+        "high": "32.75",
+        "line": 16848,
+        "low": "32.48",
+        "open": "32.84",
+        "provider": "nasdaq_api",
+        "reason": "OHLC_GEOMETRY",
+        "ticker": "XLF",
+        "volume": "50531440.0"
+      },
+      {
+        "close": "39.685",
+        "date": "2023-06-05",
+        "high": "40.3075",
+        "line": 19363,
+        "low": "39.615",
+        "open": "40.5325",
+        "provider": "nasdaq_api",
+        "reason": "OHLC_GEOMETRY",
+        "ticker": "XLE",
+        "volume": "37826200.0"
+      },
+      {
+        "close": "139.09",
+        "date": "2023-06-05",
+        "high": "139.31",
+        "line": 62054,
+        "low": "138.13",
+        "open": "140.11",
+        "provider": "nasdaq_api",
+        "reason": "OHLC_GEOMETRY",
+        "ticker": "JPM",
+        "volume": "8511902.0"
+      },
+      {
+        "close": "105.29",
+        "date": "2023-06-05",
+        "high": "107.025",
+        "line": 64569,
+        "low": "105.09",
+        "open": "107.19",
+        "provider": "nasdaq_api",
+        "reason": "OHLC_GEOMETRY",
+        "ticker": "XOM",
+        "volume": "10628000.0"
+      }
+    ],
+    "per_asset_rows": {
+      "AAPL": 2515,
+      "AMD": 2515,
+      "AMZN": 2515,
+      "ASML": 2515,
+      "AVGO": 2515,
+      "BOTZ": 2451,
+      "DIA": 2515,
+      "GLD": 2515,
+      "GOOGL": 2515,
+      "HACK": 2515,
+      "ICLN": 2515,
+      "IWM": 2515,
+      "JPM": 2515,
+      "LLY": 2515,
+      "META": 2515,
+      "MSFT": 2515,
+      "NVDA": 2515,
+      "NVO": 2515,
+      "QQQ": 2515,
+      "SAP": 2515,
+      "SMH": 2515,
+      "SPY": 2515,
+      "TLT": 2515,
+      "TSLA": 2515,
+      "XAR": 2515,
+      "XLE": 2515,
+      "XLF": 2515,
+      "XLK": 2515,
+      "XLV": 2515,
+      "XOM": 2515
+    },
+    "providers": {
+      "nasdaq_api": 75386
+    },
+    "reverse_order_events": 0,
+    "row_count_matches": true,
+    "rows": 75386,
+    "strict_complete_ohlcv_ineligible_rows": 13,
+    "uncompressed_sha256": "4c95662ce800ddff33f6d196efc77ce9d6c92ef43113b4ddef734ccb76244b6b",
+    "usable_full_ohlcv_rows": 75373,
+    "usable_ohlc_rows": 75381
+  },
+  "limitations": [
+    "Not every market price is independently cross-checked against a second provider. Attributable source and structural checks are the acceptance basis.",
+    "Nasdaq adjustment policy and redistribution terms are absent from seed manifest.",
+    "Reasoning source provenance is internal signal IDs on main and empty on snapshot; underlying live DB/event histories were not accessed.",
+    "Kaggle source attribution, license and exact v1 file hash verified; session timezone and Rate definition not independently documented.",
+    "Original datasets remain byte-for-byte untouched; downloaded artifacts and reviewer outputs exist only under work/hf-audit-review."
+  ],
+  "memory": {
+    "contribution_records": 0,
+    "eligible_training_records": 0,
+    "files": [
+      "README.md",
+      "schema.json",
+      "quarantine/README.txt"
+    ],
+    "status": "quarantine_only",
+    "viewer_claimed_rows": 1,
+    "viewer_row_is_schema_metadata": true
+  },
+  "mode": "read_only_audit",
+  "model_evidence": {
+    "challenger_evaluation": {
+      "candidate_status": "blocked",
+      "champion_revision": "ef36cc90f8d4e6c7df20b40a82f9b0e41ba4c24c",
+      "dataset_commit": "fc56f70",
+      "dataset_revision": "snapshot-3e00c6ee6fdd",
+      "dataset_snapshot_sha256": "3e00c6ee6fdd59a770293ed8eda227838a31199b2c4bf9544e5d948d73be0041",
+      "decision_contract_preservation": "not_yet_certified",
+      "outcome_reflection_smoke_test": {
+        "challenger_correct": 5,
+        "champion_correct": 0,
+        "sample_size": 5
+      },
+      "promotion_blockers": [
+        "temporal_test_missing_contradicted_outcomes",
+        "insufficient_outcome_reflection_evaluation_sample",
+        "decision_contract_preservation_not_certified",
+        "trading_alpha_not_evaluated"
+      ],
+      "temporal_test_outcome_distribution": {
+        "confirmed": 53,
+        "contradicted": 0,
+        "mixed": 0
+      },
+      "training": {
+        "iterations": 20,
+        "learning_rate": 2e-05,
+        "peak_memory_gb": 7.412,
+        "train_loss_at_iteration_20": 0.014,
+        "validation_loss_after": 0.003,
+        "validation_loss_before": 5.685
+      }
+    },
+    "interpretation": "Language-contract and community academic test metrics do not certify forecasting performance, trading alpha or forward paper promotion. Current challenger remains BLOCKED.",
+    "mmlu_community_summary": {
+      "benchmark": "MMLU finance and business subset",
+      "confidence_interval_95": [
+        0.71513558,
+        0.77929395
+      ],
+      "dataset": "cais/mmlu",
+      "dataset_revision": "c30699e8356da336a370243923dbaf21066bb9fe",
+      "device": "mps",
+      "dtype": "bfloat16",
+      "evaluated_at": "2026-07-29T10:03:49.030340+00:00",
+      "few_shot": 5,
+      "macro_accuracy": 0.74857143,
+      "micro_accuracy": 0.74857143,
+      "model": ".artifacts/blum-transformers-v1/portable",
+      "model_revision": "ad6f5cec7f729370d2976d8c78983521cb37ca83",
+      "official_leaderboard_result": false,
+      "sample_limit_per_subject": 100,
+      "sample_size": 700,
+      "status": "community_evaluation",
+      "subjects": [
+        {
+          "accuracy": 0.77,
+          "confidence_interval_95": [
+            0.67845617,
+            0.84156734
+          ],
+          "correct": 77,
+          "duration_seconds": 285.586,
+          "sample_size": 100,
+          "subject": "business_ethics"
+        },
+        {
+          "accuracy": 0.65,
+          "confidence_interval_95": [
+            0.55254443,
+            0.73635752
+          ],
+          "correct": 65,
+          "duration_seconds": 222.028,
+          "sample_size": 100,
+          "subject": "econometrics"
+        },
+        {
+          "accuracy": 0.7,
+          "confidence_interval_95": [
+            0.60415145,
+            0.78105115
+          ],
+          "correct": 70,
+          "duration_seconds": 187.56,
+          "sample_size": 100,
+          "subject": "high_school_macroeconomics"
+        },
+        {
+          "accuracy": 0.87,
+          "confidence_interval_95": [
+            0.79019649,
+            0.92242833
+          ],
+          "correct": 87,
+          "duration_seconds": 171.766,
+          "sample_size": 100,
+          "subject": "high_school_microeconomics"
+        },
+        {
+          "accuracy": 0.87,
+          "confidence_interval_95": [
+            0.79019649,
+            0.92242833
+          ],
+          "correct": 87,
+          "duration_seconds": 101.632,
+          "sample_size": 100,
+          "subject": "management"
+        },
+        {
+          "accuracy": 0.92,
+          "confidence_interval_95": [
+            0.85001892,
+            0.95890654
+          ],
+          "correct": 92,
+          "duration_seconds": 194.458,
+          "sample_size": 100,
+          "subject": "marketing"
+        },
+        {
+          "accuracy": 0.46,
+          "confidence_interval_95": [
+            0.36560808,
+            0.5573514
+          ],
+          "correct": 46,
+          "duration_seconds": 543.284,
+          "sample_size": 100,
+          "subject": "professional_accounting"
+        }
+      ]
+    },
+    "models_executed": false,
+    "primary_model_manifest_dataset_hash_matches": true,
+    "promotion_performed": false,
+    "published_language_contract_evaluation": {
+      "abstention_accuracy": 1.0,
+      "aggregate_ci_lower": 0.955525,
+      "aggregate_score": 0.962601,
+      "calibration_error": 0.0,
+      "calibration_sample_size": 0,
+      "contradiction_coverage": 0.915094,
+      "evidence_attribution_precision": 0.857143,
+      "invalidation_completeness": 1.0,
+      "model_revision": "ea297ba88ab008e97104b0c118103eef2f8f9ec1",
+      "no_fabrication": 0.928571,
+      "numerical_consistency": 1.0,
+      "risk_completeness": 1.0,
+      "sample_size": 53,
+      "structured_validity": 1.0
+    },
+    "training_derivative_reproduced": true,
+    "weights_downloaded": false
+  },
+  "official_audit": {
+    "interpreter": "/Users/renatovinai/Documents/New project/.venv/bin/python",
+    "lineages": 521,
+    "note": "Pass covers structural schema, simple privacy patterns and ID lineage disjointness; expanded audit adds semantics and cryptographic comparisons.",
+    "rows": 521,
+    "status": "passed"
+  },
+  "outcome_snapshot": {
+    "accepted_by_manifest_only_not_independent_provenance": true,
+    "cross_split_lineage_leaks": {},
+    "decision_ranges": {
+      "test": {
+        "end": "2026-07-13T23:47:19.522568+00:00",
+        "start": "2026-07-09T05:43:21.686833+00:00"
+      },
+      "train": {
+        "end": "2026-07-08T06:59:37.881600+00:00",
+        "start": "2026-06-22T21:41:16.333429+00:00"
+      },
+      "validation": {
+        "end": "2026-07-09T05:02:58.898598+00:00",
+        "start": "2026-07-08T06:59:38.084603+00:00"
+      }
+    },
+    "decision_timestamp_naive_rows": 521,
+    "files": [
+      {
+        "bytes": 9272217,
+        "manifest_matches": true,
+        "path": "data/train.jsonl",
+        "rows": 416,
+        "sha256": "22960d03c9e262a3668a54acb4c0954539ebb47b6f3a5a7b46e97cae1af4bced"
+      },
+      {
+        "bytes": 1136918,
+        "manifest_matches": true,
+        "path": "data/validation.jsonl",
+        "rows": 52,
+        "sha256": "e059a53767058015e73986d5fa51d83d1aed86f82a9a50495b35603be07e61ed"
+      },
+      {
+        "bytes": 1155271,
+        "manifest_matches": true,
+        "path": "data/test.jsonl",
+        "rows": 53,
+        "sha256": "e83f3032d542dcd008e5dab5efbee999e4c57b089d5357723e21edcb249f56cd"
+      }
+    ],
+    "message_outcome_context_mismatch_count": 0,
+    "nonempty_provenance_rows": 0,
+    "outcome_counts": {
+      "correct": 460,
+      "neutral": 47,
+      "wrong": 123
+    },
+    "outcome_observed_ranges": {
+      "test": {
+        "end": "2026-07-15T11:15:42.204973+00:00",
+        "start": "2026-07-11T17:27:48.349649+00:00"
+      },
+      "train": {
+        "end": "2026-07-10T18:43:38.994444+00:00",
+        "start": "2026-06-24T02:07:27.765932+00:00"
+      },
+      "validation": {
+        "end": "2026-07-11T16:46:41.110992+00:00",
+        "start": "2026-07-10T18:43:38.983102+00:00"
+      }
+    },
+    "outcomes_cross_next_split_decision_start_count": 170,
+    "outcomes_cross_next_split_samples": [
+      {
+        "crosses_into": "validation",
+        "id": 2010,
+        "observed_at": "2026-07-10T16:41:57.787670+00:00",
+        "split": "train"
+      },
+      {
+        "crosses_into": "validation",
+        "id": 1906,
+        "observed_at": "2026-07-09T14:13:23.909373+00:00",
+        "split": "train"
+      },
+      {
+        "crosses_into": "validation",
+        "id": 2006,
+        "observed_at": "2026-07-10T15:41:08.049758+00:00",
+        "split": "train"
+      },
+      {
+        "crosses_into": "validation",
+        "id": 1961,
+        "observed_at": "2026-07-10T04:30:38.109559+00:00",
+        "split": "train"
+      },
+      {
+        "crosses_into": "validation",
+        "id": 1804,
+        "observed_at": "2026-07-08T10:44:55.154187+00:00",
+        "split": "train"
+      }
+    ],
+    "outcomes_cross_next_split_unique_rows_by_split": {
+      "train": 118,
+      "validation": 52
+    },
+    "outcomes_not_after_decision_count": 0,
+    "outcomes_not_after_decision_samples": [],
+    "outcomes_observed_after_snapshot_asof_count": 29,
+    "outcomes_observed_after_snapshot_asof_samples": [
+      {
+        "decision_timestamp": "2026-07-13T00:40:49.671423+00:00",
+        "id": 2463,
+        "observed_at": "2026-07-15T07:29:39.514143+00:00",
+        "split": "test"
+      },
+      {
+        "decision_timestamp": "2026-07-13T11:12:52.684914+00:00",
+        "id": 2494,
+        "observed_at": "2026-07-15T07:29:39.275557+00:00",
+        "split": "test"
+      },
+      {
+        "decision_timestamp": "2026-07-13T02:43:17.076809+00:00",
+        "id": 2472,
+        "observed_at": "2026-07-15T07:29:39.454129+00:00",
+        "split": "test"
+      },
+      {
+        "decision_timestamp": "2026-07-13T02:01:50.654325+00:00",
+        "id": 2469,
+        "observed_at": "2026-07-15T07:29:39.473009+00:00",
+        "split": "test"
+      },
+      {
+        "decision_timestamp": "2026-07-13T11:53:18.612914+00:00",
+        "id": 2497,
+        "observed_at": "2026-07-15T07:29:39.256965+00:00",
+        "split": "test"
+      }
+    ],
+    "post_snapshot_outcome_events_by_split": {
+      "test": 29,
+      "train": 0,
+      "validation": 0
+    },
+    "post_snapshot_outcome_rows_by_split": {
+      "test": 29,
+      "train": 0,
+      "validation": 0
+    },
+    "quality_min_max": [
+      70.93,
+      75.97
+    ],
+    "record_created_ranges": {
+      "test": {
+        "end": "2026-07-13T23:47:19.712705+00:00",
+        "start": "2026-07-09T05:43:22.072739+00:00"
+      },
+      "train": {
+        "end": "2026-07-08T06:59:38.081047+00:00",
+        "start": "2026-06-22T21:41:16.567949+00:00"
+      },
+      "validation": {
+        "end": "2026-07-09T05:02:59.149946+00:00",
+        "start": "2026-07-08T06:59:38.314632+00:00"
+      }
+    },
+    "reflection_assessment_by_split": {
+      "test": {
+        "confirmed": 53
+      },
+      "train": {
+        "confirmed": 324,
+        "contradicted": 92
+      },
+      "validation": {
+        "confirmed": 52
+      }
+    },
+    "reflection_target_unique_texts": 4,
+    "root_record_id_overlap": 521,
+    "rows": 521,
+    "snapshot_hash_computed": "3e00c6ee6fdd59a770293ed8eda227838a31199b2c4bf9544e5d948d73be0041",
+    "snapshot_hash_expected": "3e00c6ee6fdd59a770293ed8eda227838a31199b2c4bf9544e5d948d73be0041",
+    "snapshot_hash_matches": true,
+    "source_ticker_counts": {
+      "AAPL": 227,
+      "AMAT": 294
+    },
+    "unique_knowledge_record_ids": 521,
+    "unique_lineages": 521
+  },
+  "pinned_sources": [
+    {
+      "repository": "Italianhype/Blum",
+      "revision": "d78903cd235b0a152f78818124c75c55c3472cc3",
+      "source": "https://huggingface.co/api/spaces/Italianhype/Blum",
+      "type": "space"
+    },
+    {
+      "branch": "main",
+      "repository": "Italianhype/Blum-Finance-Reasoning",
+      "revision": "76ad77699d498fc930daf02e452fe3ec8b490f90",
+      "type": "dataset"
+    },
+    {
+      "branch": "snapshot-3e00c6ee6fdd",
+      "repository": "Italianhype/Blum-Finance-Reasoning",
+      "revision": "fc56f7010dc623bc71775cfdb18ec683d0f74f64",
+      "type": "dataset"
+    },
+    {
+      "branch": "main",
+      "repository": "Italianhype/Blum-Finance-Memory",
+      "revision": "780c1c65668922a7d3360dcadf7f905d85d02957",
+      "type": "dataset"
+    },
+    {
+      "repository": "Italianhype/Blum",
+      "revision": "ef36cc90f8d4e6c7df20b40a82f9b0e41ba4c24c",
+      "type": "model_metadata_only"
+    },
+    {
+      "repository": "Italianhype/Blum-Finance-4B",
+      "revision": "2f5a7b0714cc88d9914faf878302506ec8b8b9af",
+      "type": "model_metadata_only"
+    },
+    {
+      "repository": "Italianhype/Blum-Finance-4B-Challenger",
+      "revision": "3e84d7b2d65b3b4f674d9eea8bff9ec065d945c0",
+      "type": "model_metadata_only"
+    }
+  ],
+  "reasoning_main": {
+    "confidence_equals_100": 490,
+    "confidence_min_max": [
+      25.0,
+      100.0
+    ],
+    "confidence_over_70": 490,
+    "content_hash_recompute_matches": 521,
+    "content_hash_recompute_mismatches": 0,
+    "cross_split_lineage_leaks": {},
+    "data_quality_min_max": [
+      55.0,
+      55.0
+    ],
+    "dataset_digest_computed": "4cd60a2a44eabc185f6eceba5e2619aeb11ec437b89fe3cacc5cff240e52deaf",
+    "dataset_digest_expected": "4cd60a2a44eabc185f6eceba5e2619aeb11ec437b89fe3cacc5cff240e52deaf",
+    "dataset_digest_matches": true,
+    "evidence_observation_counts": {
+      "without_observed_at": 3885
+    },
+    "evidence_provenance_counts": {
+      "signal_snapshot": 521
+    },
+    "exact_answer_duplicate_excess": 262,
+    "exact_answer_groups_shared_across_splits": 4,
+    "exact_message_duplicate_excess": 0,
+    "future_input_timestamp_count": 0,
+    "future_input_timestamp_samples": [],
+    "invalid_request_json": 0,
+    "invalid_response_json": 0,
+    "mature_rows": 0,
+    "naive_timestamp_counts": {
+      "as_of": 521,
+      "created_at": 521,
+      "market_context.timestamp": 521
+    },
+    "outcome_counts": {
+      "inconclusive|inconclusive": 521
+    },
+    "pii_or_token_pattern_rows": 0,
+    "rows": 521,
+    "rows_in_answer_groups_shared_across_splits": 15,
+    "same_input_except_timestamps_groups_shared_across_splits": 4,
+    "split_counts": {
+      "test": 53,
+      "train": 416,
+      "validation": 52
+    },
+    "split_date_ranges": {
+      "test": {
+        "end": "2026-07-13T23:47:19.530828",
+        "start": "2026-07-09T05:43:21.697064"
+      },
+      "train": {
+        "end": "2026-07-08T06:59:37.887390",
+        "start": "2026-06-22T21:41:16.349685"
+      },
+      "validation": {
+        "end": "2026-07-09T05:02:58.917038",
+        "start": "2026-07-08T06:59:38.092795"
+      }
+    },
+    "status_counts": {
+      "watch": 521
+    },
+    "ticker_counts": {
+      "AAPL": 227,
+      "AMAT": 294
+    },
+    "unique_content_hashes": 521,
+    "unique_example_ids": 521,
+    "unique_lineages": 521,
+    "unsupported_numeric_by_split": {
+      "test": 53,
+      "train": 416,
+      "validation": 52
+    },
+    "unsupported_numeric_examples": [
+      {
+        "example_id": "blum-d8d6b369dbf8bec864f2",
+        "split": "train",
+        "ticker": "AMAT",
+        "unsupported": {
+          "invalidation_conditions": [
+            "384.53"
+          ],
+          "thesis": [
+            "79.8",
+            "74.3",
+            "100"
+          ],
+          "what_would_change_the_view": [
+            "384.53"
+          ]
+        }
+      },
+      {
+        "example_id": "blum-d0a47dfd6436de8e6f27",
+        "split": "train",
+        "ticker": "AMAT",
+        "unsupported": {
+          "invalidation_conditions": [
+            "384.53"
+          ],
+          "thesis": [
+            "79.9",
+            "74.4",
+            "100"
+          ],
+          "what_would_change_the_view": [
+            "384.53"
+          ]
+        }
+      },
+      {
+        "example_id": "blum-b41645061aee2a041215",
+        "split": "train",
+        "ticker": "AMAT",
+        "unsupported": {
+          "invalidation_conditions": [
+            "384.53"
+          ],
+          "thesis": [
+            "79.9",
+            "74.4",
+            "100"
+          ],
+          "what_would_change_the_view": [
+            "384.53"
+          ]
+        }
+      },
+      {
+        "example_id": "blum-39f38e42b0e086bf5a12",
+        "split": "train",
+        "ticker": "AMAT",
+        "unsupported": {
+          "invalidation_conditions": [
+            "384.53"
+          ],
+          "thesis": [
+            "79.9",
+            "74.4",
+            "100"
+          ],
+          "what_would_change_the_view": [
+            "384.53"
+          ]
+        }
+      },
+      {
+        "example_id": "blum-e8870efffd44d2c38b75",
+        "split": "train",
+        "ticker": "AMAT",
+        "unsupported": {
+          "invalidation_conditions": [
+            "384.53"
+          ],
+          "thesis": [
+            "79.9",
+            "74.4",
+            "100"
+          ],
+          "what_would_change_the_view": [
+            "384.53"
+          ]
+        }
+      }
+    ],
+    "unsupported_numeric_field_row_counts": {
+      "bear_case": 0,
+      "bull_case": 0,
+      "invalidation_conditions": 521,
+      "risks": 0,
+      "thesis": 521,
+      "what_would_change_the_view": 521
+    },
+    "unsupported_numeric_rows": 521,
+    "unsupported_numeric_token_counts": {
+      "invalidation_conditions": 521,
+      "thesis": 1563,
+      "what_would_change_the_view": 521
+    },
+    "usable_as_ohlcv_rows": 0,
+    "validation_faults": []
+  },
+  "recommendation": "Ship source attribution, per-use eligibility gates and exact reject ledgers; activate only the filtered daily replay lane. Keep model retraining and challenger/forward promotion blocked until separate gates are met.",
+  "reviewed_at": "2026-10-12T13:24:40.875516+00:00",
+  "reviewed_code_revision": "6d865876a47f6ec730a376f29d42f605c6db0368",
+  "sanitized_reasoning_derivative": {
+    "manifest_total": 3095,
+    "test": {
+      "examples": 53,
+      "manifest_expected_sha256": "dcdceea08675e9de4be82e0bfa9aee47f2c10af8a51eb2c9b74548b64803265b",
+      "manifest_match_mlx": true,
+      "manifest_match_source": false,
+      "mlx_derivative_sha256": "dcdceea08675e9de4be82e0bfa9aee47f2c10af8a51eb2c9b74548b64803265b",
+      "numeric_replacements": 318,
+      "source_derivative_sha256": "8922953c82000b276edb2b45082969ac41808bd038953ca581f590462c8ac266"
+    },
+    "total_replacements": 3095,
+    "train": {
+      "examples": 416,
+      "manifest_expected_sha256": "86f92a5e04cfe19a8c3cc26c4332785b67cd2b2397680c5729ac5753546e863a",
+      "manifest_match_mlx": true,
+      "manifest_match_source": false,
+      "mlx_derivative_sha256": "86f92a5e04cfe19a8c3cc26c4332785b67cd2b2397680c5729ac5753546e863a",
+      "numeric_replacements": 2465,
+      "source_derivative_sha256": "b0103e70cea7ac999886dec439c458ce49e3d40f46108e2e08977cb80149189f"
+    },
+    "validation": {
+      "examples": 52,
+      "manifest_expected_sha256": "fdb8d49c13cea279b8a76f8123c9e0a89ec51bfef964fef3f87c4f0ab3954cbc",
+      "manifest_match_mlx": true,
+      "manifest_match_source": false,
+      "mlx_derivative_sha256": "fdb8d49c13cea279b8a76f8123c9e0a89ec51bfef964fef3f87c4f0ab3954cbc",
+      "numeric_replacements": 312,
+      "source_derivative_sha256": "fd5533bed3ad853cd1f9f59437a4cbf6fc8a0ad4599019cee162902b0072facc"
+    }
+  },
+  "schema_version": "blum-independent-hf-evidence-review-v1",
+  "scope": "Public Italianhype HF data and relevant model evidence; full-row audits on pinned main and snapshot datasets, Space bundled prices, exact Kaggle v1 Forex source.",
+  "selection_artifacts": {
+    "forex-accepted-groups.json": {
+      "bytes": 34785,
+      "records": 123,
+      "relative_path": "work/hf-audit-review/forex-accepted-groups.json",
+      "sha256": "4ca8e2557e92cf4d3f6804f0260442b3137cb28b3f65f4621b01b34c5b7ffcdf"
+    },
+    "forex-accepted-weekday-groups.json": {
+      "bytes": 18894,
+      "records": 71,
+      "relative_path": "work/hf-audit-review/forex-accepted-weekday-groups.json",
+      "sha256": "ededb5f16c63665625d44fd69d36116add0981d37e0704750f312e573a3a55bd"
+    },
+    "forex-conflicting-groups.json": {
+      "bytes": 34091,
+      "records": 146,
+      "relative_path": "work/hf-audit-review/forex-conflicting-groups.json",
+      "sha256": "477474ef68707975a88bcb52307ce21ea75969068df9d0cde615de3e05bbeb37"
+    },
+    "forex-conflicting-keys.json": {
+      "bytes": 8325,
+      "records": 146,
+      "relative_path": "work/hf-audit-review/forex-conflicting-keys.json",
+      "sha256": "898ce787493be87a8011b8e0f8ca26e6eca2b87480b8a68e7a2ddf7fee194cd7"
+    },
+    "forex-weekend-unverified-groups.json": {
+      "bytes": 15894,
+      "records": 52,
+      "relative_path": "work/hf-audit-review/forex-weekend-unverified-groups.json",
+      "sha256": "9958ef49267ceb6c9ba062df955c967c3db16cde03a5f2bfceb18d5e6408cd4e"
+    },
+    "historical-missing-volume-flags.json": {
+      "bytes": 1920,
+      "records": 8,
+      "relative_path": "work/hf-audit-review/historical-missing-volume-flags.json",
+      "sha256": "55343d59961ae2318f207363fa4d5a8a699ce48c0822da423f181156ecc57e3e"
+    },
+    "historical-rejected-rows.json": {
+      "bytes": 1257,
+      "records": 5,
+      "relative_path": "work/hf-audit-review/historical-rejected-rows.json",
+      "sha256": "3bed5cd7af404116e5d751b4f2804210100c9bdcf875d9ebe5cdcac7e5700481"
+    },
+    "snapshot-boundary-crossing-outcomes.json": {
+      "bytes": 63701,
+      "records": 170,
+      "relative_path": "work/hf-audit-review/snapshot-boundary-crossing-outcomes.json",
+      "sha256": "d22627f661b23c7a7dbfabbf6af6111e8965261fa5d4ba4da8d4ff39442cc5ee"
+    },
+    "snapshot-late-outcomes.json": {
+      "bytes": 8181,
+      "records": 29,
+      "relative_path": "work/hf-audit-review/snapshot-late-outcomes.json",
+      "sha256": "26fc0b86a59daf196f09679ef527a9739927f8933bc1298a057dfea024987df0"
+    }
+  },
+  "source_file_hashes": [
+    {
+      "bytes": 1131,
+      "path": "reasoning/README.md",
+      "sha256": "f45fca1f882b64453f49c0336145e920f9a1710fd72f9909c295e37b737dc30a"
+    },
+    {
+      "bytes": 0,
+      "path": "reasoning/excluded.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 752,
+      "path": "reasoning/manifest.json",
+      "sha256": "cc6ffd1f5d1d9ea070715dbaceeebf22a094e2329054e3bb38b590cacb405cc7"
+    },
+    {
+      "bytes": 226314,
+      "path": "reasoning/test.jsonl",
+      "sha256": "02afc03a9f5cd38f36b34daea690f6d16e2c73892ea94217b493950ff5d63c56"
+    },
+    {
+      "bytes": 1826641,
+      "path": "reasoning/train.jsonl",
+      "sha256": "089c9a7794b3f0190d6478135e2190771371b7ca0e061a4d46edaf9f2d9d9a5f"
+    },
+    {
+      "bytes": 224890,
+      "path": "reasoning/validation.jsonl",
+      "sha256": "793db398bc6ff77ff567990e589e000e384651468df785d271b30a8a25728338"
+    },
+    {
+      "bytes": 1683,
+      "path": "snapshot/README.md",
+      "sha256": "d097cb225cb3738450507c03a35884b2c892ee0864a6a88a25b016b05ee867c4"
+    },
+    {
+      "bytes": 1155271,
+      "path": "snapshot/data/test.jsonl",
+      "sha256": "e83f3032d542dcd008e5dab5efbee999e4c57b089d5357723e21edcb249f56cd"
+    },
+    {
+      "bytes": 9272217,
+      "path": "snapshot/data/train.jsonl",
+      "sha256": "22960d03c9e262a3668a54acb4c0954539ebb47b6f3a5a7b46e97cae1af4bced"
+    },
+    {
+      "bytes": 1136918,
+      "path": "snapshot/data/validation.jsonl",
+      "sha256": "e059a53767058015e73986d5fa51d83d1aed86f82a9a50495b35603be07e61ed"
+    },
+    {
+      "bytes": 0,
+      "path": "snapshot/excluded.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1671,
+      "path": "snapshot/manifest.json",
+      "sha256": "ba97344fd3a81828f562d66c4dd3d0921d9d429340f7c1a9752494c0582e8ff0"
+    },
+    {
+      "bytes": 226314,
+      "path": "snapshot/test.jsonl",
+      "sha256": "02afc03a9f5cd38f36b34daea690f6d16e2c73892ea94217b493950ff5d63c56"
+    },
+    {
+      "bytes": 1826641,
+      "path": "snapshot/train.jsonl",
+      "sha256": "089c9a7794b3f0190d6478135e2190771371b7ca0e061a4d46edaf9f2d9d9a5f"
+    },
+    {
+      "bytes": 224890,
+      "path": "snapshot/validation.jsonl",
+      "sha256": "793db398bc6ff77ff567990e589e000e384651468df785d271b30a8a25728338"
+    },
+    {
+      "bytes": 686,
+      "path": "memory/README.md",
+      "sha256": "205a156aeed1dee63816d72f5f564f8b10638094742ef61be3c79228fe8cb048"
+    },
+    {
+      "bytes": 73,
+      "path": "memory/quarantine/README.txt",
+      "sha256": "05125ca0c59490ef0a9493b994b7d5342088fd7b0a098b3a24b2735e804a7f4e"
+    },
+    {
+      "bytes": 149,
+      "path": "memory/schema.json",
+      "sha256": "f7e00a54202b205683cba92787028bfb99bb77501c82f3f63b5f5c33dc892939"
+    },
+    {
+      "bytes": 120750,
+      "path": "space/Forex_sample_dataset.csv",
+      "sha256": "def896b19b80b36fdd154a0de1ef001c05fd774769d5896a414959010896428c"
+    },
+    {
+      "bytes": 992,
+      "path": "space/README.md",
+      "sha256": "45395179f9083de3a6eed769216bc11584629fa01dbbaeb6e460c33757228cb0"
+    },
+    {
+      "bytes": 1330179,
+      "path": "space/historical_prices_seed.csv.gz",
+      "sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2"
+    },
+    {
+      "bytes": 5962,
+      "path": "space/historical_prices_seed_manifest.json",
+      "sha256": "de2310adeb62aaa3831088d85427da072e5a242726f3ed252d4312482b53e92f"
+    },
+    {
+      "bytes": 6299,
+      "path": "mlx/README.md",
+      "sha256": "a883e57c791a6ac96ab104f367dca82a495ea92846372d2cc86b76c1d0ecc807"
+    },
+    {
+      "bytes": 458,
+      "path": "mlx/evaluation/base_summary.json",
+      "sha256": "b96a55d2f60bee0792c9e2f17da582611f6c72d9ca0b3d22f05e9818fe43acbd"
+    },
+    {
+      "bytes": 483,
+      "path": "mlx/evaluation/candidate_summary.json",
+      "sha256": "1077e0f5927f76825259d4ed5501e2256a216c09532756bc0d51c47f9ba0418f"
+    },
+    {
+      "bytes": 202,
+      "path": "mlx/evaluation/promotion_decision.json",
+      "sha256": "7c2c6ebd6f0dcadbdc38c44fc32daeb93aa61d16f21d8deb06c7267981c273da"
+    },
+    {
+      "bytes": 3311,
+      "path": "mlx/release_manifest.json",
+      "sha256": "99e773bf3de307197b6abf7f6a3c5a8d591f94515211fbaf585e517077135c85"
+    },
+    {
+      "bytes": 2046,
+      "path": "mlx/training_manifest.json",
+      "sha256": "5e1af1aee55c937a192467fc629868cb60d4144f323a92026e2da5b2ac759bf8"
+    },
+    {
+      "bytes": 5805,
+      "path": "bf16/README.md",
+      "sha256": "6fc2c96c20af1d3146d113c700b82753667da49a7b4138c727cb7d2b87132b62"
+    },
+    {
+      "bytes": 1876,
+      "path": "bf16/conversion/manifest.json",
+      "sha256": "8b352d8097f1c6a8ae195a83923c35a603b2faecc118942e73964469a4089d00"
+    },
+    {
+      "bytes": 2326,
+      "path": "bf16/evaluations/mmlu-finance-stratified-100/results.json",
+      "sha256": "6c2434c82e029fdbd2823cc85f7b91eb16a1d5d1e7302d45a76fe57048037ef4"
+    },
+    {
+      "bytes": 1688,
+      "path": "challenger/README.md",
+      "sha256": "881b27d179e867f66ed453ab4bc540404d9fbb24b3579bf290cd4621d7dab07e"
+    },
+    {
+      "bytes": 1000,
+      "path": "challenger/evaluation/evaluation.json",
+      "sha256": "33c1f2d464d1fd3e2d77e6c08d7949233e14a8594b3401fa058af1df9681391b"
+    }
+  ],
+  "usage_decisions": {
+    "forward_promotion": {
+      "accepted_records": 0,
+      "reason": "Historical and retrospective data cannot certify contemporaneous forward execution. No independent paper run or candidate-model evaluation was executed."
+    },
+    "historical_replay": {
+      "conditionally_accepted_ohlc_rows": 75381,
+      "conditions": [
+        "Reference immutable source revisions and raw bytes hashes.",
+        "Keep all records in an external historical replay evidence lane, paper_authority=false, alpha_authority=false.",
+        "Do not bridge daily source into intraday coverage or fill missing dates with synthetic bars.",
+        "Price-based replay must disclose unknown corporate-action/dividend/volume adjustments and inability to reconstruct historical nominal prices or total return.",
+        "Forex Rate-as-open is a transform assumption; conventional daily UTC session and post-gap horizons require explicit checks."
+      ],
+      "forex_conditionally_accepted_weekday_snapshots": 71,
+      "forex_quarantined_source_rows": 855,
+      "full_ohlcv_rows": 75373,
+      "null_volume_flags": 8,
+      "quarantined_ohlc_rows": 5
+    },
+    "reasoning_training": {
+      "memory": "no contribution rows available",
+      "original_main_direct_training": "quarantine: all 521 target-grounding failures; license unresolved",
+      "sanitized_main": "reproducible reasoning-only derivative; 3095 replacements and all MLX hashes verified, licensing unresolved and mature outcomes=0",
+      "snapshot_reflection": "quarantine for independent provenance, true available_at cutoff and split embargo repair; 521 repeated source records, not new OHLC history"
+    }
+  }
+}

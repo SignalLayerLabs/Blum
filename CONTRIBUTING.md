@@ -14,7 +14,7 @@ decision quality, risk control, learning reliability or runtime performance.
 
 ## Development workflow
 
-1. Fork `BlumFinancialLab/Blum` and create a focused branch.
+1. Fork `SignalLayerLabs/Blum` and create a focused branch.
 2. Add or update tests before changing behavior.
 3. Run the smallest relevant test set, then the full affected suite.
 4. Document data lineage, point-in-time constraints and benchmark methodology.

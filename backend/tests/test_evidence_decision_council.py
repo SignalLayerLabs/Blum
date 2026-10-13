@@ -72,6 +72,7 @@ def _vote(
             regime=record.market_regime,
             sector=record.sector,
             reliability_weight_at_time=reliability,
+            created_at=record.created_at,
         )
     )
 
@@ -167,6 +168,10 @@ def test_mature_outcome_creates_reflection_used_by_later_same_ticker_decision():
     reflected = EvidenceBoundDecisionCouncil(min_memory_samples=1).reflect_mature_outcomes(db)
     assert reflected["created"] == 1
     assert db.scalar(select(func.count(AgentCouncilReflection.id))) == 1
+    # The reflection became available after the historical outcome matured.
+    reflection = db.scalar(select(AgentCouncilReflection))
+    reflection.created_at = outcome.updated_at
+    db.commit()
 
     second = _record(db, suffix="memory-two", confidence=65)
     second.created_at = NOW + timedelta(days=7)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import hashlib
 import json
 import math
@@ -28,7 +28,7 @@ KAGGLE_FOREX_SOURCE_URL = (
     "https://www.kaggle.com/datasets/jeleeladekunlefijabi/"
     "forex-trading-dataset-with-ema-rsi-and-atr"
 )
-FOREX_HISTORY_TRANSFORM_VERSION = "blum-forex-daily-causal-v1"
+FOREX_HISTORY_TRANSFORM_VERSION = "blum-forex-daily-quality-v2"
 
 
 def bundled_forex_history_path() -> Path:
@@ -108,7 +108,7 @@ class ForexHistoricalDatasetService:
             n_rows=self.max_rows,
             columns=["Timestamp", "Pair", "Rate", "High", "Low", "Close"],
         )
-        bars_by_pair, duplicate_rows = self._bars(frame)
+        bars_by_pair, quality = self._bars(frame)
         examples = self._examples(bars_by_pair, source_sha256)
         provenance = {
             "source_id": (
@@ -121,7 +121,7 @@ class ForexHistoricalDatasetService:
             "source_sha256": source_sha256,
             "rows_read": frame.height,
             "daily_bars_created": sum(len(rows) for rows in bars_by_pair.values()),
-            "duplicate_rows_consolidated": duplicate_rows,
+            **quality,
             "examples_created": len(examples),
             "pairs": sorted(bars_by_pair),
             "timeframe": "1d",
@@ -129,6 +129,7 @@ class ForexHistoricalDatasetService:
             "sample_weight": self.sample_weight,
             "indicator_policy": "recomputed_from_ohlc_trailing_only",
             "label_policy": "next_bar_open_to_horizon_close_after_decision",
+            "gap_policy": "No example spans a gap over four calendar days in its EMA50 window or label path.",
             "transformation_version": FOREX_HISTORY_TRANSFORM_VERSION,
             "evidence_lane": "external_historical_replay",
             "paper_authority": False,
@@ -159,17 +160,20 @@ class ForexHistoricalDatasetService:
     @staticmethod
     def _bars(
         frame: pl.DataFrame,
-    ) -> tuple[dict[str, tuple[_Bar, ...]], int]:
+    ) -> tuple[dict[str, tuple[_Bar, ...]], dict]:
         required = {"Timestamp", "Pair", "Rate", "High", "Low", "Close"}
         if not required.issubset(frame.columns):
             missing = sorted(required.difference(frame.columns))
             raise ValueError(f"Forex history is missing required columns: {missing}")
         bars: dict[tuple[str, datetime], _Bar] = {}
+        counts: dict[tuple[str, datetime], int] = defaultdict(int)
+        conflicts: set[tuple[str, datetime]] = set()
         duplicate_rows = 0
         for row in frame.iter_rows(named=True):
             pair = _canonical_pair(str(row["Pair"]))
             stamp = _parse_timestamp(str(row["Timestamp"]))
             key = (pair, stamp)
+            counts[key] += 1
             values = tuple(float(row[name]) for name in ("Rate", "High", "Low", "Close"))
             if not all(math.isfinite(value) and value > 0 for value in values):
                 raise ValueError(f"invalid OHLC row: {pair} {stamp.isoformat()}")
@@ -181,21 +185,31 @@ class ForexHistoricalDatasetService:
                 bars[key] = _Bar(stamp, pair, opened, high, low, close)
             else:
                 duplicate_rows += 1
-                bars[key] = _Bar(
-                    stamp,
-                    pair,
-                    previous.opened,
-                    max(previous.high, high),
-                    min(previous.low, low),
-                    close,
-                )
+                if values != (previous.opened, previous.high, previous.low, previous.close):
+                    conflicts.add(key)
         buckets: dict[str, list[_Bar]] = defaultdict(list)
-        for bar in bars.values():
+        weekend_rows = 0
+        for key, bar in bars.items():
+            if key in conflicts:
+                continue
+            if bar.timestamp.weekday() >= 5:
+                weekend_rows += counts[key]
+                continue
             buckets[bar.pair].append(bar)
-        return {
+        accepted = {
             pair: tuple(sorted(rows, key=lambda item: item.timestamp))
             for pair, rows in buckets.items()
-        }, duplicate_rows
+        }
+        return accepted, {
+            "duplicate_rows_observed": duplicate_rows,
+            "conflicting_groups_quarantined": len(conflicts),
+            "conflicting_rows_quarantined": sum(counts[key] for key in conflicts),
+            "weekend_rows_quarantined": weekend_rows,
+            "accepted_keys": [{"pair": bar.pair, "date": bar.timestamp.date().isoformat()}
+                              for rows in accepted.values() for bar in rows][:1000],
+            "accepted_keys_truncated": sum(map(len, accepted.values())) > 1000,
+            "duplicate_policy": "Identical OHLC deduplicated; every conflicting group quarantined, never aggregated.",
+        }
 
     def _examples(
         self,
@@ -214,6 +228,10 @@ class ForexHistoricalDatasetService:
                 current = bars[index]
                 entry_bar = bars[index + 1]
                 outcome_bar = bars[index + self.horizon_bars]
+                window = bars[index - self.minimum_warmup_bars:index + self.horizon_bars + 1]
+                if any(right.timestamp - left.timestamp > timedelta(days=4)
+                       for left, right in zip(window, window[1:])):
+                    continue
                 state = indicators[index]
                 setup_type, direction = _decision_rule(state)
                 side = 1.0 if direction == "LONG" else -1.0
@@ -238,7 +256,7 @@ class ForexHistoricalDatasetService:
                     TradingMLExample(
                         source_object_type="external_forex_history",
                         source_object_id=(
-                            f"{self.source_version}:{pair}:"
+                            f"{self.source_version}:{FOREX_HISTORY_TRANSFORM_VERSION}:{pair}:"
                             f"{current.timestamp.date().isoformat()}:h{self.horizon_bars}"
                         ),
                         market_family="forex",
@@ -273,6 +291,8 @@ class ForexHistoricalKnowledgeService:
             return _neutral_advice("Historical Forex knowledge artifact is unreadable.")
         if payload.get("format") != "blum_forex_historical_knowledge_v1":
             return _neutral_advice("Historical Forex knowledge artifact format is unsupported.")
+        if (payload.get("provenance") or {}).get("transformation_version") != FOREX_HISTORY_TRANSFORM_VERSION:
+            return _neutral_advice("Historical Forex knowledge predates the current data-quality audit.")
         pattern = _live_pattern(closes)
         canonical_pair = _canonical_pair(pair)
         pair_key = f"{canonical_pair}|{pattern}"
@@ -510,6 +530,10 @@ def _future_returns(
     values: dict[datetime, list[float]] = defaultdict(list)
     for bars in bars_by_pair.values():
         for index in range(len(bars) - horizon_bars):
+            window = bars[index:index + horizon_bars + 1]
+            if any(right.timestamp - left.timestamp > timedelta(days=4)
+                   for left, right in zip(window, window[1:])):
+                continue
             entry = bars[index + 1].opened
             exit_price = bars[index + horizon_bars].close
             if entry > 0:

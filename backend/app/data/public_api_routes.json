@@ -1,0 +1,10 @@
+[
+  "/health", "/startup/status", "/system/status",
+  "/api/brain/snapshot", "/api/training/snapshot", "/api/paper-trading/snapshot",
+  "/api/paper-trading/trades/{source_engine}/{source_trade_id}",
+  "/api/alpha/snapshot", "/api/ascent/status",
+  "/api/runtime/release", "/api/runtime/status", "/api/runtime/contracts",
+  "/api/engine/status", "/api/engine/contracts", "/api/engine/agents",
+  "/api/analyst/status", "/api/analyst/contracts", "/api/architecture/contracts",
+  "/assets", "/assets/{ticker}"
+]

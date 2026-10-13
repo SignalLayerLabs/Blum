@@ -21,3 +21,14 @@ directly authorize a paper trade or establish an alpha claim.
 
 The dataset is redistributed under its stated
 [CC BY-SA 4.0 license](https://creativecommons.org/licenses/by-sa/4.0/).
+
+## Release 2.2 audit
+
+The 926 source rows remain verbatim for traceability. Current gates quarantine 632
+rows from 146 contradictory pair/date groups and 223 additional weekend rows
+without certified session/timezone. Only 71 weekday snapshots remain. Identical
+OHLC records are deduplicated; conflicting records never become invented daily candles.
+
+A continuous EMA50 warmup and label path produces one eligible causal example,
+insufficient for validation or promotion. The maintained runtime keeps this
+external bootstrap disabled. See [data acceptance](../../../../docs/DATA_QUALITY.md).

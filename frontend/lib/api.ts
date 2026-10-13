@@ -1,6 +1,7 @@
 import { AccuracyOverview, AccuracyProfile, Asset, BrainAccuracy, BrainAssetMemory, BrainEvaluation, BrainStatus, ChartReport, CommunitySentimentPayload, DashboardOverview, DataCoverage, ExecutiveDashboardPayload, FinancialChatResponse, IPORadar, LiveNewsArticle, MacroOverview, MarketBrain, MarketBrainHistoryRow, MarketNarrativePayload, MarketSentiment, OpportunityRadarPayload, PipelineStatus, PortfolioScenarioPayload, RelatedNews, Signal, SignalValidationReport, StockRadar, SystemStatus, WatchlistPayload } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
+import type { AscentSnapshot } from "./ascentView.mjs";
 const inFlightRequests = new Map<string, Promise<any>>();
 const memoryCache = new Map<string, { expiresAt: number; value: any }>();
 const LEARNING_INITIAL_RENDER_GUARD_MS = 4000;
@@ -41,7 +42,7 @@ let learningPagePath = "";
 let learningPageStartedAt: number | null = null;
 
 async function getJson<T>(path: string): Promise<T> {
-  const response = await fetchBlum(path, { method: "GET", cacheTtlMs: 2500, timeoutMs: 12000 });
+  const response = await fetchBlum(path, { method: "GET", headers: { Accept: "application/json" }, cacheTtlMs: 2500, timeoutMs: 12000 });
   if (!response.ok) {
     throw new Error(await responseError(response));
   }
@@ -139,7 +140,7 @@ async function fetchBlum(path: string, options: RequestInit & { timeoutMs?: numb
 function reportFrontendTiming(path: string, method: string, duration_ms: number, status: string, force = false) {
   if (path.includes("/performance/frontend-widget") || path.includes("/api/performance/frontend-widget")) return;
   const onLearningPage = typeof location !== "undefined" && location.pathname.startsWith("/learning");
-  const onReadOnlyProductSurface = typeof location !== "undefined" && ["/paper-trading", "/copy-trading", "/brain", "/training-ground", "/alpha"].some((prefix) => location.pathname.startsWith(prefix));
+  const onReadOnlyProductSurface = typeof location !== "undefined" && ["/paper-trading", "/copy-trading", "/brain", "/training-ground", "/alpha", "/evolution"].some((prefix) => location.pathname.startsWith(prefix));
   const route = typeof location !== "undefined" ? `${location.pathname}${location.search}` : "";
   const initialLearningWindow = onLearningPage && isWithinLearningInitialWindow();
   if (!force && onReadOnlyProductSurface) return;
@@ -195,6 +196,7 @@ async function responseError(response: Response) {
 }
 
 export const api = {
+  ascentStatus: () => getJson<AscentSnapshot>("/api/ascent/status"),
   clientRequestStats: () => ({ ...requestStats, initialLearningPage: [...requestStats.initialLearningPage] }),
   performanceDiagnostics: () => getJson<any>("/performance/diagnostics"),
   recordPerformanceWidget: (payload: { name: string; duration_ms: number; status?: string; source?: string; detail?: string }) =>

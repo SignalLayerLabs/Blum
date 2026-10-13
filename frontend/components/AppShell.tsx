@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Activity, Brain, Clock, Copy, Cpu, Dumbbell, TrendingUp, type LucideIcon } from "lucide-react";
+import { Activity, Brain, Clock, Copy, Cpu, Dumbbell, TrendingUp, FlaskConical, type LucideIcon } from "lucide-react";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import { SystemStatus } from "@/lib/types";
@@ -19,7 +19,8 @@ const nav: NavItem[] = [
   { href: "/brain", label: "Brain", icon: Brain, aliases: ["/dashboard"] },
   { href: "/training-ground", label: "Training Ground", icon: Dumbbell, aliases: ["/learning"] },
   { href: "/paper-trading", label: "Paper Trading", icon: Copy, aliases: ["/copy-trading"] },
-  { href: "/alpha", label: "Alpha", icon: TrendingUp }
+  { href: "/alpha", label: "Alpha", icon: TrendingUp },
+  { href: "/evolution", label: "Evolution", icon: FlaskConical }
 ];
 
 type SidebarStatus = {

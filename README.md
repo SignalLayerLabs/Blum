@@ -1,220 +1,188 @@
 ---
-title: Blum AI Financial Intelligence
+title: BLUM Financial Research
 emoji: 📈
 colorFrom: yellow
 colorTo: gray
 sdk: docker
 app_port: 7860
-short_description: Open-source evidence-bound financial decision intelligence.
-tags: [financial-analysis, quantitative-finance, algorithmic-trading, paper-trading, ai, fastapi, nextjs, forex, stock-market]
+short_description: Evidence-bound market research, paper trading and bounded source evolution.
+tags: [quantitative-finance, paper-trading, financial-machine-learning, fastapi, nextjs, forex]
 pinned: false
 ---
 
-<div align="center">
-
 # BLUM
 
-### Open-source financial decision intelligence
+**An open-source financial research system that records what it knows, measures what happened, and rejects improvements the evidence cannot support.**
 
-BLUM studies markets, records decisions, simulates execution and learns from
-measured outcomes. It is designed to explain whether its reasoning is improving,
-not to manufacture confidence or promise returns.
+[![Verify BLUM](https://github.com/SignalLayerLabs/Blum/actions/workflows/ci.yml/badge.svg)](https://github.com/SignalLayerLabs/Blum/actions/workflows/ci.yml)
+[![Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/SignalLayerLabs/Blum)](https://github.com/SignalLayerLabs/Blum/releases)
 
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-2563eb.svg)](LICENSE)
-[![GitHub](https://img.shields.io/github/stars/BlumFinancialLab/Blum?style=flat&label=GitHub)](https://github.com/BlumFinancialLab/Blum)
-[![Hugging Face Space](https://img.shields.io/badge/Hugging%20Face-live%20Space-f5c518.svg)](https://huggingface.co/spaces/Italianhype/Blum)
-[![Model](https://img.shields.io/badge/model-BLUM%20Finance-f97316.svg)](https://huggingface.co/Italianhype/Blum)
-[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776ab.svg)](https://www.python.org/)
-[![FastAPI + Next.js](https://img.shields.io/badge/runtime-FastAPI%20%2B%20Next.js-111827.svg)](#architecture)
+[Open the observatory](https://blum.signallayerlabs.workers.dev) · [Releases](https://github.com/SignalLayerLabs/Blum/releases) · [Issues](https://github.com/SignalLayerLabs/Blum/issues) · [Deployment](docs/DEPLOYMENT.md) · [Data audit](docs/DATA_QUALITY.md)
 
-[Live application](https://italianhype-blum.hf.space) ·
-[Documentation](#documentation) ·
-[Model](https://huggingface.co/Italianhype/Blum) ·
-[Discussions](https://github.com/BlumFinancialLab/Blum/discussions) ·
-[Contributing](CONTRIBUTING.md)
+GitHub is the canonical platform for BLUM's source, review, tests, releases, documentation and evidence reports. Cloudflare serves the public product and routes read-only API requests to the Hugging Face Docker runtime. The Engine and its PostgreSQL evidence store retain financial decision authority.
 
-</div>
-
-## What BLUM is
-
-BLUM is an open-source research system for quantitative finance, financial
-machine learning, equities and Forex paper trading. Its core loop is explicit:
+## The research loop
 
 ```text
-Market evidence -> thesis -> risk-gated decision -> paper execution
-                -> measured outcome -> learning -> next experiment
+Attributable evidence → timestamped thesis → deterministic risk gates
+                    → paper execution → cost-aware outcome → validation
+                    → recorded lesson or rejected experiment
 ```
 
-The system combines technical, fundamental, narrative, regime, benchmark and
-portfolio evidence. Every trading result remains paper-only, timestamped and
-auditable. Stored outcomes can influence future confidence and research
-priorities, but BLUM never rewrites its own source code.
+BLUM researches equities, ETFs and Forex, stores reasoning and outcomes, and evaluates them against relevant baselines. Deterministic engines own risk, portfolio decisions, execution simulation and financial accounting. Optional model output remains advisory. Missing sources, weak samples and failed gates are reported explicitly.
 
-## Product surfaces
+The supported configuration is paper trading and research. There is no broker execution, guaranteed profit or independently established outperformance claim.
 
-| Surface | Question answered | Live view |
-| --- | --- | --- |
-| **Brain** | Is decision quality improving? | [Open Brain](https://italianhype-blum.hf.space/brain) |
-| **Training Ground** | What is BLUM testing and learning? | [Open Training Ground](https://italianhype-blum.hf.space/training-ground) |
-| **Paper Trading** | Which decisions were opened, closed or rejected, and why? | [Open Paper Trading](https://italianhype-blum.hf.space/paper-trading) |
-| **Alpha** | Does stored evidence beat relevant benchmarks? | [Open Alpha](https://italianhype-blum.hf.space/alpha) |
+## Explore the product
 
-The public UI reads compact snapshots. Training, research and trade evaluation
-continue in background workers and are never triggered by page rendering.
+| Surface | What it shows |
+| --- | --- |
+| [Brain](https://blum.signallayerlabs.workers.dev/brain/) | Decision quality, stored knowledge, uncertainty and runtime state |
+| [Training Ground](https://blum.signallayerlabs.workers.dev/training-ground/) | Research priorities, validation progress, learning blockers and measured outcomes |
+| [Paper Trading](https://blum.signallayerlabs.workers.dev/paper-trading/) | Simulated trades, execution history, costs, rejections and attribution |
+| [Alpha](https://blum.signallayerlabs.workers.dev/alpha/) | Benchmark evidence, reliability, drawdown and performance limitations |
+| [Evolution](https://blum.signallayerlabs.workers.dev/evolution/) | ASCENT generations, source hashes, evaluation gates, rejected candidates and resource budgets |
 
-## Evidence before claims
+These pages read snapshots; opening a page does not launch training or research. The public gateway permits only reviewed GET/HEAD APIs. Legacy diagnostic operations remain private. Administrative research and deployment use private credentials and trusted maintainer tools.
 
-BLUM separates four evidence classes rather than combining them into one score:
+## What ships in 2.2
 
-1. historical replay;
-2. purged or walk-forward validation;
-3. paper-forward outcomes;
-4. live-forward evidence when available.
+- **Bounded source evolution.** ASCENT generates four actual calibration source candidates per generation, tests them, freezes selection and evaluates the selected candidate against untouched evidence. Candidates can alter confidence calibration only.
+- **Capability-free evaluation.** A restricted arithmetic interpreter permits finite constants, the scalar confidence input, arithmetic and min/max. Candidate code receives no filesystem, environment, network or host execution.
+- **Independent validation.** Purged chronological development folds, a frozen holdout, baseline comparisons, asset/regime coverage, calibration regression checks and conservative time-block uncertainty gates determine retention.
+- **Persistent experiments.** SQL checkpoints, source/evaluator/data hashes, consumed-holdout records and private artifacts preserve lineage and failures.
+- **Data rejection at the boundary.** Invalid price candles and conflicting Forex records are excluded. Old external Forex projections and advice are rejected by the current policy.
+- **Reproducible releases.** Locked web dependencies, backend/migration checks, gateway tests, reviewed data hashes and one-way GitHub deployment.
 
-Every performance surface should expose sample size, benchmark, period,
-transaction-cost assumptions and reliability warnings. Historical success is
-not treated as forward alpha. Missing evidence is reported as missing, not
-replaced with synthetic results.
+ASCENT retains research artifacts. It does not automatically merge code, replace a production champion, promote an HF model or place orders. Its budget is at most 2,000 observations, four candidates and 90 cooperative seconds per cycle, with at most eight generations per day. It uses no external inference or paid GPU job. Database operations are not forcibly preempted.
 
-## Architecture
+[Read ASCENT architecture and operation](docs/ASCENT.md).
 
-BLUM uses three boundaries with one source of financial truth:
+## Evidence and data
+
+Historical replay, walk-forward validation and paper-forward outcomes remain separate. Archived decisions do not become forward results when imported. Every new experiment must respect input availability, outcome maturity, costs, benchmark definitions, sample size and provenance.
+
+| Input | Release audit decision |
+| --- | --- |
+| Equity/ETF cache | 75,381 price-valid observations across 30 assets; five invalid bars excluded; eight missing-volume values remain missing |
+| Forex CSV | 71 non-ambiguous weekday snapshots, producing one causal example; insufficient for validation or promotion |
+| Raw public reasoning dataset | 521 examples quarantined for new training/promotion |
+| Persistent reasoning archives | All 95 versions quarantined; 21,424 occurrences represent 530 unique lineages |
+| Community Memory dataset | No contribution records available |
+
+Hash validity does not establish semantic validity. Reasoning archives have missing provenance and outcomes after declared cutoffs. A reproducible sanitized derivative of a previous dataset exists, but establishes no market edge. Database and recovery backups remain preserved; this source audit does not certify all their contents. [Read the exact decisions and limitations](docs/DATA_QUALITY.md).
+
+## Architecture and deployment ownership
 
 ```mermaid
-flowchart LR
-    Data["Market, news and filing evidence"] --> Engine["BLUM Engine"]
-    Engine --> Decisions["Theses, decisions and risk plans"]
-    Decisions --> Paper["Paper execution and outcomes"]
-    Paper --> Learning["Learning and validation"]
-    Learning --> Memory["Versioned evidence memory"]
-    Memory --> Engine
-    Engine --> Snapshots["Read-only snapshots"]
-    Snapshots --> Runtime["BLUM Runtime"]
-    Runtime --> UI["Brain · Training · Paper Trading · Alpha"]
-    Engine --> Dataset["Curated reasoning dataset"]
-    Dataset --> Analyst["BLUM Finance model"]
-    Analyst -->|"Advisory reasoning only"| Engine
+flowchart TD
+    GH["GitHub: source · review · CI · releases"] --> HF["Hugging Face Docker runtime"]
+    GH --> CF["Cloudflare: product + API gateway"]
+    Browser["Browser"] --> CF
+    CF -->|"Read-only JSON snapshots"| HF
+    Sources["Attributable market evidence"] --> Engine["BLUM Engine"]
+    HF --- Engine
+    Engine <--> DB["PostgreSQL: decisions · paper outcomes · checkpoints"]
+    DB --> Backup["Persistent HF bucket: recovery + research artifacts"]
+    Engine --> Ascent["ASCENT: isolated source candidates"]
+    Ascent --> Validation["Frozen independent evaluator"]
+    Validation --> Results["Retain for research or reject"]
 ```
 
-- **BLUM Engine** owns evidence, decisions, learning, risk, portfolio logic and
-  benchmark validation.
-- **BLUM Runtime** owns APIs, scheduling, snapshots, observability and the web
-  interface. It does not own financial truth.
-- **BLUM Finance model** learns BLUM's evidence-bound reasoning format. Its
-  output remains advisory until the Engine validates it.
+The Python/ML runtime remains on Hugging Face. Cloudflare does not own a second financial database. The gateway streams live JSON, disables financial-response caching, strips credentials/cookies, bounds upstream waits and rejects HTML masquerading as an API response. The web build is the existing full Next.js product.
 
-Read [Architecture](docs/ARCHITECTURE.md) for module boundaries and event flow.
+The old HF → GitHub automatic import is removed. Deployments flow from verified GitHub `main` to HF and Cloudflare. HF publication is fast-forward-only; divergence stops publication for review. Neither workflow force-pushes canonical history.
 
-## Core capabilities
+## Run locally
 
-- point-in-time market, news, filing and sentiment evidence;
-- multi-engine bull, bear and neutral thesis competition;
-- equities, ETF and Forex opportunity research;
-- deterministic risk gates and paper execution simulation;
-- spread, slippage, fees, partial-fill and benchmark accounting;
-- historical replay, walk-forward and paper-forward evidence separation;
-- decision, trade, engine-vote and learning attribution;
-- confidence calibration and regime-aware reliability;
-- autonomous research priorities and champion/challenger policies;
-- snapshot-first FastAPI and Next.js runtime;
-- governed reasoning-dataset and model-release pipeline.
-
-## Quick start
-
-Docker is the supported reproducible path:
+Docker is the supported complete runtime:
 
 ```bash
-git clone https://github.com/BlumFinancialLab/Blum.git
+git clone https://github.com/SignalLayerLabs/Blum.git
 cd Blum
-docker build -t blum .
+git lfs pull
+docker build -t blum --build-arg BLUM_SOURCE_REVISION=$(git rev-parse HEAD) .
 docker run --rm -p 7860:7860 blum
 ```
 
-Open `http://localhost:7860`. The first image build installs CPU machine-learning
-and quantitative dependencies and can take several minutes.
+Open `http://localhost:7860`. The image includes CPU ML dependencies and may take several minutes to build. Without `DATABASE_URL`, startup manages embedded PostgreSQL. Production uses persistent `/data` recovery files or external PostgreSQL; multiple replicas require an external database.
 
-Without `DATABASE_URL`, the container starts an embedded PostgreSQL instance for
-research use. On deployments with persistent `/data`, BLUM asynchronously keeps
-a physical recovery image for fast local startup and an atomic logical dump as
-fallback. PostgreSQL itself remains on local disk because network-mounted Space
-storage is not a safe database data directory. Use an external PostgreSQL
-database for durable multi-replica deployments:
+Backend development with PostgreSQL already configured:
 
 ```bash
-docker run --rm -p 7860:7860 \
-  -e DATABASE_URL=postgresql+psycopg2://user:password@host:5432/blum \
-  blum
+python3.12 -m venv .venv
+. .venv/bin/activate
+pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements-dev.txt
+PYTHONPATH=backend alembic -c backend/alembic.ini upgrade head
+PYTHONPATH=backend uvicorn app.main:app --host 127.0.0.1 --port 7860
 ```
 
-Configuration belongs in environment variables or deployment secrets. Never
-commit market-provider, model-provider or database credentials.
+Web product and local gateway:
 
-## Repository and deployment flow
+```bash
+npm ci --prefix frontend --workspaces=false
+npm --prefix frontend run build
+npm ci --prefix cloudflare
+npm --prefix cloudflare run types
+npm --prefix cloudflare run preview
+```
 
-[GitHub](https://github.com/BlumFinancialLab/Blum) is canonical. The
-[Hugging Face Space](https://huggingface.co/spaces/Italianhype/Blum) is the
-public Docker deployment.
+The gateway's default upstream is the public HF runtime. Change `BACKEND_ORIGIN` deliberately when using a different HTTPS backend. No secret belongs in `NEXT_PUBLIC_*`, browser code or Wrangler's public variables.
 
-A scheduled GitHub workflow reads the public HF Git history:
+## Research operations
 
-- equal or older HF history produces no change;
-- a strictly newer HF history fast-forwards GitHub after Git LFS transfer;
-- divergent histories create a protected review branch and pull request;
-- canonical `main` is never force-pushed.
+ASCENT is disabled by default in a fresh installation. The maintained deployment can enable its bounded scheduler explicitly:
 
-See [Deployment and synchronization](docs/DEPLOYMENT.md).
+```text
+BLUM_ASCENT_ENABLED=true
+BLUM_ASCENT_SCHEDULER_ENABLED=true
+BLUM_ASCENT_INTERVAL_MINUTES=360
+BLUM_ASCENT_ARTIFACT_ROOT=/data/ascent
+BLUM_ASCENT_ADMIN_KEY=<private runtime secret>
+```
 
-## Model and datasets
+Read state or run one cycle against a configured local database:
 
-- [BLUM Finance 4B](https://huggingface.co/Italianhype/Blum): downloadable
-  evidence-bound reasoning model.
-- [BLUM Finance Reasoning](https://huggingface.co/datasets/Italianhype/Blum-Finance-Reasoning):
-  versioned training and evaluation examples.
-- [BLUM Finance Memory](https://huggingface.co/datasets/Italianhype/Blum-Finance-Memory):
-  opt-in, quarantined community contributions.
+```bash
+PYTHONPATH=backend python scripts/run_ascent.py --status
+PYTHONPATH=backend python scripts/run_ascent.py --market equity --lane REPLAY_EVIDENCE
+```
 
-Inference does not send telemetry by default. Community evidence requires an
-explicit redacted contribution flow and never changes active weights merely
-because it was uploaded.
+An unavailable revision, insufficient data, a consumed holdout or a failed gate blocks the relevant experiment. Rejected results are expected outcomes of a functioning validator. HF paid training and automatic dataset publication remain disabled pending a validated replacement dataset.
 
-## Documentation
+## Verify and release
 
-| Document | Purpose |
+```bash
+PYTHONPATH=backend python -m pytest -q
+PYTHONPATH=backend python scripts/audit_historical_sources.py --check
+npm --prefix frontend test
+npm --prefix frontend run build
+npm --prefix cloudflare test
+npm --prefix cloudflare run types
+npm --prefix cloudflare run typecheck
+```
+
+[Verify BLUM](.github/workflows/ci.yml) runs these contracts on GitHub. [Deploy verified main](.github/workflows/deploy.yml) requires successful exact-revision checks, deploys HF, waits for readiness and the baked source revision, then publishes Cloudflare and smoke-tests all five surfaces.
+
+Production requires `HF_TOKEN`, `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in GitHub's secret/variable stores. Provider, database and administrative secrets remain in HF's runtime secret store. [Read deployment, rollback and recovery procedures](docs/DEPLOYMENT.md).
+
+## Repository guide
+
+| Path | Responsibility |
 | --- | --- |
-| [Architecture](docs/ARCHITECTURE.md) | Engine, Runtime, Analyst and data-flow boundaries |
-| [Research methodology](docs/RESEARCH_METHODOLOGY.md) | Evidence, validation and anti-bias rules |
-| [Deployment](docs/DEPLOYMENT.md) | Docker, HF and repository synchronization |
-| [Engineering standards](ENGINEERING_STANDARDS.md) | Production and evidence requirements |
-| [Roadmap](ROADMAP.md) | Current engineering direction |
-| [Changelog](CHANGELOG.md) | Shipped changes |
-| [Project reference](docs/PROJECT_REFERENCE.md) | Full historical subsystem and release reference |
-| [Model release report](BLUM_FINANCE_MODEL_RELEASE_REPORT.md) | Dataset, evaluation and release limitations |
+| `backend/app/engine/` | Financial contracts and product read models |
+| `backend/app/services/` | Evidence, risk, paper execution, learning and validation |
+| `backend/app/services/ascent/` | Candidate language, datasets, frozen evaluation and checkpointed evolution |
+| `backend/app/api/routers/` | Bounded APIs and legacy compatibility |
+| `backend/alembic/` | Versioned SQL migrations |
+| `frontend/` | Next.js product and view contracts |
+| `cloudflare/` | Static-assets Worker, gateway policy and tests |
+| `model_release/` | Advisory model release, sanitization and evaluation tools |
+| `scripts/` | Trusted audits, research commands and deployment verification |
+| `docs/evidence/` | Source audits and rejection ledgers |
 
-## Contributing
+[Architecture](docs/ARCHITECTURE.md) · [Methodology](docs/RESEARCH_METHODOLOGY.md) · [Engineering standards](ENGINEERING_STANDARDS.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Governance](GOVERNANCE.md)
 
-Contributions should improve measured decision quality, evidence integrity,
-risk control, reproducibility or runtime reliability. Start with
-[CONTRIBUTING.md](CONTRIBUTING.md), use
-[Discussions](https://github.com/BlumFinancialLab/Blum/discussions) for research
-questions and submit reproducible defects through
-[Issues](https://github.com/BlumFinancialLab/Blum/issues).
-
-Project decisions follow [GOVERNANCE.md](GOVERNANCE.md). Security issues must be
-reported privately according to [SECURITY.md](SECURITY.md).
-
-## Safety boundary
-
-BLUM is research and paper-trading software. It does not connect to a broker or
-execute real-money orders in the supported open-source configuration. It does
-not provide investment advice, guarantee profit or claim market outperformance
-without sufficient stored evidence.
-
-Models, datasets and third-party market sources may have licenses or usage terms
-separate from the Apache-2.0 application license. Review their cards and terms
-before redistribution or commercial use.
-
-## License
-
-Application source is licensed under [Apache-2.0](LICENSE).
-
-Copyright 2026 BLUM Financial Lab contributors.
+Application source is licensed under [Apache-2.0](LICENSE). Market-provider, dataset and model terms are separate. BLUM Financial Lab contributors, 2026.

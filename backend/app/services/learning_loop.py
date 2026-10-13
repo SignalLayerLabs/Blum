@@ -1511,17 +1511,19 @@ def nearest_trading_date(db: Session, asset: Asset, target: date, latest: date) 
 
 
 def price_frame(rows: list[PriceHistory]) -> pd.DataFrame:
+    from app.services.market_data_quality import valid_ohlcv
+    rows = [row for row in rows if valid_ohlcv(row.open, row.high, row.low, row.close, row.volume)]
     if not rows:
         return pd.DataFrame()
     return pd.DataFrame(
         [
             {
                 "date": row.date,
-                "open": row.open if row.open is not None else row.close,
-                "high": row.high if row.high is not None else row.close,
-                "low": row.low if row.low is not None else row.close,
+                "open": row.open,
+                "high": row.high,
+                "low": row.low,
                 "close": row.close,
-                "volume": row.volume or 0,
+                "volume": row.volume,
             }
             for row in rows
         ]
