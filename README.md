@@ -5,7 +5,7 @@ colorFrom: yellow
 colorTo: gray
 sdk: docker
 app_port: 7860
-short_description: Evidence-bound market research, paper trading and bounded source evolution.
+short_description: Evidence-bound research, paper trading and source evolution.
 tags: [quantitative-finance, paper-trading, financial-machine-learning, fastapi, nextjs, forex]
 pinned: false
 ---
