@@ -44,7 +44,7 @@ The supported configuration is paper trading and research. There is no broker ex
 | [Alpha](https://blum.signallayerlabs.workers.dev/alpha/) | Benchmark evidence, reliability, drawdown and performance limitations |
 | [Evolution](https://blum.signallayerlabs.workers.dev/evolution/) | ASCENT generations, source hashes, evaluation gates, rejected candidates and resource budgets |
 
-These pages read snapshots; opening a page does not launch training or research. The public gateway permits GET/HEAD. Administrative research and deployment use private credentials and trusted maintainer tools.
+These pages read snapshots; opening a page does not launch training or research. The public gateway permits only reviewed GET/HEAD APIs. Legacy diagnostic operations remain private. Administrative research and deployment use private credentials and trusted maintainer tools.
 
 ## What ships in 2.2
 

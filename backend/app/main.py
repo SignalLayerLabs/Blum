@@ -7,6 +7,7 @@ import time
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routers import (
@@ -21,6 +22,7 @@ from app.api.routers import (
     forex_trader_router,
 )
 from app.core.config import get_settings
+from app.api.public_access import public_access_error
 from app.api.routers.ascent import router as ascent_router
 from app.core.database import SessionLocal
 from app.services.bootstrap import bootstrap_database
@@ -81,6 +83,13 @@ app.include_router(analyst_router)
 app.include_router(ascent_router)
 include_legacy_router_without_duplicate_operations(app, legacy_router)
 app.include_router(forex_trader_router)
+
+
+@app.middleware("http")
+async def public_observatory_guard(request: Request, call_next):
+    error = public_access_error(request, app.router.routes,
+        enabled=settings.public_observatory_enabled, admin_key=settings.ascent_admin_key)
+    return error if error is not None else await call_next(request)
 
 
 @app.middleware("http")
@@ -192,10 +201,16 @@ def shutdown() -> None:
 def serve_frontend(full_path: str):
     if not STATIC_DIR.exists():
         return {"message": "Frontend build not found. Run the Next.js build or use the API docs at /docs."}
-    target = STATIC_DIR / full_path
+    root = STATIC_DIR.resolve()
+    target = (root / full_path).resolve()
+    if not target.is_relative_to(root):
+        return JSONResponse({"detail": "Not found"}, status_code=404)
     if target.is_file():
         return FileResponse(target)
-    html_file = target / "index.html"
-    if html_file.is_file():
+    html_file = (target / "index.html").resolve()
+    if html_file.is_relative_to(root) and html_file.is_file():
         return FileResponse(html_file)
-    return FileResponse(STATIC_DIR / "index.html")
+    index = (root / "index.html").resolve()
+    if index.is_relative_to(root) and index.is_file():
+        return FileResponse(index)
+    return JSONResponse({"detail": "Frontend build unavailable"}, status_code=503)

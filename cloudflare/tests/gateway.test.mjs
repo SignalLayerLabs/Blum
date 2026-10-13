@@ -70,3 +70,35 @@ test('legacy snapshot paths proxy and release status is honest about backend rea
   const legacy = await worker.fetch(new Request('https://blum.example/system/status'), env);
   assert.equal(legacy.headers.get('Content-Type'), 'application/json');
 });
+
+
+test('unvetted GET handlers never reach the backend even with persist=false', async t => {
+  t.mock.method(globalThis,'fetch',() => {throw new Error('must not fetch');});
+  for (const path of ['/ipo-radar/sec-submissions/123?persist=false','//attacker.example/state']) {
+    const r = await worker.fetch(new Request('https://blum.example'+path,{headers:{Accept:'application/json'}}),env);
+    assert.equal(r.status,404);
+  }
+});
+test('every backend truthy persistence alias is denied', async t => {
+  t.mock.method(globalThis,'fetch',() => {throw new Error('must not fetch');});
+  for (const value of ['yes','on','y','t','TRUE','1','%20true%20']) {
+    const r = await worker.fetch(new Request('https://blum.example/api/brain/snapshot?persist='+value),env);
+    assert.equal(r.status,400);
+  }
+});
+test('release GET and HEAD require the exact backend revision', async t => {
+  let revision = 'a'.repeat(40);
+  t.mock.method(globalThis,'fetch',async url => new Response(JSON.stringify(String(url).endsWith('/startup/status')
+    ? {api_ready:true,ui_ready:true,last_error:''} : {version:'2.2.0',source_revision:revision}), {headers:{'Content-Type':'application/json'}}));
+  assert.equal((await worker.fetch(new Request('https://blum.example/api/release'),env)).status,200);
+  const head = await worker.fetch(new Request('https://blum.example/api/release',{method:'HEAD'}),env);
+  assert.equal(head.status,200); assert.equal(await head.text(),'');
+  revision = 'b'.repeat(40);
+  assert.equal((await worker.fetch(new Request('https://blum.example/api/release'),env)).status,503);
+});
+test('post-header stream errors return explicit JSON503 readiness', async t => {
+  t.mock.method(globalThis,'fetch',async () => new Response(new ReadableStream({start(controller){controller.error(new Error('stream aborted'));}}),
+    {headers:{'Content-Type':'application/json'}}));
+  const r = await worker.fetch(new Request('https://blum.example/api/release'),env);
+  assert.equal(r.status,503);assert.equal((await r.json()).backend_ready,false);
+});

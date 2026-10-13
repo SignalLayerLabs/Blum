@@ -1,4 +1,6 @@
+import publicRoutes from '../../backend/app/data/public_api_routes.json' with {type: 'json'};
 // Cloudflare serves the product assets. Financial state remains in the Engine.
+const PUBLIC_PATHS = publicRoutes.map(template => new RegExp('^' + template.replace(/\{[^}]+\}/g, '[^/]+') + '$'));
 const LEGACY_API_ROOTS = new Set([
   'system', 'dashboard', 'performance', 'snapshots', 'learning', 'brain',
   'trader-brain', 'engine', 'runtime', 'analyst', 'architecture', 'model',
@@ -31,8 +33,11 @@ function json(env: Env, value: unknown, status = 200): Response {
 
 async function proxy(request: Request, env: Env, path?: string): Promise<Response> {
   const url = new URL(request.url);
-  if ([...url.searchParams].some(([key, value]) => ['persist', 'refresh', 'rebuild', 'force'].includes(key.toLowerCase()) && ['true', '1'].includes(value.toLowerCase()))) {
+  if ([...url.searchParams].some(([key, value]) => ['persist', 'refresh', 'rebuild', 'force'].includes(key.toLowerCase()) && !['false', '0'].includes(value.trim().toLowerCase()))) {
     return json(env, {detail: 'MUTATING_QUERY_NOT_ALLOWED'}, 400);
+  }
+  if (!PUBLIC_PATHS.some(pattern => pattern.test(path ?? url.pathname))) {
+    return json(env, {detail: 'PUBLIC_API_ROUTE_NOT_AVAILABLE'}, 404);
   }
   let origin: URL;
   try {
@@ -41,7 +46,9 @@ async function proxy(request: Request, env: Env, path?: string): Promise<Respons
   } catch {
     return json(env, {detail: 'BACKEND_CONFIGURATION_INVALID'}, 503);
   }
-  const target = new URL(path ?? url.pathname + url.search, origin);
+  const target = new URL(origin);
+  target.pathname = path ?? url.pathname;
+  target.search = path ? '' : url.search;
   try {
     const upstream = await fetch(target, {
       method: 'GET', headers: new Headers({'Accept': 'application/json'}),
@@ -72,9 +79,7 @@ async function proxy(request: Request, env: Env, path?: string): Promise<Respons
   }
 }
 
-async function releaseStatus(request: Request, env: Env): Promise<Response> {
-  const result = await proxy(request, env, '/startup/status');
-  let ready = false;
+async function boundedJSON(result: Response): Promise<Record<string, unknown> | null> {
   if (result.ok && result.body) {
     const reader = result.body.getReader();
     let content = '', size = 0;
@@ -87,12 +92,26 @@ async function releaseStatus(request: Request, env: Env): Promise<Response> {
         if (size > 65536) throw new Error('oversized readiness payload');
         content += decoder.decode(next.value, {stream: true});
       }
-      const state = JSON.parse(content + decoder.decode());
-      ready = state.api_ready === true && state.ui_ready === true && !state.last_error;
-    } catch { ready = false; } finally { await reader.cancel(); }
+      const value: unknown = JSON.parse(content + decoder.decode());
+      return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+    } catch { return null; } finally { await reader.cancel().catch(() => undefined); }
   }
+  await result.body?.cancel().catch(() => undefined);
+  return null;
+}
+
+async function releaseStatus(request: Request, env: Env): Promise<Response> {
+  const probe = new Request(request, {method:'GET'});
+  const [startup, release] = await Promise.all([
+    proxy(probe, env, '/startup/status').then(boundedJSON),
+    proxy(probe, env, '/api/runtime/release').then(boundedJSON)
+  ]);
+  const ready = startup?.api_ready === true && startup?.ui_ready === true && !startup?.last_error
+    && release?.source_revision === env.SOURCE_REVISION && release?.version === '2.2.0';
   return json(env, {version: '2.2.0', source_revision: env.SOURCE_REVISION,
     worker_version: env.CF_VERSION_METADATA.id, backend_ready: ready,
+    backend_source_revision:release?.source_revision ?? null,
+    backend_version:release?.version ?? null,
     mode: 'paper_research_observatory', github: 'https://github.com/SignalLayerLabs/Blum'}, ready ? 200 : 503);
 }
 
@@ -104,7 +123,10 @@ export default {
       return response;
     }
     const path = new URL(request.url).pathname;
-    if (path === '/api/release') return releaseStatus(request, env);
+    if (path === '/api/release') {
+      const response = await releaseStatus(request, env);
+      return request.method === 'HEAD' ? new Response(null, response) : response;
+    }
     if (isAPI(path) || request.headers.get('Accept')?.includes('application/json')) return proxy(request, env);
     const asset = await env.ASSETS.fetch(request);
     const out = new Headers(asset.headers);

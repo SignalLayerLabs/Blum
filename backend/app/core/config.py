@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_name: str = "Blum AI Financial Intelligence"
     app_version: str = "2.2.0"
+    public_observatory_enabled: bool = Field(default=False, alias="BLUM_PUBLIC_OBSERVATORY_ENABLED")
     environment: str = Field(default="demo", alias="ENVIRONMENT")
     database_url: str = Field(
         default="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/blum",

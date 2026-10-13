@@ -32,7 +32,7 @@ Deployment builds the web product, sets the HF source revision, transfers LFS an
 
 ## Cloudflare gateway
 
-`cloudflare/wrangler.jsonc` serves `frontend/out` using an assets binding and the typed Worker. Keep `NEXT_PUBLIC_API_BASE` empty for same-origin requests. Public requests are GET/HEAD. Persistence/rebuild queries are rejected. Client credentials/cookies are stripped; APIs stream with no-store. Redirects and non-JSON API responses fail explicitly. Asset detail APIs send Accept: application/json so they do not shadow HTML pages at the same path.
+`cloudflare/wrangler.jsonc` serves `frontend/out` using an assets binding and the typed Worker. Keep `NEXT_PUBLIC_API_BASE` empty for same-origin requests. Public requests are GET/HEAD on the shared reviewed route list. Unvetted legacy GET handlers are private because some write even when persist=false. Persistence/rebuild queries are rejected. Client credentials/cookies are stripped; APIs stream with no-store. Redirects and non-JSON API responses fail explicitly. Asset detail APIs send Accept: application/json so they do not shadow HTML pages at the same path.
 
 ```bash
 npm ci --prefix frontend --workspaces=false
@@ -71,7 +71,7 @@ BLUM_ASCENT_ARTIFACT_ROOT=/data/ascent
 BLUM_ASCENT_ADMIN_KEY=<runtime secret>
 ```
 
-Direct HF POST /api/ascent/run requires X-BLUM-Admin-Key. Cloudflare blocks public mutations even if a caller sends a key. Viewing Evolution never starts research. Candidates remain research-only; deployment automation never promotes their source into application code.
+The maintained origin enables BLUM_PUBLIC_OBSERVATORY_ENABLED=true. Unvetted API handlers and all mutations require the private X-BLUM-Admin-Key; the five product snapshots and their declared supporting reads stay public. Direct HF POST /api/ascent/run requires that key. Cloudflare blocks public mutations even if a caller sends a key. Viewing Evolution never starts research. Candidates remain research-only; deployment automation never promotes their source into application code.
 
 Keep BLUM_FOREX_HISTORY_ENABLED=false, BLUM_HF_TRAINING_ENABLED=false, BLUM_HF_TRAINING_AUTO_LAUNCH=false, BLUM_HF_TRAINING_SCHEDULER_ENABLED=false and BLUM_HF_DATASET_SNAPSHOT_ENABLED=false until those sources pass a replacement audit. The accepted Forex snapshots produce only one causal example. All existing reasoning archive versions remain quarantined. See [data acceptance](DATA_QUALITY.md).
 
