@@ -291,6 +291,12 @@ class TraderBrainService:
         live_game = latest_row(db, LiveForwardPaperGame)
         benchmarks = latest_benchmarks(db)
         paper_rows = db.scalars(select(LiveForwardPaperTrade).order_by(desc(LiveForwardPaperTrade.created_at)).limit(500)).all()
+        closed_history = db.scalars(select(LiveForwardPaperTrade)
+            .where(LiveForwardPaperTrade.status.in_(["CLOSED", "EXPIRED", "INVALIDATED"]),
+                LiveForwardPaperTrade.closed_at.is_not(None), LiveForwardPaperTrade.exit_price.is_not(None),
+                LiveForwardPaperTrade.position_size > 0)
+            .order_by(desc(LiveForwardPaperTrade.closed_at), desc(LiveForwardPaperTrade.id)).limit(500)).all()
+        paper_rows = list({row.id: row for row in [*paper_rows, *closed_history]}.values())
         excluded_evidence_types = {
             "PAPER_FORWARD_INTRADAY_EXPERIMENTAL",
             "PAPER_FORWARD_INVALID_ENTRY_GEOMETRY",
@@ -334,7 +340,8 @@ class TraderBrainService:
         verdict = alpha_verdict_from_splits(evidence_split, evidence_grade)
         latest_update = latest_alpha_update_from_splits(evidence_split) or latest_paper_forward_update(eligible_paper_rows, benchmarks)
         primary_evidence = primary_alpha_evidence(evidence_split)
-        total_evidence_sample = sum(int(split.get("sample_size") or 0) for split in evidence_split.values() if isinstance(split, dict))
+        # live_forward is a second view of paper_forward, not independent observations.
+        total_evidence_sample = sum(int(split.get("sample_size") or 0) for key, split in evidence_split.items() if isinstance(split, dict) and key != "live_forward")
         unified_payload = unified_paper.get("payload") or {}
         unified_counts = (unified_payload.get("counts") or {}).get("aggregate") or {}
         unified_metrics = (unified_payload.get("metrics") or {}).get("aggregate") or {}
@@ -1569,8 +1576,9 @@ def trading_game_evidence_split(rows: list[TradingGameTrade], *, label: str, dat
         "win_rate": round(wins / len(rows), 4) if rows else None,
         "profit_factor": profit_factor,
         "max_drawdown": average_present(drawdown_values),
-        "evidence_grade": grade,
-        "evidence_reason": reason,
+        "evidence_grade": grade if grade in {"NO_DATA", "WEAK"} else "INSUFFICIENT_EVIDENCE",
+        "evidence_reason": "Legacy historical results lack independently verified input and evaluation provenance; descriptive returns are not a validated alpha claim.",
+        "provenance_status": "UNVERIFIED_LEGACY",
         "data_source": data_source,
         "last_updated_at": latest_iso([row.created_at for row in rows if row.created_at]),
         "results": [historical_trade_result(row) for row in rows[:6]],
@@ -1888,11 +1896,17 @@ def latest_iso(values: list[Any]) -> str | None:
 
 
 def paper_forward_trade_is_closed(row: LiveForwardPaperTrade) -> bool:
+    if str(row.status or "").upper() in {"SKIPPED", "REJECTED", "DATA_BLOCKED"}:
+        return False
+    if str(row.outcome_label or row.close_reason or "").upper() in {"ORDER_NOT_FILLED", "SIGNAL_DECAY_BEFORE_ENTRY"}:
+        return False
+    if str(row.status or "").upper() in {"EXPIRED", "INVALIDATED"}:
+        return bool(row.opened_at and row.closed_at and row.exit_price is not None and (row.position_size or 0) > 0)
     return bool(
         row.closed_at
         or row.exit_price is not None
         or row.close_reason
-        or str(row.status or "").upper() in {"CLOSED", "EXITED", "EXPIRED", "INVALIDATED"}
+        or str(row.status or "").upper() in {"CLOSED", "EXITED"}
     )
 
 

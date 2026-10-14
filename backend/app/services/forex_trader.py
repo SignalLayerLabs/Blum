@@ -523,6 +523,8 @@ class BlumForexTraderCore:
                 "finrlx_quant": quant_payload,
             }
             if not evaluation.approved:
+                from app.services.alpha_desk import AlphaCallRegistry
+                AlphaCallRegistry().register(db, decision)
                 rejected.append({"pair": market.pair, "blockers": list(evaluation.blockers)})
                 blockers.extend(evaluation.blockers)
                 continue
@@ -532,6 +534,8 @@ class BlumForexTraderCore:
             if not risk.decision.startswith("APPROVE"):
                 decision.status = "REJECTED"
                 decision.blockers = list(risk.blockers)
+                from app.services.alpha_desk import AlphaCallRegistry
+                AlphaCallRegistry().register(db, decision)
                 rejected.append({"pair": market.pair, "blockers": list(risk.blockers)})
                 blockers.extend(risk.blockers)
                 evidence = self.learning.record_outcome(db, decision_id=decision.id, outcome="RISK_BLOCK_CORRECT", payload={
@@ -544,6 +548,8 @@ class BlumForexTraderCore:
                 if evidence:
                     learning_events.append(evidence.outcome)
                 continue
+            from app.services.alpha_desk import AlphaCallRegistry
+            AlphaCallRegistry().register(db, decision)
             request = ForexOrderRequest.from_proposal(
                 evaluation.proposal,
                 quantity_lots=risk.quantity_lots,
@@ -576,6 +582,7 @@ class BlumForexTraderCore:
                 contract_json={
                     **_jsonable(asdict(evaluation.proposal)),
                     "broker_profile": "paper_eu_30x",
+                    "account_currency": self.brokers.get().account_currency,
                     "account_fx_rate": execution.account_fx_rate,
                     "fx_rate_source": execution.fx_rate_source,
                     "session": market.session,

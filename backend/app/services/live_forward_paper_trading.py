@@ -113,6 +113,17 @@ class LiveForwardPaperTradingService(_TradingLabLiveForwardService):
         game = self.active_or_create_live_game(db)
         now = datetime.utcnow()
         ticker = normalize_text(decision_payload.get("ticker")).upper()
+        context = dict(decision_payload.get("price_context") or {})
+        if not context.get("provider") or not context.get("available_at"):
+            asset = db.scalar(select(Asset).where(Asset.ticker == ticker).limit(1))
+            if asset is not None:
+                latest = db.scalar(select(PriceHistory).where(PriceHistory.asset_id == asset.id)
+                    .order_by(desc(PriceHistory.date)).limit(1))
+                if (latest is not None and latest.created_at is not None and latest.created_at <= now
+                    and context.get("latest_date") == latest.date.isoformat()
+                    and safe_float(context.get("latest_price"), None) == float(latest.close)):
+                    context.update(provider=latest.provider, available_at=latest.created_at.isoformat(), source_price_id=latest.id)
+                    decision_payload = {**decision_payload, "price_context": context}
         plan = decision_payload.get("trade_plan") or {}
         setup_type = normalize_text((decision_payload.get("setup") or {}).get("setup_type")) or "unknown_setup"
         entry_trigger = normalize_text(plan.get("entry_trigger") or plan.get("confirmation_condition")) or "live_forward_candidate"
@@ -357,6 +368,8 @@ class LiveForwardPaperTradingService(_TradingLabLiveForwardService):
             self.append_event(db, trade.id, "DATA_BLOCKED", block_reason, payload={"price_context": decision_payload.get("price_context"), "actionability_diagnosis": diagnosis_payload})
         elif status in {"SKIPPED", "WAITING_FOR_TRIGGER"}:
             self.append_event(db, trade.id, "ACTIONABILITY_REJECTED", block_reason, payload={**actionability_event_payload(decision_payload, diagnosis, feedback), "classification": decision_payload_with_diagnosis["paper_forward_classification"]}, price_used=price if price > 0 else None)
+        from app.services.alpha_desk import AlphaCallRegistry
+        AlphaCallRegistry().register(db, trade)
         return trade
 
     def append_event(
@@ -2485,6 +2498,9 @@ def latest_price_context_for_asset(db: Session, asset: Asset, *, data_quality_sc
     return {
         "latest_price": safe_float(latest.close, None) if latest else None,
         "latest_date": latest.date.isoformat() if latest and latest.date else None,
+        "provider": latest.provider if latest else None,
+        "available_at": latest.created_at.isoformat() if latest and latest.created_at else None,
+        "source_price_id": latest.id if latest else None,
         "latest_volume": safe_float(latest.volume, None) if latest else None,
         "rows": rows,
         "data_quality_score": safe_float(data_quality_score, 0.0),

@@ -107,8 +107,10 @@ async function releaseStatus(request: Request, env: Env): Promise<Response> {
     proxy(probe, env, '/api/runtime/release').then(boundedJSON)
   ]);
   const ready = startup?.api_ready === true && startup?.ui_ready === true && !startup?.last_error
-    && release?.source_revision === env.SOURCE_REVISION && release?.version === '2.2.0';
-  return json(env, {version: '2.2.0', source_revision: env.SOURCE_REVISION,
+    && release?.source_revision === env.SOURCE_REVISION && release?.version === '2.3.0'
+    && /^[0-9a-f]{64}$/.test(env.SOURCE_CONTENT_HASH) && release?.source_content_hash === env.SOURCE_CONTENT_HASH;
+  return json(env, {version: '2.3.0', source_revision: env.SOURCE_REVISION,
+    source_content_hash: release?.source_content_hash ?? null,
     worker_version: env.CF_VERSION_METADATA.id, backend_ready: ready,
     backend_source_revision:release?.source_revision ?? null,
     backend_version:release?.version ?? null,

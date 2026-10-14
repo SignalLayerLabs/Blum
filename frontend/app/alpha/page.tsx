@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { BloombergPanel, MetricCard, MiniSparkline, TerminalHeader } from "@/components/FinancialTerminal";
 import { LoadingState } from "@/components/LoadingState";
 import { StatusBadge } from "@/components/StatusBadge";
+import { AlphaDesk } from "@/components/AlphaDesk";
 
 const EVIDENCE_GRADE_ORDER = ["NO_DATA", "INSUFFICIENT_EVIDENCE", "WEAK", "MIXED", "PROMISING", "STRONG"];
 
@@ -69,6 +70,7 @@ export default function AlphaPage() {
         ]}
       />
 
+      <AlphaDesk data={data.registered_alpha_desk} />
       <section className="alpha-verdict-panel">
         <div>
           <span>Alpha Verdict</span>
