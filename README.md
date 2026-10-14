@@ -46,14 +46,15 @@ The supported configuration is paper trading and research. There is no broker ex
 
 These pages read snapshots; opening a page does not launch training or research. The public gateway permits only reviewed GET/HEAD APIs. Legacy diagnostic operations remain private. Administrative research and deployment use private credentials and trusted maintainer tools.
 
-## What ships in 2.2
+## What ships in 2.3
 
+- **Prospective Alpha Desk.** New equity and Forex decisions are registered before outcomes with frozen input hashes, provider/availability metadata, an actual registration timestamp and a protected-code fingerprint. Markets are evaluated separately; stale inputs, unfilled orders and unreconciled costs cannot create a qualified track record. [Read the evaluation contract](docs/ALPHA_DESK.md).
 - **Bounded source evolution.** ASCENT generates four actual calibration source candidates per generation, tests them, freezes selection and evaluates the selected candidate against untouched evidence. Candidates can alter confidence calibration only.
 - **Capability-free evaluation.** A restricted arithmetic interpreter permits finite constants, the scalar confidence input, arithmetic and min/max. Candidate code receives no filesystem, environment, network or host execution.
 - **Independent validation.** Purged chronological development folds, a frozen holdout, baseline comparisons, asset/regime coverage, calibration regression checks and conservative time-block uncertainty gates determine retention.
 - **Persistent experiments.** SQL checkpoints, source/evaluator/data hashes, consumed-holdout records and private artifacts preserve lineage and failures.
 - **Data rejection at the boundary.** Invalid price candles and conflicting Forex records are excluded. Old external Forex projections and advice are rejected by the current policy.
-- **Reproducible releases.** Locked web dependencies, backend/migration checks, gateway tests, reviewed data hashes and one-way GitHub deployment.
+- **Reproducible releases.** Locked web dependencies, backend/migration checks, gateway tests, reviewed data hashes and one-way GitHub deployment. The backend reports a fingerprint computed from its actual protected runtime files; deployment verification checks this against the verified checkout.
 
 ASCENT retains research artifacts. It does not automatically merge code, replace a production champion, promote an HF model or place orders. Its budget is at most 2,000 observations, four candidates and 90 cooperative seconds per cycle, with at most eight generations per day. It uses no external inference or paid GPU job. Database operations are not forcibly preempted.
 

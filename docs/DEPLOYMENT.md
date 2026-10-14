@@ -40,7 +40,8 @@ npm --prefix frontend run build
 npm ci --prefix cloudflare
 npm --prefix cloudflare run types
 npm --prefix cloudflare run typecheck
-npm --prefix cloudflare run deploy -- --var SOURCE_REVISION:$(git rev-parse HEAD)
+source_content_hash=$(PYTHONPATH=backend python -c 'from app.core.release import source_content_hash; print(source_content_hash())')
+npm --prefix cloudflare run deploy -- --var "SOURCE_REVISION:$(git rev-parse HEAD)" --var "SOURCE_CONTENT_HASH:$source_content_hash"
 ```
 
 Wrangler authentication is required for publication. A custom domain can be added later. This release does not alter unrelated DNS. Worker observability is enabled. Financial state is not stored in edge cache or a parallel Worker database.
@@ -55,7 +56,7 @@ curl -fsS https://italianhype-blum.hf.space/api/runtime/release
 curl -fsS https://blum.signallayerlabs.workers.dev/api/release
 ```
 
-Require api_ready=true, ui_ready=true, no startup last_error, and the exact GitHub source revision. HTML with HTTP200 is not API readiness. `scripts/verify_deployment.py` enforces this contract.
+Require api_ready=true, ui_ready=true, no startup last_error, and the exact GitHub source revision. The release API also reports source_content_hash, computed from protected backend and script files. The verifier compares it with the verified checkout, so changing a revision variable cannot make an older code image pass. HTML with HTTP200 is not API readiness. `scripts/verify_deployment.py` enforces this contract.
 
 The existing bucket stays attached. PostgreSQL remains on local disk; object storage holds physical recovery files and atomic logical backups. Embedded PostgreSQL supports one replica. Multiple replicas require an external database. Preserve recovery files and verify startup before declaring data recovery complete.
 
@@ -84,3 +85,7 @@ Keep BLUM_FOREX_HISTORY_ENABLED=false, BLUM_HF_TRAINING_ENABLED=false, BLUM_HF_T
 5. Additive migration 0044_ascent_evolution preserves existing data. Code rollback does not require dropping its tables or erasing evidence.
 
 Report outages and missing evidence explicitly. Do not fill unavailable charts or APIs with fabricated results.
+
+## Prospective call evidence
+
+New decisions register within their original database transactions. The read-only `/api/alpha/desk` never backfills legacy records or starts financial execution. Migration 0045 is additive. Source fingerprints establish recorded code content, not semantic data validity or model outperformance. See [Alpha Desk](ALPHA_DESK.md).

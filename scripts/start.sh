@@ -7,6 +7,7 @@ export BLUM_DB_BACKUP_SECONDS="${BLUM_DB_BACKUP_SECONDS:-1800}"
 export BLUM_DB_RESTORE_JOBS="${BLUM_DB_RESTORE_JOBS:-2}"
 export BLUM_DB_INITIAL_BACKUP_DELAY_SECONDS="${BLUM_DB_INITIAL_BACKUP_DELAY_SECONDS:-60}"
 export BLUM_LOCAL_POSTGRES_DATA_DIR="${BLUM_LOCAL_POSTGRES_DATA_DIR:-/var/lib/postgresql/15/main}"
+BLUM_LOCAL_RESTORE_INCOMPLETE_FILE="${BLUM_LOCAL_POSTGRES_DATA_DIR}.restore-incomplete"
 export BLUM_PHYSICAL_POSTGRES_BACKUP_DIR="${BLUM_PERSIST_DIR}/embedded_postgres_physical"
 export BLUM_PHYSICAL_POSTGRES_BASE_BACKUP="${BLUM_PERSIST_DIR}/embedded_postgres_physical/base.tar.gz"
 export BLUM_PHYSICAL_POSTGRES_WAL_BACKUP="${BLUM_PERSIST_DIR}/embedded_postgres_physical/pg_wal.tar.gz"
@@ -134,11 +135,16 @@ cleanup_unsupported_persistent_postgres() {
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
   echo "No DATABASE_URL provided. Starting embedded PostgreSQL for the Hugging Face Docker demo."
+  if [[ -f "${BLUM_LOCAL_RESTORE_INCOMPLETE_FILE}" ]]; then
+    echo "Refusing startup after an incomplete restore. Recover the local database before clearing its failure marker."
+    exit 1
+  fi
   mkdir -p "${BLUM_PERSIST_DIR}" || true
   cleanup_unsupported_persistent_postgres
   PHYSICAL_RESTORE_ATTEMPTED=false
   if [[ -f "${BLUM_PHYSICAL_POSTGRES_READY_FILE}" ]]; then
     PHYSICAL_RESTORE_ATTEMPTED=true
+    touch "${BLUM_LOCAL_RESTORE_INCOMPLETE_FILE}"
     start_restore_status_server
     if restore_embedded_postgres_physical_backup; then
       echo "Physical PostgreSQL recovery image restored to local disk."
@@ -166,27 +172,53 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   export BLUM_COMPRESSED_POSTGRES_PARTS_READY_FILE="${BLUM_PERSIST_DIR}/embedded_postgres_blum.sql.gz.parts-ready"
   export BLUM_LEGACY_POSTGRES_BACKUP_FILE="${BLUM_PERSIST_DIR}/embedded_postgres_blum.sql"
   TABLE_COUNT="$(su postgres -c "psql -d blum -tAc \"SELECT count(*) FROM information_schema.tables WHERE table_schema='public';\"" | tr -d '[:space:]')"
+  if [[ "${TABLE_COUNT:-0}" == "0" && "${PHYSICAL_RESTORE_ATTEMPTED}" == "true" ]] && ! { [[ -s "${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}" ]] || [[ -s "${BLUM_COMPRESSED_POSTGRES_BACKUP_FILE}" ]] || [[ -s "${BLUM_COMPRESSED_POSTGRES_PARTS_READY_FILE}" ]] || [[ -s "${BLUM_LEGACY_POSTGRES_BACKUP_FILE}" ]]; }; then
+    echo "Refusing startup: physical recovery left no financial tables and no logical backup is available."
+    stop_restore_status_server
+    exit 1
+  fi
   if [[ "${TABLE_COUNT:-0}" == "0" ]] && { [[ -s "${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}" ]] || [[ -s "${BLUM_COMPRESSED_POSTGRES_BACKUP_FILE}" ]] || [[ -s "${BLUM_COMPRESSED_POSTGRES_PARTS_READY_FILE}" ]] || [[ -s "${BLUM_LEGACY_POSTGRES_BACKUP_FILE}" ]]; }; then
     start_restore_status_server
   fi
   if [[ "${TABLE_COUNT:-0}" == "0" && -s "${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}" ]]; then
     echo "Restoring embedded PostgreSQL backup from ${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}."
     chmod a+r "${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}" || true
-    su postgres -c "pg_restore --jobs=${BLUM_DB_RESTORE_JOBS} --exit-on-error -d blum '${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}'" || echo "Custom backup restore failed; continuing with migrations."
+    touch "${BLUM_LOCAL_RESTORE_INCOMPLETE_FILE}"
+    if ! su postgres -c "pg_restore --jobs=${BLUM_DB_RESTORE_JOBS} --exit-on-error -d blum '${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}'"; then
+      echo "Custom backup restore failed. Refusing startup with incomplete financial evidence."
+      stop_restore_status_server
+      exit 1
+    fi
   elif [[ "${TABLE_COUNT:-0}" == "0" && -s "${BLUM_COMPRESSED_POSTGRES_BACKUP_FILE}" ]]; then
     echo "Restoring compressed PostgreSQL bootstrap from ${BLUM_COMPRESSED_POSTGRES_BACKUP_FILE}."
-    gzip -dc "${BLUM_COMPRESSED_POSTGRES_BACKUP_FILE}" | su postgres -c "psql -d blum" || echo "Compressed backup restore failed; continuing with migrations."
+    touch "${BLUM_LOCAL_RESTORE_INCOMPLETE_FILE}"
+    if ! gzip -dc "${BLUM_COMPRESSED_POSTGRES_BACKUP_FILE}" | su postgres -c "psql -v ON_ERROR_STOP=1 -d blum"; then
+      echo "Compressed backup restore failed. Refusing startup with incomplete financial evidence."
+      stop_restore_status_server
+      exit 1
+    fi
   elif [[ "${TABLE_COUNT:-0}" == "0" && -s "${BLUM_COMPRESSED_POSTGRES_PARTS_READY_FILE}" ]]; then
     echo "Restoring segmented PostgreSQL bootstrap from ${BLUM_COMPRESSED_POSTGRES_PART_PREFIX}.part-* ."
-    cat "${BLUM_COMPRESSED_POSTGRES_PART_PREFIX}".part-* | gzip -dc | su postgres -c "psql -d blum" || echo "Segmented backup restore failed; continuing with migrations."
+    touch "${BLUM_LOCAL_RESTORE_INCOMPLETE_FILE}"
+    if ! cat "${BLUM_COMPRESSED_POSTGRES_PART_PREFIX}".part-* | gzip -dc | su postgres -c "psql -v ON_ERROR_STOP=1 -d blum"; then
+      echo "Segmented backup restore failed. Refusing startup with incomplete financial evidence."
+      stop_restore_status_server
+      exit 1
+    fi
   elif [[ "${TABLE_COUNT:-0}" == "0" && -s "${BLUM_LEGACY_POSTGRES_BACKUP_FILE}" ]]; then
     echo "Restoring legacy PostgreSQL backup from ${BLUM_LEGACY_POSTGRES_BACKUP_FILE}."
-    su postgres -c "psql -d blum" < "${BLUM_LEGACY_POSTGRES_BACKUP_FILE}" || echo "Legacy backup restore failed; continuing with migrations."
+    touch "${BLUM_LOCAL_RESTORE_INCOMPLETE_FILE}"
+    if ! su postgres -c "psql -v ON_ERROR_STOP=1 -d blum" < "${BLUM_LEGACY_POSTGRES_BACKUP_FILE}"; then
+      echo "Legacy backup restore failed. Refusing startup with incomplete financial evidence."
+      stop_restore_status_server
+      exit 1
+    fi
   elif [[ ! -s "${BLUM_EMBEDDED_POSTGRES_BACKUP_FILE}" && ! -s "${BLUM_COMPRESSED_POSTGRES_BACKUP_FILE}" && ! -s "${BLUM_LEGACY_POSTGRES_BACKUP_FILE}" ]]; then
     echo "No embedded PostgreSQL backup found yet. A new backup will be written periodically."
   else
     echo "Embedded PostgreSQL already contains tables; skipping restore."
   fi
+  rm -f "${BLUM_LOCAL_RESTORE_INCOMPLETE_FILE}"
   stop_restore_status_server
   export DATABASE_URL="postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/blum"
   START_EMBEDDED_BACKUP_LOOP=true

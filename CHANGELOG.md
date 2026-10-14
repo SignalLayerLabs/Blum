@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.3.0 — 2026-10-14
+
+- Register new equity and Forex calls prospectively, preserving source identity, frozen inputs, timestamps and protected-code fingerprints.
+- Add a read-only Alpha Desk with separate markets, explicit exclusions, net-cost reconciliation and closure-date confidence intervals.
+- Include older closed trades in Alpha and exclude expired unfilled orders; remove duplicate live-forward sample counts.
+- Mark unverified historical positive grades as insufficient evidence.
+- Stop startup after failed database restores. Periodic embedded backups still do not guarantee zero-loss recovery.
+- Verify actual protected backend/script content during automated deployment, in addition to source revision and version.
+
+
 ## v2.2.0 | ASCENT and canonical release
 
 - Added bounded ASCENT calibration source experiments, frozen temporal holdouts, independent gates, persistent lineage and Evolution.

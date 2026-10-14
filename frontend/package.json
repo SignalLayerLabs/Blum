@@ -1,6 +1,6 @@
 {
   "name": "blum-ai-financial-intelligence-frontend",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",

@@ -4,6 +4,7 @@ import worker from '../src/index.ts';
 
 const env = {
   BACKEND_ORIGIN: 'https://italianhype-blum.hf.space', SOURCE_REVISION: 'a'.repeat(40),
+  SOURCE_CONTENT_HASH: 'c'.repeat(64),
   CF_VERSION_METADATA: {id:'version'},
   ASSETS: {fetch: async () => new Response('<html>BLUM</html>', {headers:{'Content-Type':'text/html'}})}
 };
@@ -86,13 +87,17 @@ test('every backend truthy persistence alias is denied', async t => {
     assert.equal(r.status,400);
   }
 });
-test('release GET and HEAD require the exact backend revision', async t => {
+test('release GET and HEAD require the exact backend revision and source content', async t => {
   let revision = 'a'.repeat(40);
+  let content = 'c'.repeat(64);
   t.mock.method(globalThis,'fetch',async url => new Response(JSON.stringify(String(url).endsWith('/startup/status')
-    ? {api_ready:true,ui_ready:true,last_error:''} : {version:'2.2.0',source_revision:revision}), {headers:{'Content-Type':'application/json'}}));
+    ? {api_ready:true,ui_ready:true,last_error:''} : {version:'2.3.0',source_revision:revision,source_content_hash:content}), {headers:{'Content-Type':'application/json'}}));
   assert.equal((await worker.fetch(new Request('https://blum.example/api/release'),env)).status,200);
   const head = await worker.fetch(new Request('https://blum.example/api/release',{method:'HEAD'}),env);
   assert.equal(head.status,200); assert.equal(await head.text(),'');
+  content = 'd'.repeat(64);
+  assert.equal((await worker.fetch(new Request('https://blum.example/api/release'),env)).status,503);
+  content = 'c'.repeat(64);
   revision = 'b'.repeat(40);
   assert.equal((await worker.fetch(new Request('https://blum.example/api/release'),env)).status,503);
 });

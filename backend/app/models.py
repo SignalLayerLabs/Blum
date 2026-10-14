@@ -10,6 +10,22 @@ from app.core.database import Base
 JsonType = JSON().with_variant(JSONB, "postgresql")
 
 
+class AlphaCallRegistration(Base):
+    __tablename__ = "alpha_call_registrations"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_uid: Mapped[str] = mapped_column(String(220), unique=True)
+    source_type: Mapped[str] = mapped_column(String(32))
+    source_id: Mapped[int] = mapped_column(Integer)
+    market: Mapped[str] = mapped_column(String(16), index=True)
+    asset: Mapped[str] = mapped_column(String(32))
+    decision_at: Mapped[datetime] = mapped_column(DateTime)
+    registered_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    source_revision: Mapped[str] = mapped_column(String(40))
+    source_content_hash: Mapped[str] = mapped_column(String(64))
+    manifest_json: Mapped[dict] = mapped_column(JsonType)
+    manifest_sha256: Mapped[str] = mapped_column(String(64))
+
+
 class AscentGeneration(Base):
     __tablename__ = "ascent_generations"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

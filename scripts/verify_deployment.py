@@ -2,6 +2,8 @@
 import argparse
 import json
 import subprocess
+import sys
+from pathlib import Path
 import time
 import urllib.error
 import urllib.request
@@ -10,11 +12,14 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--backend-only', action='store_true')
 parser.add_argument('--timeout', type=int, default=120)
 args = parser.parse_args()
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
+from app.core.release import source_content_hash
+expected_content_hash = source_content_hash()
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
 backend = 'https://italianhype-blum.hf.space'
 site = 'https://blum.signallayerlabs.workers.dev'
 verification_headers = {
-    'User-Agent': 'BLUM-Deployment-Verification/2.2.0 (+https://github.com/SignalLayerLabs/Blum)',
+    'User-Agent': 'BLUM-Deployment-Verification/2.3.0 (+https://github.com/SignalLayerLabs/Blum)',
 }
 
 def request(url, **kwargs):
@@ -35,8 +40,10 @@ while time.monotonic() < deadline:
         deployed = get_json(backend, '/api/runtime/release')
         if not startup.get('api_ready') or not startup.get('ui_ready') or startup.get('last_error'):
             raise ValueError('Backend is restoring or unavailable.')
-        if deployed.get('source_revision') != revision or deployed.get('version') != '2.2.0':
+        if deployed.get('source_revision') != revision or deployed.get('version') != '2.3.0':
             raise ValueError('Backend revision has not finished deploying.')
+        if deployed.get('source_content_hash') != expected_content_hash:
+            raise ValueError('Backend protected source content does not match the verified checkout.')
         break
     except (OSError, ValueError) as exc:
         last_error = str(exc)
@@ -46,10 +53,10 @@ else:
 print('Backend ready at', revision, flush=True)
 if not args.backend_only:
     public = get_json(site, '/api/release')
-    if public.get('source_revision') != revision or not public.get('backend_ready'):
+    if public.get('source_revision') != revision or public.get('source_content_hash') != expected_content_hash or not public.get('backend_ready'):
         raise SystemExit('Cloudflare revision or backend readiness mismatch.')
     for path in ['/api/brain/snapshot', '/api/training/snapshot', '/api/paper-trading/snapshot?limit=1',
-                 '/api/alpha/snapshot', '/api/ascent/status']:
+                 '/api/alpha/snapshot', '/api/alpha/desk', '/api/ascent/status']:
         payload = get_json(site, path)
         if not isinstance(payload, dict): raise SystemExit('Invalid snapshot: '+path)
         print('Verified JSON snapshot', path, flush=True)

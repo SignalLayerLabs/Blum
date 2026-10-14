@@ -62,6 +62,7 @@ jobs:
           WRANGLER_SEND_METRICS: 'false'
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" || { echo "Configure the production Cloudflare deployment secret."; exit 1; }
-          npm --prefix cloudflare run deploy -- --var "SOURCE_REVISION:$(git rev-parse HEAD)"
+          source_content_hash=$(PYTHONPATH=backend python -c 'from app.core.release import source_content_hash; print(source_content_hash())')
+          npm --prefix cloudflare run deploy -- --var "SOURCE_REVISION:$(git rev-parse HEAD)" --var "SOURCE_CONTENT_HASH:$source_content_hash"
       - name: Verify public release
         run: python scripts/verify_deployment.py --timeout 120
