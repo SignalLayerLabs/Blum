@@ -60,6 +60,6 @@ Files: Alpha router, facade, shared route JSON, Alpha page/components, `scripts/
 Files: version references, release documentation and deployment verifier.
 
 - [x] Set version 2.3.0 consistently and add Desk smoke verification.
-- [ ] Run full backend, frontend and gateway checks; obtain independent review and resolve concrete blockers.
+- [x] Run full backend, frontend and gateway checks; obtain independent review and resolve concrete blockers.
 - [ ] Commit, push PR, attach it, merge after required CI and verify exact-revision deployment.
 - [ ] Capture public runtime, data/persistence limitations and live screenshots; publish GitHub 2.3.0 release.

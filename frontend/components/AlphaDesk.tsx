@@ -25,8 +25,8 @@ export function AlphaDesk({ data }: { data: any }) {
               <td>{call.asset}<br /><small>{call.market}</small></td>
               <td>{call.registered_at?.replace("T", " ")}<br /><small title={call.input_sha256}>Input {call.input_sha256?.slice(0, 12)}</small></td>
               <td>{call.direction ?? "unknown"}<br /><small>{call.status}</small></td>
-              <td>{call.provider ?? "unattributed"}<br /><small>{call.quote_at?.replace("T", " ") ?? "timestamp missing"}</small></td>
-              <td>{alphaMetric(call.net_pnl)}</td><td>{alphaMetric(call.paired_excess_percent, "%")}</td>
+              <td>{typeof call.provider === "string" ? call.provider : "unattributed"}<br /><small>{call.quote_at?.replace("T", " ") ?? "timestamp missing"}</small></td>
+              <td>{alphaMetric(call.net_pnl)} {call.account_currency ?? ""}</td><td>{alphaMetric(call.paired_excess_percent, "%")}</td>
               <td>{call.qualified_closed ? "Cost-qualified close" : call.outcome_status}<br /><small>{call.blockers?.join(" · ") || "No current blocker"}</small></td>
             </tr>)}</tbody>
           </table>
@@ -46,8 +46,9 @@ function Market({ data, market, title }: { data: any; market: string; title: str
       <div><span>Mean paired excess</span><strong>{alphaMetric(view.alpha, "%")}</strong></div>
       <div><span>95% closure-date interval</span><strong>{alphaMetric(view.interval.lower_95, "%")} to {alphaMetric(view.interval.upper_95, "%")}</strong></div>
       <div><span>Closure dates / assets</span><strong>{view.interval.dates ?? 0} / {view.interval.assets ?? 0}</strong></div>
-      <div><span>Observed net account P/L</span><strong>{alphaMetric(view.pnl)}</strong></div>
+      <div><span>Observed net account P/L</span><strong>{alphaMetric(view.pnl)} {view.pnlCurrency ?? ""}</strong></div>
     </div>
+    {Object.entries(view.pnlByCurrency).length > 1 && <p>Separate currency totals: {Object.entries(view.pnlByCurrency).map(([currency, value]) => `${currency} ${alphaMetric(value)}`).join(" · ")}.</p>}
     <h3 style={{ marginTop: 14 }}>Current qualified calls</h3>
     {view.active.map((call: any) => <div className="brain-list dense" key={call.source_uid}>
       <div><strong>{call.asset} · {call.direction}</strong><p>Entry {alphaMetric(call.entry)} · Stop {alphaMetric(call.stop)} · Target {alphaMetric(call.target)}</p><span>Stored expected net edge: {alphaMetric(call.expected_net_edge)} {call.edge_units}. {call.model}</span></div>

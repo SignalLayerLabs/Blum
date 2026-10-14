@@ -582,6 +582,7 @@ class BlumForexTraderCore:
                 contract_json={
                     **_jsonable(asdict(evaluation.proposal)),
                     "broker_profile": "paper_eu_30x",
+                    "account_currency": self.brokers.get().account_currency,
                     "account_fx_rate": execution.account_fx_rate,
                     "fx_rate_source": execution.fx_rate_source,
                     "session": market.session,

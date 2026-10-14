@@ -55,6 +55,11 @@ def close(row, *, benchmark=3, net=9):
     row.commission_cost=1
     row.r_multiple=1.8
     row.benchmark_return_same_period=benchmark
+    row.execution_costs={'benchmark_period':{'ticker':row.benchmark_ticker,'kind':'price',
+        'start':{'date':row.opened_at.date().isoformat(),'price':100,'provider':'test',
+            'available_at':row.opened_at.isoformat()},
+        'end':{'date':row.closed_at.date().isoformat(),'price':103,'provider':'test',
+            'available_at':row.closed_at.isoformat()}}}
 
 
 def register(db, row):
@@ -268,7 +273,7 @@ def forex_source(db):
     position=ForexPosition(position_uid='fx-test-position',decision_id=row.id,pair=row.pair,
         strategy_id=row.strategy_id,direction='LONG',quantity_lots=0.001,entry_price=1.1,
         stop_price=1.09,target_price=1.12,current_price=1.1,opened_at=NOW+timedelta(seconds=2),
-        contract_json={'account_fx_rate':1.0,'fx_rate_source':'IDENTITY'})
+        contract_json={'account_fx_rate':1.0,'fx_rate_source':'IDENTITY','account_currency':'EUR'})
     db.add(position)
     db.flush()
     return row,position
@@ -377,3 +382,129 @@ def test_invalid_source_shapes_stay_visible_without_qualifying_or_breaking_reads
     result=snapshot(db)
     assert result['markets']['forex' if native else 'equity']['qualified_closed']==0
     assert result['journal'][0]['blockers']
+    if failure=='provider': assert result['journal'][0]['provider'] is None
+
+
+@pytest.mark.parametrize('reason',['TIME_EXIT','INVALIDATION_HIT'])
+def test_actual_filled_terminal_exit_remains_closed_evidence(db,reason):
+    from app.services.live_forward_paper_trading import LiveForwardPaperTradingService
+    from app.engine.brain.trader_brain import paper_forward_trade_is_closed
+    row=paper(db)
+    register(db,row)
+    service=LiveForwardPaperTradingService()
+    service.close_trade(db,db.get(LiveForwardPaperGame,row.game_id),row,datetime.utcnow().date(),98,reason)
+    result=snapshot(db)
+    assert result['journal'][0]['outcome_status']=='CLOSED'
+    assert result['markets']['equity']['qualified_closed']==1
+    assert result['markets']['equity']['observed_net_pnl']==-2
+    assert paper_forward_trade_is_closed(row)
+    # It must also be sampled separately from hundreds of newer no-fills.
+    from app.engine.brain.trader_brain import TraderBrainService
+    for i in range(501):
+        unfilled=paper(db,uid=f'expired-{i}')
+        unfilled.status='EXPIRED'
+        unfilled.position_size=0
+        unfilled.opened_at=None
+        unfilled.created_at=NOW+timedelta(days=3,seconds=i)
+    db.commit()
+    assert TraderBrainService().alpha(db)['evidence_split']['paper_forward']['closed_trade_count']==1
+
+
+def test_real_close_benchmark_uses_actual_entry_and_retains_endpoint_provenance(db):
+    from app.models import Asset,PriceHistory
+    from app.services.live_forward_paper_trading import LiveForwardPaperTradingService
+    row=paper(db)
+    row.decision_timestamp=NOW-timedelta(days=2)
+    row.decision_date=row.decision_timestamp.date()
+    row.entry_date=row.opened_at.date()
+    row.frozen_decision_payload['price_context']['latest_date']=row.decision_date.isoformat()
+    row.frozen_decision_payload['price_context']['available_at']=row.decision_timestamp.isoformat()
+    from app.services.alpha_desk import AlphaCallRegistry
+    AlphaCallRegistry().register(db,row,registered_at=row.decision_timestamp+timedelta(seconds=1))
+    asset=Asset(ticker='SPY',name='SPY',category='ETF',sector='equity',country='US',asset_type='ETF')
+    db.add(asset);db.flush()
+    for d,p in [(row.decision_date,100),(row.entry_date,200),(NOW.date()+timedelta(days=1),200)]:
+        db.add(PriceHistory(asset_id=asset.id,date=d,open=p,high=p,low=p,close=p,volume=1000,
+            provider='test',created_at=datetime.combine(d,datetime.min.time())))
+    db.flush()
+    LiveForwardPaperTradingService().close_trade(db,db.get(LiveForwardPaperGame,row.game_id),row,NOW.date()+timedelta(days=1),110,'TARGET_1_HIT')
+    assert row.benchmark_return_same_period==0
+    assert snapshot(db)['journal'][0]['paired_excess_percent']==10
+
+
+@pytest.mark.parametrize('failure',['missing','future','stale','wrong_period'])
+def test_unverified_benchmark_endpoints_never_enter_paired_alpha(db,failure):
+    row=paper(db);register(db,row);close(row)
+    period=row.execution_costs['benchmark_period']
+    if failure=='missing': row.execution_costs={}
+    if failure=='future': period['start']['available_at']=(row.opened_at+timedelta(days=1)).isoformat()
+    if failure=='stale': period['end']['date']=(row.closed_at-timedelta(days=1)).date().isoformat()
+    if failure=='wrong_period': period['ticker']='QQQ'
+    result=snapshot(db)
+    assert result['markets']['equity']['qualified_closed']==1
+    assert result['markets']['equity']['paired_sample']==0
+    assert result['journal'][0]['paired_excess_percent'] is None
+
+
+def test_realistic_fill_costs_reconcile_actual_target_lifecycle(monkeypatch):
+    from test_live_forward_paper_trading import setup_db,seed_asset,add_price,candidate,run_lifecycle
+    from app.services.live_forward_paper_trading import LiveForwardPaperTradingService
+    from app.services.alpha_desk import AlphaDeskService
+    class FutureDatetime(datetime):
+        @classmethod
+        def utcnow(cls): return datetime.utcnow()+timedelta(days=3)
+    monkeypatch.setattr('app.services.live_forward_paper_trading.settings.paper_execution_account_currency','USD')
+    with setup_db() as session:
+        asset=seed_asset(session)
+        service=LiveForwardPaperTradingService()
+        payload=candidate(target_1=104,target_2=150)
+        payload['price_context']['latest_date']=datetime.utcnow().date().isoformat()
+        row=service.create_candidate(session,payload)
+        add_price(session,asset,1,100)
+        run_lifecycle(service,session)
+        add_price(session,asset,2,106)
+        monkeypatch.setattr('app.services.trading_intelligence_lab.datetime',FutureDatetime)
+        run_lifecycle(service,session)
+        result=AlphaDeskService().snapshot(session,now=datetime.utcnow()+timedelta(days=4))
+        assert row.status=='CLOSED'
+        assert result['journal'][0]['qualified_closed']
+        assert result['journal'][0]['net_pnl']==row.net_pnl_eur
+
+
+def test_real_close_reconciles_explicit_cash_costs_in_foreign_account_currency(db):
+    from app.services.live_forward_paper_trading import LiveForwardPaperTradingService
+    row=paper(db);register(db,row)
+    row.notional_value=80
+    row.costs_paid=0.3
+    row.execution_costs={'accounting':{'reconciled':True,'account_currency':'EUR',
+        'entry_fx_rate':1.25,'exit_fx_rate':1.25,'entry_commission':0.01,
+        'entry_fx_cost':0.01,'exit_commission':0.01,'exit_fx_cost':0.01,'explicit_costs':0.04}}
+    LiveForwardPaperTradingService().close_trade(db,db.get(LiveForwardPaperGame,row.game_id),row,datetime.utcnow().date(),110,'TARGET_1_HIT')
+    result=snapshot(db)
+    assert row.net_pnl_eur==7.96
+    assert result['journal'][0]['qualified_closed']
+    assert result['journal'][0]['account_currency']=='EUR'
+
+
+def test_account_currency_totals_are_not_pooled(db):
+    for i,currency in enumerate(['EUR','USD']):
+        row=paper(db,uid=str(i));register(db,row);close(row)
+        row.execution_costs={**row.execution_costs,'accounting':{'reconciled':True,
+            'account_currency':currency,'entry_fx_rate':1,'exit_fx_rate':1,
+            'entry_commission':1,'entry_fx_cost':0,'exit_commission':0,'exit_fx_cost':0,'explicit_costs':1}}
+    result=snapshot(db)['markets']['equity']
+    assert result['qualified_closed']==2
+    assert result['observed_net_pnl'] is None
+    assert result['observed_net_pnl_by_currency']=={'EUR':9,'USD':9}
+
+
+@pytest.mark.parametrize('field',['costs_paid','spread_cost'])
+def test_realistic_accounting_rejects_non_finite_diagnostic_costs(db,field):
+    row=paper(db);register(db,row);close(row)
+    row.execution_costs={**row.execution_costs,'accounting':{'reconciled':True,
+        'account_currency':'USD','entry_fx_rate':1,'exit_fx_rate':1,
+        'entry_commission':1,'entry_fx_cost':0,'exit_commission':0,'exit_fx_cost':0,'explicit_costs':1}}
+    setattr(row,field,float('inf'))
+    result=snapshot(db)
+    assert result['markets']['equity']['qualified_closed']==0
+    assert 'INVALID_ACCOUNTING' in result['journal'][0]['blockers']

@@ -869,11 +869,10 @@ class LiveForwardPaperTradingService:
         pnl_per_share = metrics.price_change / exit_fx_rate
         gross = metrics.gross_pnl
         net = metrics.net_pnl
-        benchmark_return = (
-            0.0
-            if str(paper_trade.benchmark_ticker or "").upper() in {CASH_BENCHMARK, "NO_TRADE"}
-            else period_return(db, paper_trade.benchmark_ticker, paper_trade.decision_date, latest_date)
-        )
+        holding_start = paper_trade.entry_date or (paper_trade.opened_at.date() if paper_trade.opened_at else None)
+        benchmark_period = holding_benchmark_period(db, paper_trade.benchmark_ticker, holding_start, latest_date)
+        paper_trade.execution_costs = {**dict(paper_trade.execution_costs or {}), "benchmark_period": benchmark_period}
+        benchmark_return = benchmark_period.get("return_percent")
         asset_return = metrics.return_fraction * 100
         status = "EXPIRED" if close_reason == "TIME_EXIT" else "INVALIDATED" if close_reason == "INVALIDATION_HIT" else "CLOSED"
         paper_trade.status = status
@@ -1896,6 +1895,29 @@ def period_return(db: Session, ticker: str | None, start_date: date | None, end_
     if not start or not end:
         return None
     return round(((end / start) - 1) * 100, 4)
+
+
+def holding_benchmark_period(db: Session, ticker: str | None, start_date: date | None, end_date: date | None) -> dict:
+    """Retain exact daily endpoints; absent days cannot silently reuse older prices."""
+    result = {"ticker": ticker, "kind": "price", "return_percent": None,
+        "start": {"date": start_date.isoformat() if start_date else None},
+        "end": {"date": end_date.isoformat() if end_date else None}}
+    if not start_date or not end_date or end_date < start_date:
+        return result
+    if str(ticker or "").upper() in {CASH_BENCHMARK, "NO_TRADE"}:
+        return {**result, "kind": "cash_no_trade", "return_percent": 0.0}
+    asset = db.scalar(select(Asset).where(Asset.ticker == ticker).limit(1))
+    if asset is None:
+        return result
+    for key, day in (("start", start_date), ("end", end_date)):
+        price = db.scalar(select(PriceHistory).where(PriceHistory.asset_id == asset.id, PriceHistory.date == day).limit(1))
+        if price is not None:
+            result[key].update(price=price.close, provider=price.provider, source_price_id=price.id,
+                available_at=price.created_at.isoformat() if price.created_at else None)
+    start, end = result["start"].get("price"), result["end"].get("price")
+    if isinstance(start, (int, float)) and isinstance(end, (int, float)) and math.isfinite(start) and math.isfinite(end) and start > 0 and end > 0:
+        result["return_percent"] = round((end / start - 1) * 100, 4)
+    return result
 
 
 def close_reason_for(row: LiveForwardPaperTrade, latest_price: float) -> str | None:

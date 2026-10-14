@@ -292,7 +292,9 @@ class TraderBrainService:
         benchmarks = latest_benchmarks(db)
         paper_rows = db.scalars(select(LiveForwardPaperTrade).order_by(desc(LiveForwardPaperTrade.created_at)).limit(500)).all()
         closed_history = db.scalars(select(LiveForwardPaperTrade)
-            .where(LiveForwardPaperTrade.status == "CLOSED")
+            .where(LiveForwardPaperTrade.status.in_(["CLOSED", "EXPIRED", "INVALIDATED"]),
+                LiveForwardPaperTrade.closed_at.is_not(None), LiveForwardPaperTrade.exit_price.is_not(None),
+                LiveForwardPaperTrade.position_size > 0)
             .order_by(desc(LiveForwardPaperTrade.closed_at), desc(LiveForwardPaperTrade.id)).limit(500)).all()
         paper_rows = list({row.id: row for row in [*paper_rows, *closed_history]}.values())
         excluded_evidence_types = {
@@ -1894,10 +1896,12 @@ def latest_iso(values: list[Any]) -> str | None:
 
 
 def paper_forward_trade_is_closed(row: LiveForwardPaperTrade) -> bool:
-    if str(row.status or "").upper() in {"EXPIRED", "INVALIDATED", "SKIPPED", "REJECTED", "DATA_BLOCKED"}:
+    if str(row.status or "").upper() in {"SKIPPED", "REJECTED", "DATA_BLOCKED"}:
         return False
     if str(row.outcome_label or row.close_reason or "").upper() in {"ORDER_NOT_FILLED", "SIGNAL_DECAY_BEFORE_ENTRY"}:
         return False
+    if str(row.status or "").upper() in {"EXPIRED", "INVALIDATED"}:
+        return bool(row.opened_at and row.closed_at and row.exit_price is not None and (row.position_size or 0) > 0)
     return bool(
         row.closed_at
         or row.exit_price is not None

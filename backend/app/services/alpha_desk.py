@@ -177,6 +177,29 @@ def paired_interval(rows):
     return result
 
 
+def holding_benchmark(trade, frozen, opened, closed_at):
+    """A stored scalar alone cannot establish a comparable holding-period baseline."""
+    period=mapping(mapping(getattr(trade,'execution_costs',None)).get('benchmark_period'))
+    start,end=mapping(period.get('start')),mapping(period.get('end'))
+    start_day=getattr(trade,'entry_date',None) or (opened.date() if opened else None)
+    end_day=getattr(trade,'exit_date',None) or (closed_at.date() if closed_at else None)
+    if not start_day or not end_day or period.get('ticker')!=frozen.get('benchmark'):
+        return None
+    if start.get('date')!=start_day.isoformat() or end.get('date')!=end_day.isoformat() or end_day<start_day:
+        return None
+    stored=number(getattr(trade,'benchmark_return_same_period',None))
+    if period.get('kind')=='cash_no_trade' and str(frozen.get('benchmark') or '').upper() in {'CASH','NO_TRADE'}:
+        return 0.0 if stored==0 else None
+    if period.get('kind')!='price': return None
+    for endpoint,bound in ((start,opened),(end,closed_at)):
+        acquired=utc(endpoint.get('available_at'))
+        price=number(endpoint.get('price'))
+        if not provider_name(endpoint.get('provider')) or price is None or price<=0 or acquired is None or bound is None or acquired>bound:
+            return None
+    expected=(end['price']/start['price']-1)*100
+    return stored if stored is not None and math.isclose(stored,expected,abs_tol=0.00011,rel_tol=1e-6) else None
+
+
 class AlphaDeskService:
     def snapshot(self,db,*,now=None):
         now=utc(now or datetime.now(timezone.utc))
@@ -232,6 +255,10 @@ class AlphaDeskService:
             blockers.append('INVALID_PLAN')
         net_r=number(getattr(trade,'r_multiple',None) if record.source_type=='paper' else getattr(trade,'realized_r',None))
         contract=mapping(getattr(trade,'contract_json',None)) if record.source_type=='forex' else {}
+        execution=mapping(getattr(trade,'execution_costs',None)) if record.source_type=='paper' else {}
+        accounting=mapping(execution.get('accounting'))
+        account_currency=accounting.get('account_currency','EUR') if record.source_type=='paper' else contract.get('account_currency')
+        if not isinstance(account_currency,str) or len(account_currency)!=3 or not account_currency.isalpha(): account_currency=None
         notional=number(getattr(trade,'notional_value',None) if record.source_type=='paper' else contract.get('notional_value'))
         net=number(getattr(trade,'net_pnl_eur',None) if record.source_type=='paper' else getattr(trade,'net_pnl',None))
         gross=number(getattr(trade,'gross_pnl_eur',None) if record.source_type=='paper' else getattr(trade,'gross_pnl',None))
@@ -239,25 +266,39 @@ class AlphaDeskService:
         parts=[number(getattr(trade,k,None)) for k in cost_fields]
         costs=(sum(parts) if record.source_type=='paper' else sum(parts[:3])-parts[3]) if all(v is not None for v in parts) else None
         stored_cost=number(getattr(trade,'costs_paid',None)) if record.source_type=='paper' else costs
-        benchmark=number(getattr(trade,'benchmark_return_same_period',None)) if record.source_type=='paper' else None
+        cash_contract=record.source_type=='paper' and bool(accounting)
+        tolerance=0.00011 if cash_contract else 1e-5  # authoritative P/L is rounded to four decimals
+        if cash_contract:
+            cash_parts=[number(accounting.get(k)) for k in ('entry_commission','entry_fx_cost','exit_commission','exit_fx_cost')]
+            fx_rates=[number(accounting.get(k)) for k in ('entry_fx_rate','exit_fx_rate')]
+            if accounting.get('reconciled') is not True or account_currency is None or any(v is None or v<=0 for v in fx_rates) or any(v is None or v<0 for v in cash_parts):
+                blockers.append('INVALID_ACCOUNTING')
+                costs=None
+            else:
+                costs=sum(cash_parts)
+            stored_cost=number(accounting.get('explicit_costs'))
+            diagnostic_cost=number(getattr(trade,'costs_paid',None))
+            if diagnostic_cost is None or diagnostic_cost<0 or any(v is None or v<0 for v in parts[:3]): blockers.append('INVALID_ACCOUNTING')
+        benchmark=holding_benchmark(trade,frozen,opened,closed_at) if record.source_type=='paper' else None
         outcome='PENDING'
         realized=False
         paired=None
         net_return=None
-        if status=='CLOSED':
+        quantity=number(getattr(trade,'position_size',None) if record.source_type=='paper' else getattr(trade,'quantity_lots',None))
+        filled_terminal=status in {'EXPIRED','INVALIDATED'} and quantity is not None and quantity>0 and opened is not None and closed_at is not None and exit_price is not None
+        if status=='CLOSED' or filled_terminal:
             outcome='CLOSED'
-            quantity=number(getattr(trade,'position_size',None) if record.source_type=='paper' else getattr(trade,'quantity_lots',None))
             if quantity is None or quantity<=0: blockers.append('MISSING_FILL')
             if closed_at is None or closed_at>now or opened is None or opened<utc(record.decision_at) or closed_at<=opened or closed_at<=utc(record.registered_at): blockers.append('NON_CAUSAL_OUTCOME')
             if entry is None or exit_price is None or entry<=0 or exit_price<=0 or side is None or net is None or gross is None or costs is None or stored_cost is None:
                 blockers.append('INVALID_ACCOUNTING')
-            elif any(value<0 for value in parts[:3]): blockers.append('INVALID_ACCOUNTING')
-            elif not math.isclose(gross-net,costs,rel_tol=1e-6,abs_tol=1e-5) or not math.isclose(costs,stored_cost,rel_tol=1e-6,abs_tol=1e-5): blockers.append('COST_RECONCILIATION_FAILED')
+            elif any(value is None or value<0 for value in parts[:3]): blockers.append('INVALID_ACCOUNTING')
+            elif not math.isclose(gross-net,costs,rel_tol=1e-6,abs_tol=tolerance) or not math.isclose(costs,stored_cost,rel_tol=1e-6,abs_tol=tolerance): blockers.append('COST_RECONCILIATION_FAILED')
             if record.source_type=='paper' and source is not None and not paper_trade_evidence_is_eligible(source): blockers.append('INVALID_ACCOUNTING')
             realized=not blockers
             if realized and notional is not None and notional>0:
                 holding=(exit_price/entry-1)*(1 if side=='LONG' else -1)
-                if math.isclose(gross,holding*notional,rel_tol=1e-4,abs_tol=1e-5):
+                if math.isclose(gross,holding*notional,rel_tol=1e-4,abs_tol=tolerance):
                     net_return=net/notional*100
                     paired=net_return-benchmark if benchmark is not None else None
                 else: blockers.append('NOTIONAL_RETURN_MISMATCH')
@@ -268,17 +309,19 @@ class AlphaDeskService:
             if stamp is not None and (now-stamp).total_seconds()>ttl: blockers.append('QUOTE_STALE_NOW')
         expected=number(frozen.get('expected_net_edge')) if record.source_type=='paper' else number(mapping(frozen.get('proposal')).get('expected_net_pips'))
         if outcome=='PENDING' and expected is None: blockers.append('NO_STORED_EDGE_ESTIMATE')
+        display_provider=mapping(inputs.get('quote')).get('source') if record.source_type=='forex' else mapping(inputs.get('price_context')).get('provider')
         return {'source_uid':record.source_uid,'market':record.market,'asset':record.asset,
             'status':status,'outcome_status':outcome,'direction':side,'decision_at':record.decision_at.isoformat(),
             'registered_at':record.registered_at.isoformat(),'source_revision':record.source_revision,
             'source_content_hash':record.source_content_hash,
-            'input_sha256':record.manifest_sha256,'provider':mapping(inputs.get('quote')).get('source') if record.source_type=='forex' else mapping(inputs.get('price_context')).get('provider'),
+            'input_sha256':record.manifest_sha256,'provider':display_provider if provider_name(display_provider) else None,
             'quote_at':stamp.isoformat() if stamp else None,'quote_age_seconds':max(0,(now-stamp).total_seconds()) if stamp else None,
             'entry':entry,'stop':stop,'target':target,'model':frozen.get('model'),
             'confidence':number((mapping(frozen.get('proposal')) or inputs).get('confidence')),
             'confidence_semantics':'HEURISTIC_NOT_PROBABILITY','expected_net_edge':expected,
             'edge_units':'bps' if record.source_type=='paper' else 'pips',
             'qualified_closed':realized,'net_pnl':net if realized else None,'net_r':net_r if realized else None,
+            'account_currency':account_currency,
             'net_return_percent':net_return,'paired_excess_percent':paired,'closed_at':closed_at.isoformat() if closed_at else None,
             'active_eligible':outcome=='PENDING' and not blockers and expected is not None and expected>0,
             'blockers':list(dict.fromkeys(blockers))}
@@ -291,8 +334,12 @@ class AlphaDeskService:
         active=sorted([r for r in rows if r['active_eligible']],key=lambda r:r['expected_net_edge'],reverse=True)[:10]
         exclusions=Counter(b for r in rows for b in r['blockers'])
         returns=[r['net_return_percent'] for r in closed if r['net_return_percent'] is not None]
+        currency_totals=defaultdict(float)
+        for row in closed: currency_totals[row['account_currency'] or 'UNKNOWN']+=row['net_pnl']
+        single_currency=next(iter(currency_totals)) if len(currency_totals)==1 and 'UNKNOWN' not in currency_totals else None
         return {'registered':len(rows),'qualified_closed':len(closed),'paired_sample':len(paired),
-            'observed_net_pnl':sum(r['net_pnl'] for r in closed) if closed else None,
+            'observed_net_pnl':currency_totals[single_currency] if single_currency else None,
+            'observed_net_pnl_by_currency':dict(currency_totals),'pnl_currency':single_currency,
             'mean_net_return_percent':sum(returns)/len(returns) if returns else None,
             'mean_paired_excess_percent':interval['mean'],'paired_interval':interval,
             'verdict':'POSITIVE_PAIRED_SAMPLE' if interval['positive_sample'] else 'INSUFFICIENT_EVIDENCE',
