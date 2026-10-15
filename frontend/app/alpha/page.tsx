@@ -7,22 +7,27 @@ import { BloombergPanel, MetricCard, MiniSparkline, TerminalHeader } from "@/com
 import { LoadingState } from "@/components/LoadingState";
 import { StatusBadge } from "@/components/StatusBadge";
 import { AlphaDesk } from "@/components/AlphaDesk";
+import { loadAlphaWithRetry } from "@/lib/alphaLoad.mjs";
 
 const EVIDENCE_GRADE_ORDER = ["NO_DATA", "INSUFFICIENT_EVIDENCE", "WEAK", "MIXED", "PROMISING", "STRONG"];
 
 export default function AlphaPage() {
   const [data, setData] = useState<any | null>(null);
   const [error, setError] = useState("");
+  const [retrying, setRetrying] = useState(false);
+  const [loadKey, setLoadKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
-    api.traderAlpha()
-      .then((payload) => mounted && setData(payload))
+    setError("");
+    setRetrying(false);
+    loadAlphaWithRetry(() => api.traderAlpha(), {active: () => mounted, onRetry: () => mounted && setRetrying(true)})
+      .then((payload) => mounted && payload !== undefined && setData(payload))
       .catch((err) => mounted && setError(err instanceof Error ? err.message : String(err)));
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [loadKey]);
 
   const spark = useMemo(() => {
     if (!data) return [0, 0];
@@ -37,12 +42,13 @@ export default function AlphaPage() {
 
   if (error) {
     return (
-      <div className="terminal-empty">
-        Alpha snapshot unavailable: {error}. The page is read-only and did not trigger recalculation.
+      <div className="terminal-empty" role="alert">
+        <p>Alpha snapshot unavailable: {error}. The page is read-only and did not trigger recalculation.</p>
+        <button className="terminal-button" type="button" onClick={() => setLoadKey((value) => value + 1)}>Retry snapshot</button>
       </div>
     );
   }
-  if (!data) return <LoadingState label="Loading Alpha Evidence" />;
+  if (!data) return <LoadingState label={retrying ? "Retrying Alpha Evidence (read only)" : "Loading Alpha Evidence"} />;
 
   const grade = normalizeGrade(data.evidence_grade);
   const verdictTone = gradeTone(grade);
