@@ -48,21 +48,30 @@ BLUM_HF_TRAINING_AUTO_LAUNCH=false
 BLUM_HF_TRAINING_SCHEDULER_ENABLED=false
 ```
 
-Confirm the Space starts and the Alembic revision is `0025_tg_runtime_snap`, not the overlong `0025_trading_game_runtime_snapshots`.
+Confirm startup readiness and compare the installed database revision with the migration head of the exact checked-out release. Run these trusted local checks from the repository root with the database configured:
+
+```bash
+(cd backend && PYTHONPATH=. alembic -c alembic.ini heads)
+(cd backend && PYTHONPATH=. alembic -c alembic.ini current)
+```
+
+For 2.3 the expected head is `0045_alpha_call_registry`. The shortened `0025_tg_runtime_snap` identifier is an earlier migration, not the current readiness checkpoint.
+
+Administrative calls below target the private HF origin, never the public Cloudflare gateway. In observatory mode the origin boundary checks `BLUM_ASCENT_ADMIN_KEY`; promotion/rollback additionally check `BLUM_HF_TRAINING_ADMIN_KEY` against the same request header. A header value must satisfy both checks where applicable. Review the configured authorization contract before any future promotion, and never disable the public boundary to make a request pass. `<admin-key>` denotes an existing authorized private credential; do not paste secrets into shared commands or logs.
 
 Inspect readiness:
 
 ```bash
-curl https://<space-host>/api/analyst/hf-training/status
+curl -H 'X-BLUM-Admin-Key: <admin-key>' 'https://<space-host>/api/analyst/hf-training/status'
 ```
 
 Generate a local dry-run manifest without writing to the Hub:
 
 ```bash
-curl -X POST 'https://<space-host>/api/analyst/hf-training/snapshot?publish=false'
+curl -X POST -H 'X-BLUM-Admin-Key: <admin-key>' 'https://<space-host>/api/analyst/hf-training/snapshot?publish=false'
 ```
 
-After reviewing counts and rejection reasons, enable controlled external operations:
+Only after a replacement source audit passes and a maintainer explicitly authorizes paid work may the optional external operations be enabled:
 
 ```text
 BLUM_HF_TRAINING_ENABLED=true
@@ -78,19 +87,19 @@ The scheduler synchronizes active remote Jobs. With `AUTO_LAUNCH=false`, it does
 Publish the immutable snapshot:
 
 ```bash
-curl -X POST 'https://<space-host>/api/analyst/hf-training/snapshot?publish=true'
+curl -X POST -H 'X-BLUM-Admin-Key: <admin-key>' 'https://<space-host>/api/analyst/hf-training/snapshot?publish=true'
 ```
 
 Launch the challenger:
 
 ```bash
-curl -X POST 'https://<space-host>/api/analyst/hf-training/launch'
+curl -X POST -H 'X-BLUM-Admin-Key: <admin-key>' 'https://<space-host>/api/analyst/hf-training/launch'
 ```
 
 Synchronize training and evaluation state:
 
 ```bash
-curl -X POST 'https://<space-host>/api/analyst/hf-training/sync'
+curl -X POST -H 'X-BLUM-Admin-Key: <admin-key>' 'https://<space-host>/api/analyst/hf-training/sync'
 ```
 
 When a job becomes `eligible`, promote it explicitly:
@@ -127,7 +136,7 @@ A candidate cannot be promoted when it regresses aggregate contract score or no-
 
 ## Automatic launch
 
-Enable only after several manually reviewed successful cycles:
+This remains disabled in the maintained deployment. A future enablement requires a validated replacement dataset, several manually reviewed successful cycles and explicit authorization for recurring paid work:
 
 ```text
 BLUM_HF_TRAINING_AUTO_LAUNCH=true

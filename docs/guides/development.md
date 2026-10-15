@@ -13,7 +13,7 @@ python3.12 -m venv .venv
 . .venv/bin/activate
 pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements-dev.txt
-PYTHONPATH=backend alembic -c backend/alembic.ini upgrade head
+(cd backend && PYTHONPATH=. alembic -c alembic.ini upgrade head)
 PYTHONPATH=backend uvicorn app.main:app --host 127.0.0.1 --port 7860
 ```
 

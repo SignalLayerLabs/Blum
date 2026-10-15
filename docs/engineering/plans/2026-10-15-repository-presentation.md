@@ -50,3 +50,9 @@ An independent whole-branch review and GitHub CI follow publication of the revie
 ## Visual QA decision
 
 GitHub rendered the required HF frontmatter as a large metadata table above the product hero. The marketing presentation now lives in `.github/README.md`, GitHub's documented first-choice homepage README. The root README retains the HF metadata and a focused runtime introduction. Both use relative links from their own locations, and neither requires a deployment/source-mirror change. This replaces the initial single-file presentation approach to preserve both platform contracts without duplicate long-form copy.
+
+## Independent review and fixes
+
+The first reviewer could not start because of its usage limit; a fresh independent reviewer completed the whole-branch review. It found a migration command resolving the wrong scripts directory (Important) and an obsolete migration-readiness checkpoint (labeled Minor). Both concern whether a maintainer can perform or correctly verify setup, so both were treated as actionable documentation correctness issues.
+
+The original root Alembic command was executed and failed because root `alembic/` does not exist. The guide now uses the backend working directory, matching the Docker entrypoint. The operations guide checks current/head for the evaluated release rather than stopping at migration 0025, and documents the existing private-origin authorization checks. No runtime or authentication configuration changed. Financial-performance certification and live operational state were outside the editorial review; the branch makes no new performance or deployment claim.
