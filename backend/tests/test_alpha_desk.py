@@ -12,6 +12,16 @@ NOW = datetime(2026, 10, 13, 12)
 
 
 @pytest.fixture
+def fixed_close_clock(monkeypatch):
+    class CloseClock(datetime):
+        @classmethod
+        def utcnow(cls):
+            return NOW + timedelta(days=1)
+    monkeypatch.setattr('app.services.trading_intelligence_lab.datetime',CloseClock)
+    return CloseClock.utcnow()
+
+
+@pytest.fixture
 def db():
     engine = create_engine('sqlite:///:memory:',connect_args={'check_same_thread':False},poolclass=StaticPool)
     Base.metadata.create_all(engine)
@@ -386,13 +396,13 @@ def test_invalid_source_shapes_stay_visible_without_qualifying_or_breaking_reads
 
 
 @pytest.mark.parametrize('reason',['TIME_EXIT','INVALIDATION_HIT'])
-def test_actual_filled_terminal_exit_remains_closed_evidence(db,reason):
+def test_actual_filled_terminal_exit_remains_closed_evidence(db,reason,fixed_close_clock):
     from app.services.live_forward_paper_trading import LiveForwardPaperTradingService
     from app.engine.brain.trader_brain import paper_forward_trade_is_closed
     row=paper(db)
     register(db,row)
     service=LiveForwardPaperTradingService()
-    service.close_trade(db,db.get(LiveForwardPaperGame,row.game_id),row,datetime.utcnow().date(),98,reason)
+    service.close_trade(db,db.get(LiveForwardPaperGame,row.game_id),row,fixed_close_clock.date(),98,reason)
     result=snapshot(db)
     assert result['journal'][0]['outcome_status']=='CLOSED'
     assert result['markets']['equity']['qualified_closed']==1
@@ -410,7 +420,7 @@ def test_actual_filled_terminal_exit_remains_closed_evidence(db,reason):
     assert TraderBrainService().alpha(db)['evidence_split']['paper_forward']['closed_trade_count']==1
 
 
-def test_real_close_benchmark_uses_actual_entry_and_retains_endpoint_provenance(db):
+def test_real_close_benchmark_uses_actual_entry_and_retains_endpoint_provenance(db,fixed_close_clock):
     from app.models import Asset,PriceHistory
     from app.services.live_forward_paper_trading import LiveForwardPaperTradingService
     row=paper(db)
@@ -471,7 +481,7 @@ def test_realistic_fill_costs_reconcile_actual_target_lifecycle(monkeypatch):
         assert result['journal'][0]['net_pnl']==row.net_pnl_eur
 
 
-def test_real_close_reconciles_explicit_cash_costs_in_foreign_account_currency(db):
+def test_real_close_reconciles_explicit_cash_costs_in_foreign_account_currency(db,fixed_close_clock):
     from app.services.live_forward_paper_trading import LiveForwardPaperTradingService
     row=paper(db);register(db,row)
     row.notional_value=80
@@ -479,7 +489,7 @@ def test_real_close_reconciles_explicit_cash_costs_in_foreign_account_currency(d
     row.execution_costs={'accounting':{'reconciled':True,'account_currency':'EUR',
         'entry_fx_rate':1.25,'exit_fx_rate':1.25,'entry_commission':0.01,
         'entry_fx_cost':0.01,'exit_commission':0.01,'exit_fx_cost':0.01,'explicit_costs':0.04}}
-    LiveForwardPaperTradingService().close_trade(db,db.get(LiveForwardPaperGame,row.game_id),row,datetime.utcnow().date(),110,'TARGET_1_HIT')
+    LiveForwardPaperTradingService().close_trade(db,db.get(LiveForwardPaperGame,row.game_id),row,fixed_close_clock.date(),110,'TARGET_1_HIT')
     result=snapshot(db)
     assert row.net_pnl_eur==7.96
     assert result['journal'][0]['qualified_closed']

@@ -11,6 +11,7 @@ BLUM_LOCAL_RESTORE_INCOMPLETE_FILE="${BLUM_LOCAL_POSTGRES_DATA_DIR}.restore-inco
 export BLUM_PHYSICAL_POSTGRES_BACKUP_DIR="${BLUM_PERSIST_DIR}/embedded_postgres_physical"
 export BLUM_PHYSICAL_POSTGRES_BASE_BACKUP="${BLUM_PERSIST_DIR}/embedded_postgres_physical/base.tar.gz"
 export BLUM_PHYSICAL_POSTGRES_WAL_BACKUP="${BLUM_PERSIST_DIR}/embedded_postgres_physical/pg_wal.tar.gz"
+export BLUM_PHYSICAL_POSTGRES_BUNDLE="${BLUM_PERSIST_DIR}/embedded_postgres_physical/recovery.tar"
 export BLUM_PHYSICAL_POSTGRES_READY_FILE="${BLUM_PERSIST_DIR}/embedded_postgres_physical/ready"
 export BLUM_PHYSICAL_POSTGRES_PUBLISH_DIR="${BLUM_PERSIST_DIR}/embedded_postgres_physical.publishing"
 RESTORE_STATUS_PID=""
@@ -51,10 +52,9 @@ publish_embedded_postgres_physical_backup() {
 
   rm -rf "${BLUM_PHYSICAL_POSTGRES_PUBLISH_DIR}"
   mkdir -p "${BLUM_PHYSICAL_POSTGRES_PUBLISH_DIR}" || return 1
-  cp "${physical_tmp_dir}/base.tar.gz" "${BLUM_PHYSICAL_POSTGRES_PUBLISH_DIR}/base.tar.gz" || return 1
-  if [[ -s "${physical_tmp_dir}/pg_wal.tar.gz" ]]; then
-    cp "${physical_tmp_dir}/pg_wal.tar.gz" "${BLUM_PHYSICAL_POSTGRES_PUBLISH_DIR}/pg_wal.tar.gz" || return 1
-  fi
+  # A network bucket does not atomically switch a directory of independently
+  # cached objects. Keep base and WAL in one object with embedded checksums.
+  python3 /app/scripts/postgres_recovery.py pack "${physical_tmp_dir}" "${BLUM_PHYSICAL_POSTGRES_PUBLISH_DIR}/recovery.tar" || return 1
   touch "${BLUM_PHYSICAL_POSTGRES_PUBLISH_DIR}/ready" || return 1
 
   rm -rf "${previous_backup_dir}"
@@ -98,18 +98,26 @@ start_backup_loop() {
 
 restore_embedded_postgres_physical_backup() {
   [[ -f "${BLUM_PHYSICAL_POSTGRES_READY_FILE}" ]] || return 1
-  [[ -s "${BLUM_PHYSICAL_POSTGRES_BASE_BACKUP}" ]] || return 1
+  [[ -s "${BLUM_PHYSICAL_POSTGRES_BUNDLE}" || -s "${BLUM_PHYSICAL_POSTGRES_BASE_BACKUP}" ]] || return 1
 
   echo "Restoring local PostgreSQL data directory from the physical recovery image."
   service postgresql stop >/dev/null 2>&1 || true
   rm -rf "${BLUM_LOCAL_POSTGRES_DATA_DIR:?}"/*
-  if ! tar -xzf "${BLUM_PHYSICAL_POSTGRES_BASE_BACKUP}" -C "${BLUM_LOCAL_POSTGRES_DATA_DIR}"; then
-    return 1
-  fi
-  if [[ -s "${BLUM_PHYSICAL_POSTGRES_WAL_BACKUP}" ]]; then
-    mkdir -p "${BLUM_LOCAL_POSTGRES_DATA_DIR}/pg_wal"
-    if ! tar -xzf "${BLUM_PHYSICAL_POSTGRES_WAL_BACKUP}" -C "${BLUM_LOCAL_POSTGRES_DATA_DIR}/pg_wal"; then
+  if [[ -s "${BLUM_PHYSICAL_POSTGRES_BUNDLE}" ]]; then
+    if ! python3 /app/scripts/postgres_recovery.py restore "${BLUM_PHYSICAL_POSTGRES_BUNDLE}" "${BLUM_LOCAL_POSTGRES_DATA_DIR}"; then
       return 1
+    fi
+  else
+    # Compatibility with existing two-file backups. PostgreSQL must still start
+    # successfully; an inconsistent legacy pair falls back to the logical dump.
+    if ! tar -xzf "${BLUM_PHYSICAL_POSTGRES_BASE_BACKUP}" -C "${BLUM_LOCAL_POSTGRES_DATA_DIR}"; then
+      return 1
+    fi
+    if [[ -s "${BLUM_PHYSICAL_POSTGRES_WAL_BACKUP}" ]]; then
+      mkdir -p "${BLUM_LOCAL_POSTGRES_DATA_DIR}/pg_wal"
+      if ! tar -xzf "${BLUM_PHYSICAL_POSTGRES_WAL_BACKUP}" -C "${BLUM_LOCAL_POSTGRES_DATA_DIR}/pg_wal"; then
+        return 1
+      fi
     fi
   fi
   rm -f "${BLUM_LOCAL_POSTGRES_DATA_DIR}/postmaster.pid"

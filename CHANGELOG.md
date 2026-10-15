@@ -7,6 +7,7 @@
 - Include older closed trades in Alpha and exclude expired unfilled orders; remove duplicate live-forward sample counts.
 - Mark unverified historical positive grades as insufficient evidence.
 - Stop startup after failed database restores. Periodic embedded backups still do not guarantee zero-loss recovery.
+- Publish each physical base/WAL snapshot in one streaming, checksum-checked recovery object; reject incomplete bundles and preserve logical recovery fallback.
 - Verify actual protected backend/script content during automated deployment, in addition to source revision and version.
 
 
