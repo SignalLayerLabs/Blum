@@ -44,17 +44,18 @@ while time.monotonic() < deadline:
             raise ValueError('Backend revision has not finished deploying.')
         if deployed.get('source_content_hash') != expected_content_hash:
             raise ValueError('Backend protected source content does not match the verified checkout.')
+        if not args.backend_only:
+            public = get_json(site, '/api/release')
+            if public.get('source_revision') != revision or public.get('source_content_hash') != expected_content_hash or not public.get('backend_ready'):
+                raise ValueError('Cloudflare revision or backend readiness has not settled.')
         break
     except (OSError, ValueError) as exc:
         last_error = str(exc)
         time.sleep(10)
 else:
-    raise SystemExit('Backend verification failed: '+last_error)
+    raise SystemExit(('Backend' if args.backend_only else 'Release')+' verification failed: '+last_error)
 print('Backend ready at', revision, flush=True)
 if not args.backend_only:
-    public = get_json(site, '/api/release')
-    if public.get('source_revision') != revision or public.get('source_content_hash') != expected_content_hash or not public.get('backend_ready'):
-        raise SystemExit('Cloudflare revision or backend readiness mismatch.')
     for path in ['/api/brain/snapshot', '/api/training/snapshot', '/api/paper-trading/snapshot?limit=1',
                  '/api/alpha/snapshot', '/api/alpha/desk', '/api/ascent/status']:
         payload = get_json(site, path)
