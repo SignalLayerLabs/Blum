@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="330" viewBox="0 0 1200 330" role="img" aria-labelledby="title desc">
+  <title id="title">BLUM — Financial research that shows its work.</title>
+  <desc id="desc">BLUM in gold and white on a dark background. Evidence, decision and validation form a connected research loop. Open source. Equities, ETFs and Forex. Paper research.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111921"/><stop offset="1" stop-color="#070b10"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#26313c" stroke-width="0.6"/></pattern>
+  </defs>
+  <rect width="1200" height="330" rx="18" fill="url(#bg)"/>
+  <rect x="650" width="550" height="330" fill="url(#grid)" opacity="0.5"/>
+  <rect x="44" y="42" width="54" height="54" rx="12" fill="#ffbd45"/>
+  <text x="71" y="81" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="39" font-weight="800" fill="#11151a">B</text>
+  <text x="114" y="81" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="700" letter-spacing="4" fill="#f4f6f9">BLUM</text>
+  <text x="44" y="154" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="700" fill="#f4f6f9">Financial research</text>
+  <text x="44" y="204" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="700" fill="#ffbd45">that shows its work.</text>
+  <text x="46" y="270" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#b2bfcc">OPEN SOURCE  /  EQUITIES · ETFs · FOREX  /  PAPER RESEARCH</text>
+  <path d="M796 103H1090V223H796Z" fill="none" stroke="#b98831" stroke-width="1.5"/>
+  <g font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+    <rect x="718" y="80" width="164" height="46" rx="8" fill="#111a23" stroke="#354351"/>
+    <text x="800" y="109" fill="#d5dee8">EVIDENCE</text>
+    <rect x="1006" y="80" width="150" height="46" rx="8" fill="#111a23" stroke="#354351"/>
+    <text x="1081" y="109" fill="#d5dee8">DECISION</text>
+    <rect x="845" y="200" width="188" height="46" rx="8" fill="#201c14" stroke="#b98831"/>
+    <text x="939" y="229" fill="#ffbd45">VALIDATION</text>
+  </g>
+  <circle cx="938" cy="103" r="4" fill="#ffbd45"/>
+  <circle cx="1090" cy="165" r="4" fill="#ffbd45"/>
+  <circle cx="796" cy="165" r="4" fill="#ffbd45"/>
+</svg>

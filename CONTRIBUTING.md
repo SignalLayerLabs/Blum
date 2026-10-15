@@ -20,13 +20,16 @@ decision quality, risk control, learning reliability or runtime performance.
 4. Document data lineage, point-in-time constraints and benchmark methodology.
 5. Open a pull request with before/after evidence and known limitations.
 
-Useful commands:
+Follow the [development guide](docs/guides/development.md) for Python 3.12, Node.js 24, PostgreSQL and dependency setup. Useful commands from the repository root:
 
 ```bash
-python3 -m pytest -q
-pnpm --dir frontend test
-pnpm --dir frontend build
+PYTHONPATH=backend python -m pytest -q
+npm --prefix frontend test
+npm --prefix frontend run build
+npm --prefix cloudflare test
 ```
+
+For documentation changes, verify relative links and image rendering. Place guides, reports and historical records according to the [repository map](docs/architecture/repository-map.md). Avoid moving runtime entry points without a scoped compatibility migration.
 
 ## Data and model contributions
 

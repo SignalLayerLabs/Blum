@@ -31,4 +31,4 @@ OHLC records are deduplicated; conflicting records never become invented daily c
 
 A continuous EMA50 warmup and label path produces one eligible causal example,
 insufficient for validation or promotion. The maintained runtime keeps this
-external bootstrap disabled. See [data acceptance](../../../../docs/DATA_QUALITY.md).
+external bootstrap disabled. See [data acceptance](../../../../docs/research/data-quality.md).
