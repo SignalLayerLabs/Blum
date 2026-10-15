@@ -65,4 +65,15 @@ jobs:
           source_content_hash=$(PYTHONPATH=backend python -c 'from app.core.release import source_content_hash; print(source_content_hash())')
           npm --prefix cloudflare run deploy -- --var "SOURCE_REVISION:$(git rev-parse HEAD)" --var "SOURCE_CONTENT_HASH:$source_content_hash"
       - name: Verify public release
-        run: python scripts/verify_deployment.py --timeout 120
+        run: |
+          for attempt in 1 2 3; do
+            if python scripts/verify_deployment.py --timeout 120; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Public verification has not settled; retrying in 10 seconds."
+              sleep 10
+            fi
+          done
+          echo "Public verification failed after three attempts."
+          exit 1
