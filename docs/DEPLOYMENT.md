@@ -60,6 +60,8 @@ Require api_ready=true, ui_ready=true, no startup last_error, and the exact GitH
 
 The existing bucket stays attached. PostgreSQL remains on local disk; object storage holds physical recovery files and atomic logical backups. Embedded PostgreSQL supports one replica. Multiple replicas require an external database. Preserve recovery files and verify startup before declaring data recovery complete.
 
+New physical backups publish base and streamed WAL together in `recovery.tar`, with an embedded size/SHA-256 manifest. Restore reads that single object once and checks each nested archive while extracting to local disk; it does not stage another full archive locally. This prevents independently cached base/WAL objects from different generations being combined. Incomplete, ambiguous or corrupted bundles fall back to the logical dump, with the existing incomplete-restore guard. Legacy two-file images remain readable, subject to PostgreSQL successfully starting. Additional tablespaces are rejected by this embedded backup path. Checksums establish consistency with the manifest, not independent authenticity or zero-loss recovery.
+
 ## Research configuration
 
 Fresh installations default to ASCENT disabled. The maintained runtime can enable the existing bounded scheduler:
