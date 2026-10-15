@@ -32,7 +32,7 @@ def pack(source: Path, destination: Path) -> None:
             raise ValueError("Empty recovery member: " + name)
         files[name] = {"size": size, "sha256": digest.hexdigest()}
     manifest = json.dumps({"version": 1, "files": files}, sort_keys=True).encode()
-    with tarfile.open(destination, "w", format=tarfile.USTAR_FORMAT) as archive:
+    with tarfile.open(destination, "w", format=tarfile.PAX_FORMAT) as archive:
         info = tarfile.TarInfo("manifest.json")
         info.size = len(manifest)
         archive.addfile(info, io.BytesIO(manifest))
