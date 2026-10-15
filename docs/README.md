@@ -1,6 +1,6 @@
 # BLUM documentation
 
-Start with the task you want to complete. The [project homepage](../README.md) introduces the product; these guides explain how it works and how to verify it.
+Start with the task you want to complete. The [project homepage](../.github/README.md) introduces the product; these guides explain how it works and how to verify it.
 
 ## Explore and evaluate
 

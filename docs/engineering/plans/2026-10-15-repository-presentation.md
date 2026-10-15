@@ -46,3 +46,7 @@ Check misleading marketing, stale historical claims presented as current, broken
 Initial implementation checks: all 604 original tracked files retained at their original or mapped paths; 76 moves; root files reduced from 45 to 19; nine evidence ledgers unchanged. Local navigation check: 105 Markdown files, 312 relative links and two Markdown anchors, with no missing target. HF metadata, SVG XML and whitespace checks passed. Focused existing backend contracts: 34 passed; frontend: 17 passed; gateway: 12 passed. Frontend static export and gateway types/typecheck passed. Reviewed historical-source policy check passed. Protected runtime fingerprint remained `09ea98a83bd08e9de3a3ac784e592784f7d7069f1cdb14491f9addec19a17854`.
 
 An independent whole-branch review and GitHub CI follow publication of the review branch. Production maintenance is outside this editorial change.
+
+## Visual QA decision
+
+GitHub rendered the required HF frontmatter as a large metadata table above the product hero. The marketing presentation now lives in `.github/README.md`, GitHub's documented first-choice homepage README. The root README retains the HF metadata and a focused runtime introduction. Both use relative links from their own locations, and neither requires a deployment/source-mirror change. This replaces the initial single-file presentation approach to preserve both platform contracts without duplicate long-form copy.

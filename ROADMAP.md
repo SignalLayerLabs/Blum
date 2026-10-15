@@ -4,7 +4,7 @@ Priorities after the [2.3.0 release](https://github.com/SignalLayerLabs/Blum/rel
 
 ## Available foundation
 
-The current product exposes five research workspaces, prospective call registration, separate equity/ETF and Forex evaluation, paper execution, bounded ASCENT experiments and one-way verified GitHub deployment. See the [README](README.md), [changelog](CHANGELOG.md) and [current evidence policy](docs/research/data-quality.md) for their scope and limitations.
+The current product exposes five research workspaces, prospective call registration, separate equity/ETF and Forex evaluation, paper execution, bounded ASCENT experiments and one-way verified GitHub deployment. See the [project presentation](.github/README.md), [changelog](CHANGELOG.md) and [current evidence policy](docs/research/data-quality.md) for their scope and limitations.
 
 ## Next priorities
 
