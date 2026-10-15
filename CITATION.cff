@@ -22,5 +22,5 @@ abstract: >-
   market theses, simulates paper execution, evaluates outcomes against relevant
   benchmarks and uses stored evidence to guide future research and confidence.
 
-version: 2.2.0
-date-released: 2026-10-13
+version: 2.3.0
+date-released: 2026-10-15
