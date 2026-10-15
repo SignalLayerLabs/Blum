@@ -16,9 +16,11 @@ test('persistent gateway failures stop after two reads',async()=>{
 });
 
 test('non-transient errors are exposed without an automatic retry',async()=>{
-  let calls=0;
-  await assert.rejects(loadAlphaWithRetry(async()=>{calls++;throw new Error('400 invalid request');},{wait:async()=>{throw new Error('unexpected pause');}}),/400/);
-  assert.equal(calls,1);
+  for (const failure of [new Error('400 invalid request'), new TypeError('network fallback already exhausted')]) {
+    let calls=0;
+    await assert.rejects(loadAlphaWithRetry(async()=>{calls++;throw failure;},{wait:async()=>{throw new Error('unexpected pause');}}),(error)=>error===failure);
+    assert.equal(calls,1);
+  }
 });
 
 test('unmounting during the retry delay prevents another read',async()=>{

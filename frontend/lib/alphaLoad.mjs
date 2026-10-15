@@ -7,7 +7,7 @@ export async function loadAlphaWithRetry(load, {active = () => true, onRetry = (
     return await load();
   } catch (error) {
     if (!active()) return undefined;
-    const transient = ['AbortError', 'TimeoutError', 'TypeError'].includes(error?.name)
+    const transient = ['AbortError', 'TimeoutError'].includes(error?.name)
       || /^50[234]\b/.test(String(error?.message ?? ''));
     if (!transient) throw error;
     onRetry();
