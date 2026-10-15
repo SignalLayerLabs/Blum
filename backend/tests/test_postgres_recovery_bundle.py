@@ -1,5 +1,6 @@
 """Exercise real nested archives; a physical recovery cannot mix snapshot generations."""
 import hashlib
+import gzip
 import importlib.util
 import io
 import json
@@ -65,6 +66,42 @@ def test_real_bundle_round_trip_keeps_base_and_wal_together(tmp_path):
     module.restore(bundle, target)
     assert (target / "base/1/data").read_bytes() == b"generation-one"
     assert (target / "pg_wal/0000000100000023000000F6").read_bytes() == b"same-generation-wal"
+
+
+@pytest.mark.parametrize("layout", ["empty-leading", "split-header", "empty-and-split"])
+def test_postgres_wal_concatenated_gzip_members_restore_the_whole_tar(tmp_path, layout):
+    module = recovery_module()
+    source = snapshot(tmp_path)
+    wal = source / "pg_wal.tar.gz"
+    raw = gzip.decompress(wal.read_bytes())
+    parts = [raw] if layout == "empty-leading" else [raw[:512], raw[512:]]
+    if layout != "split-header":
+        parts.insert(0, b"")
+    wal.write_bytes(b"".join(gzip.compress(part) for part in parts))
+    bundle = tmp_path / "recovery.tar"
+    module.pack(source, bundle)
+    target = tmp_path / "local"
+    module.restore(bundle, target)
+    assert (target / "pg_wal/0000000100000023000000F6").read_bytes() == b"same-generation-wal"
+    assert (target / "base/1/data").read_bytes() == b"generation-one"
+
+
+@pytest.mark.parametrize("damage", ["truncated", "crc"])
+def test_gzip_trailer_is_validated_even_after_the_tar_end_marker(tmp_path, damage):
+    module = recovery_module()
+    source = snapshot(tmp_path)
+    wal = source / "pg_wal.tar.gz"
+    raw = gzip.decompress(wal.read_bytes())
+    trailing = bytearray(gzip.compress(b""))
+    if damage == "truncated":
+        trailing = trailing[:-4]
+    else:
+        trailing[-8] ^= 1
+    wal.write_bytes(gzip.compress(raw) + trailing)
+    bundle = tmp_path / "recovery.tar"
+    module.pack(source, bundle)
+    with pytest.raises((OSError, EOFError, tarfile.TarError)):
+        module.restore(bundle, tmp_path / "local")
 
 
 def test_other_generation_wal_is_rejected_even_when_it_is_valid_gzip(tmp_path):

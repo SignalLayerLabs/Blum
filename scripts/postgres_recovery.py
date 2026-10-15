@@ -6,6 +6,7 @@ streams both members from one open object without staging another full backup.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import io
 import json
@@ -76,8 +77,14 @@ def restore(bundle: Path, target: Path) -> None:
             reader = CheckedReader(archive.extractfile(member))
             directory = target / "pg_wal" if member.name == "pg_wal.tar.gz" else target
             directory.mkdir(parents=True, exist_ok=True)
-            with tarfile.open(fileobj=reader, mode="r|gz") as nested:
-                nested.extractall(directory, filter="data")
+            # pg_basebackup WAL can contain concatenated gzip members, including
+            # an empty leading member. tarfile's r|gz decoder stops at the first.
+            with gzip.GzipFile(fileobj=reader, mode="rb") as compressed:
+                with tarfile.open(fileobj=compressed, mode="r|") as nested:
+                    nested.extractall(directory, filter="data")
+                # Validate every gzip trailer, including data after tar's EOF.
+                while compressed.read(CHUNK):
+                    pass
             while reader.read(CHUNK):
                 pass
             if reader.size != member.size or reader.digest.hexdigest() != expected.get("sha256"):
