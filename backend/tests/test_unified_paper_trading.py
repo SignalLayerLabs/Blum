@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import pytest
 
 from sqlalchemy import create_engine, event, func, select
 from sqlalchemy.orm import Session
@@ -445,6 +446,112 @@ def test_expired_unfilled_order_is_terminal_evidence_not_candidate_or_closed_tra
         assert payload["recently_closed_pagination"]["total"] == 1
 
 
+def test_executed_closures_remain_visible_when_new_unfilled_orders_dominate_history():
+    with setup_db() as db:
+        game = seed_game(db)
+        filled = seed_standard_trade(db, game)
+        for index in range(8):
+            db.add(LiveForwardPaperTrade(
+                trade_uid=f'unfilled-{index}', duplicate_key=f'unfilled-{index}', game_id=game.id,
+                ticker='XLP', asset_name='XLP', asset_type='ETF', market='us_equity', setup_type='test',
+                status='EXPIRED', decision_timestamp=NOW, closed_at=NOW, opened_at=None,
+                position_size=0, entry_price=None, net_pnl_eur=None,
+            ))
+        db.commit()
+        value = UnifiedPaperTradingProjectionService().build(db, limit=2)
+        assert [row['source_trade_id'] for row in value.get('executed_closures', [])] == [filled.id]
+        assert len(value['unfilled_orders']) == 2
+        assert all(row['net_pnl'] is None for row in value['unfilled_orders'])
+
+
+def test_native_forex_projection_uses_frozen_currency_and_nested_valuation():
+    with setup_db() as db:
+        cycle = seed_forex_cycle(db)
+        decision = seed_forex_decision(db, cycle, uid='usd-open', pair='EURUSD=X', status='APPROVED')
+        position = seed_forex_position(db, decision, status='OPEN', net_pnl=2.5, realized_r=None, suffix='usd-open')
+        position.contract_json = {'account_currency': 'USD', 'valuation': {'unrealized_net_pnl': 3.75, 'current_r': 0.5}}
+        db.commit()
+        value = UnifiedPaperTradingProjectionService().build(db)['open_positions'][0]
+        assert value.get('pnl_currency') == 'USD'
+        assert value['unrealized_pnl'] == 3.75
+        assert value['r_multiple'] == 0.5
+
+
+def test_forex_net_cost_treats_negative_swap_as_a_charge():
+    with setup_db() as db:
+        cycle = seed_forex_cycle(db)
+        decision = seed_forex_decision(db, cycle, uid='swap-close', pair='EURUSD=X', status='APPROVED')
+        position = seed_forex_position(db, decision, status='CLOSED', net_pnl=4.8, realized_r=1.0, suffix='swap-close')
+        position.gross_pnl = 5.5
+        position.swap_accrued = -0.2
+        db.commit()
+        value = UnifiedPaperTradingProjectionService().build(db)['executed_closures'][0]
+        assert abs(value['costs']['total'] - (value['gross_pnl'] - value['net_pnl'])) < 1e-8
+
+
+def test_non_eur_forex_amount_is_not_mislabeled_as_eur():
+    with setup_db() as db:
+        cycle = seed_forex_cycle(db)
+        decision = seed_forex_decision(db, cycle, uid='usd-close', pair='EURUSD=X', status='APPROVED')
+        position = seed_forex_position(db, decision, status='CLOSED', net_pnl=5, realized_r=1.0, suffix='usd-close')
+        position.contract_json = {'account_currency': 'USD'}
+        db.commit()
+        value = UnifiedPaperTradingProjectionService().build(db)['recently_closed'][0]
+        assert value['net_pnl_eur'] is None
+        assert value['gross_pnl_eur'] is None
+        assert value['net_pnl'] == 5
+
+
+def test_market_monetary_metrics_do_not_pool_different_account_currencies():
+    with setup_db() as db:
+        game = seed_game(db)
+        paper = seed_intraday_forex_paper_trade(db, game)
+        paper.net_pnl_eur = 10
+        cycle = seed_forex_cycle(db)
+        decision = seed_forex_decision(db, cycle, uid='mixed-currency', pair='EURUSD=X', status='APPROVED')
+        position = seed_forex_position(db, decision, status='CLOSED', net_pnl=-5, realized_r=-1, suffix='mixed-currency')
+        position.contract_json = {'account_currency':'USD'}
+        db.commit()
+        metrics = UnifiedPaperTradingProjectionService().build(db)['metrics']['by_market']['forex']
+        assert metrics['realized_pnl'] is None
+        assert metrics['profit_factor'] is None
+        assert metrics['max_drawdown'] is None
+        assert metrics['pnl_currency'] is None
+        assert metrics['realized_pnl_by_currency'] == {'EUR':10, 'USD':-5}
+        assert metrics['win_rate'] == 0.5
+
+
+@pytest.mark.parametrize('status', ['OPEN', 'CLOSED'])
+def test_intraday_paper_currency_comes_from_its_frozen_account_contract(status):
+    with setup_db() as db:
+        game = seed_game(db)
+        trade = seed_intraday_forex_paper_trade(db, game)
+        trade.frozen_decision_payload = {'accounting':{'account_currency':'USD'}}
+        trade.status = status
+        if status == 'OPEN':
+            trade.closed_at = None
+            trade.exit_price = None
+            trade.net_pnl_eur = None
+            trade.unrealized_pnl = 2
+        db.commit()
+        row = UnifiedPaperTradingProjectionService().build(db)['open_positions' if status == 'OPEN' else 'executed_closures'][0]
+        assert row['pnl_currency'] == 'USD'
+        assert row['unrealized_pnl' if status == 'OPEN' else 'net_pnl'] == 2
+        assert row['net_pnl_eur'] is None
+
+
+def test_conflicting_account_contracts_leave_money_currency_unverified():
+    with setup_db() as db:
+        game = seed_game(db)
+        trade = seed_intraday_forex_paper_trade(db, game)
+        trade.frozen_decision_payload = {'accounting':{'account_currency':'USD'}}
+        trade.execution_costs = {'accounting':{'account_currency':'EUR'}}
+        db.commit()
+        row = UnifiedPaperTradingProjectionService().build(db)['executed_closures'][0]
+        assert row['pnl_currency'] is None
+        assert row['net_pnl_eur'] is None
+
+
 def test_open_forex_position_affects_only_unrealized_metrics():
     with setup_db() as db:
         seed_game(db)
@@ -459,6 +566,22 @@ def test_open_forex_position_affects_only_unrealized_metrics():
         assert payload["counts"]["aggregate"]["closed"] == 0
         assert payload["metrics"]["aggregate"]["realized_pnl"] is None
         assert payload["metrics"]["aggregate"]["unrealized_pnl"] == 2.5
+
+
+def test_partial_execution_is_open_exposure_with_unrealized_result():
+    with setup_db() as db:
+        game = seed_game(db)
+        trade = seed_standard_trade(db, game)
+        trade.status = 'PARTIALLY_FILLED'
+        trade.closed_at = None
+        trade.exit_price = None
+        trade.net_pnl_eur = None
+        trade.unrealized_pnl = 2.5
+        db.commit()
+        payload = UnifiedPaperTradingProjectionService().build(db)
+        assert payload['counts']['by_market']['equities']['open'] == 1
+        assert payload['metrics']['by_market']['equities']['unrealized_pnl'] == 2.5
+        assert payload['open_positions'][0]['source_trade_id'] == trade.id
         assert payload["metrics"]["aggregate"]["win_rate"] is None
 
 

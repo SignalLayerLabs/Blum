@@ -1,5 +1,5 @@
 export const CLOSED_PAPER_STATUSES = new Set(["CLOSED", "EXPIRED", "INVALIDATED"]);
-export const OPEN_PAPER_STATUSES = new Set(["OPEN", "MANAGED"]);
+export const OPEN_PAPER_STATUSES = new Set(["OPEN", "MANAGED", "PARTIALLY_FILLED"]);
 export const CANDIDATE_PAPER_STATUSES = new Set(["CANDIDATE", "WAITING_FOR_TRIGGER", "SKIPPED", "DATA_BLOCKED", "ERROR"]);
 
 export function normalizePaperStatus(value) {
@@ -20,6 +20,8 @@ export function mergePaperTrades(snapshot) {
     ...(snapshot?.latest_candidates ?? snapshot?.candidates ?? []),
     ...(snapshot?.open_positions ?? []),
     ...(snapshot?.recently_closed_trades ?? snapshot?.recently_closed ?? []),
+    ...(snapshot?.executed_closures ?? []),
+    ...(snapshot?.unfilled_orders ?? []),
   ];
   const byTrade = new Map();
 

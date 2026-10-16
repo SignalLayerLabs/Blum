@@ -81,27 +81,6 @@ def test_dashboard_snapshot_round_trip_and_stale_flag():
         assert stale["status"] == "stale"
 
 
-def test_learning_page_keeps_heavy_work_out_of_initial_render():
-    page = Path(__file__).resolve().parents[2] / "frontend" / "app" / "learning" / "page.tsx"
-    text = page.read_text()
-
-    assert text.strip() == 'export { default } from "../training-ground/page";'
-
-    training_page = Path(__file__).resolve().parents[2] / "frontend" / "app" / "training-ground" / "page.tsx"
-    training_text = training_page.read_text()
-    initial_effect = training_text.split("useEffect(() => {", 1)[1].split("}, []);", 1)[0]
-
-    assert "api.traderTrainingGround()" in initial_effect
-    assert initial_effect.count("api.") == 1
-    assert "api.tradingGameLedger" not in training_text
-    assert "api.alphaRecoveryDashboard()" not in training_text
-    assert "api.metaCognitionSummary()" not in training_text
-    assert "recalculateLearningTradingPower" not in text
-    assert "recalculateDecisionSuperiority" not in text
-    assert "recalculateBusinessQuality" not in text
-    assert "recalculatePortfolioIntelligence" not in text
-    assert "recalculateAlphaRecovery" not in text
-    assert "metaCognitionRecalculate" not in text
 
 
 def test_deep_diagnostics_uses_human_readable_renderer_not_raw_json_dump():

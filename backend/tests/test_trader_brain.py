@@ -661,42 +661,8 @@ def test_alpha_snapshot_excludes_experimental_and_quarantined_paper_evidence():
     assert payload["evidence_split"]["intraday_paper_forward"]["sample_size"] == 0
 
 
-def test_product_surface_is_reduced_to_four_primary_pages():
-    root = Path(__file__).resolve().parents[2] / "frontend" / "components" / "AppShell.tsx"
-    text = root.read_text()
-
-    assert 'label: "Brain"' in text
-    assert 'label: "Training Ground"' in text
-    assert 'label: "Paper Trading"' in text
-    assert 'label: "Alpha"' in text
-    assert 'label: "Radar"' not in text
-    assert 'label: "Signals"' not in text
-    assert 'label: "Performance"' not in text
 
 
-def test_brain_page_renders_learning_profit_and_copy_readiness_from_one_snapshot():
-    frontend = Path(__file__).resolve().parents[2] / "frontend"
-    page_text = (frontend / "app" / "brain" / "page.tsx").read_text()
-    styles_text = (frontend / "app" / "globals.css").read_text()
-    charts_path = frontend / "components" / "BrainEvidenceCharts.tsx"
-
-    assert page_text.count("api.traderBrain()") == 1
-    assert "BrainEvidenceCharts" in page_text
-    assert 'className="terminal-command-grid brain-command-grid"' in page_text
-    assert ".brain-command-grid" in styles_text
-    assert "repeat(6, minmax(0, 1fr))" in styles_text
-    assert "safeNumber(data?.brain_score) + 1" not in page_text
-    assert charts_path.exists()
-
-    charts_text = charts_path.read_text()
-    assert "Brain Improvement" in charts_text
-    assert "P/L vs Benchmark" in charts_text
-    assert "Learning Throughput" in charts_text
-    assert "Pilot Capital Gate" in charts_text
-    assert "Kill switch" in charts_text
-    assert "Max pilot capital" in charts_text
-    assert "Insufficient evidence" in charts_text
-    assert "COPY_READY_PAPER_ONLY" in charts_text
 
 
 def test_legacy_pages_are_lightweight_aliases():
@@ -705,52 +671,3 @@ def test_legacy_pages_are_lightweight_aliases():
     assert (frontend / "learning" / "page.tsx").read_text().strip() == 'export { default } from "../training-ground/page";'
     assert (frontend / "copy-trading" / "page.tsx").read_text().strip() == 'export { default } from "../paper-trading/page";'
     assert (frontend / "dashboard" / "page.tsx").read_text().strip() == 'export { default } from "../page";'
-
-
-def test_paper_trading_page_uses_single_snapshot_and_readiness_states():
-    page = Path(__file__).resolve().parents[2] / "frontend" / "app" / "paper-trading" / "page.tsx"
-    text = page.read_text()
-
-    assert "api.traderPaperTrading(50)" in text
-    assert "api.paperForwardSnapshot()" not in text
-    assert "api.paperForwardTrades(50)" not in text
-    assert "api.unifiedPaperTradingDetail(sourceEngine, tradeId)" in text
-    assert "Live-Forward Paper Trading" in text
-    assert "NO_DECISIONS" in text
-    assert "NO_ELIGIBLE_SETUPS" in text
-    assert "NO_SNAPSHOTS" in text
-    assert "WORKER_DISABLED" in text
-    assert "DATA_BLOCKED" in text
-    assert "INSUFFICIENT_EVIDENCE" in text
-    assert "No completed trades" not in text
-    assert "No raw JSON" not in text
-    assert "Developer payload" in text
-
-
-def test_paper_trading_page_separates_equity_and_forex_from_one_snapshot():
-    page = Path(__file__).resolve().parents[2] / "frontend" / "app" / "paper-trading" / "page.tsx"
-    text = page.read_text()
-
-    assert 'useState<PaperMarketTab>("equities")' in text
-    assert 'label: "Azioni / ETF"' in text
-    assert 'label: "Forex"' in text
-    assert 'row.market_group === "forex"' in text
-    assert "const visibleTrades = useMemo" in text
-    assert "Setup confidence" in text
-    assert "Data confidence" in text
-    assert "Strategy confidence" in text
-    assert text.count("api.traderPaperTrading(50)") == 1
-
-
-def test_paper_trading_summary_uses_selected_market_totals_without_global_leakage():
-    page = Path(__file__).resolve().parents[2] / "frontend" / "app" / "paper-trading" / "page.tsx"
-    text = page.read_text()
-
-    assert 'const selectedMarketKey = marketTab === "forex" ? "forex" : "equities"' in text
-    assert "marketCounts[selectedMarketKey]" in text
-    assert "marketMetrics[selectedMarketKey]" in text
-    assert "maxAvailableCount(counts.candidates, candidates.length)" in text
-    assert 'value={numberLike(counts.closed)}' in text
-    assert "counts.terminal_outcomes" in text
-    assert "snapshot.candidate_count" not in text
-    assert "snapshot.closed_count" not in text

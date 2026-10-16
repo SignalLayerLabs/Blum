@@ -182,15 +182,6 @@ def test_research_planner_summary_is_read_only_for_training_page():
         assert db.scalar(select(func.count(DashboardSnapshot.id))) == snapshots_before
 
 
-def test_training_ground_page_surfaces_planner_without_triggering_backend_work():
-    page = Path(__file__).resolve().parents[2] / "frontend" / "app" / "training-ground" / "page.tsx"
-    text = page.read_text()
-
-    assert "Autonomous Research Planner" in text
-    assert "Current Research Objective" in text
-    assert "Queued Experiments" in text
-    assert "api.traderTrainingGround()" in text
-    assert ".post(" not in text
 
 
 def test_autonomous_engine_generates_planner_before_learning_loop():

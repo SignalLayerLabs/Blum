@@ -55,7 +55,7 @@ Confirm startup readiness and compare the installed database revision with the m
 (cd backend && PYTHONPATH=. alembic -c alembic.ini current)
 ```
 
-For 2.3 the expected head is `0045_alpha_call_registry`. The shortened `0025_tg_runtime_snap` identifier is an earlier migration, not the current readiness checkpoint.
+This checkout's expected head is `0046_alpha_desk_indexes`; it adds indexes without rewriting registered evidence. Compare against the exact deployed revision when inspecting an older release. The shortened `0025_tg_runtime_snap` identifier is an earlier migration, not the current readiness checkpoint.
 
 Administrative calls below target the private HF origin, never the public Cloudflare gateway. In observatory mode the origin boundary checks `BLUM_ASCENT_ADMIN_KEY`; promotion/rollback additionally check `BLUM_HF_TRAINING_ADMIN_KEY` against the same request header. A header value must satisfy both checks where applicable. Review the configured authorization contract before any future promotion, and never disable the public boundary to make a request pass. `<admin-key>` denotes an existing authorized private credential; do not paste secrets into shared commands or logs.
 

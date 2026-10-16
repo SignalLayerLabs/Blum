@@ -22,12 +22,13 @@ from app.services.paper_forward_direction import (
     normalize_side,
     paper_trade_evidence_is_eligible,
     recover_trade_side,
+    recorded_account_currency,
 )
 
 
 SNAPSHOT_TYPE = "unified_paper_trading_summary"
 TERMINAL_STATUSES = {"CLOSED", "EXPIRED", "INVALIDATED"}
-OPEN_STATUSES = {"OPEN", "MANAGED"}
+OPEN_STATUSES = {"OPEN", "MANAGED", "PARTIALLY_FILLED"}
 
 
 def _float(value: Any) -> float | None:
@@ -37,6 +38,10 @@ def _float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _currency(value: Any) -> str | None:
+    return value if isinstance(value, str) and len(value) == 3 and value.isascii() and value.isalpha() and value.isupper() else None
 
 
 def _forex_confidence_score(value: Any) -> float | None:
@@ -212,6 +217,8 @@ class UnifiedPaperTradingProjectionService:
         visible_candidates = self._balanced_visible_rows(candidate_rows, limit)
         visible_open = self._balanced_visible_rows(open_rows, limit)
         visible_closed = self._balanced_visible_rows(closed_rows, limit)
+        executed_closures = [row for row in closed_rows if row.get("opened_at") and row.get("entry_price") and (row.get("position_size") or 0) > 0 and row.get("net_pnl") is not None]
+        unfilled_orders = [row for row in closed_rows if not row.get("opened_at") and row.get("net_pnl") is None]
         execution_snapshot = self.snapshots.latest(db, "deterministic_execution_summary")
         execution_kernel = (
             execution_snapshot.get("payload")
@@ -241,6 +248,8 @@ class UnifiedPaperTradingProjectionService:
             "candidates": visible_candidates,
             "open_positions": visible_open,
             "recently_closed": visible_closed,
+            "executed_closures": self._balanced_visible_rows(executed_closures, limit),
+            "unfilled_orders": self._balanced_visible_rows(unfilled_orders, limit),
             "pagination": {
                 "limit": limit,
                 "returned": len(visible),
@@ -416,6 +425,7 @@ class UnifiedPaperTradingProjectionService:
 
     def _paper_row(self, trade: LiveForwardPaperTrade) -> dict:
         payload = trade.frozen_decision_payload or {}
+        currency = recorded_account_currency(payload.get("accounting"), (trade.execution_costs or {}).get("accounting"))
         direction = normalize_side(trade.side) or recover_trade_side(payload)
         trading_lane = (
             "intraday"
@@ -468,8 +478,9 @@ class UnifiedPaperTradingProjectionService:
             "risk_amount": _float(trade.risk_amount),
             "gross_pnl": _float(trade.gross_pnl_eur) if evidence_eligible else None,
             "net_pnl": _float(trade.net_pnl_eur) if evidence_eligible else None,
-            "gross_pnl_eur": _float(trade.gross_pnl_eur) if evidence_eligible else None,
-            "net_pnl_eur": _float(trade.net_pnl_eur) if evidence_eligible else None,
+            "pnl_currency": currency,
+            "gross_pnl_eur": _float(trade.gross_pnl_eur) if evidence_eligible and currency == "EUR" else None,
+            "net_pnl_eur": _float(trade.net_pnl_eur) if evidence_eligible and currency == "EUR" else None,
             "unrealized_pnl": _float(trade.unrealized_pnl) if evidence_eligible and trade.status in OPEN_STATUSES else None,
             "pnl_percent": _float(trade.pnl_percent) if evidence_eligible else None,
             "pnl_per_share": _float(trade.pnl_per_share) if evidence_eligible else None,
@@ -504,6 +515,7 @@ class UnifiedPaperTradingProjectionService:
     ) -> dict:
         proposal = decision.proposal_json if decision else {}
         contract = position.contract_json or {}
+        valuation = contract.get("valuation") or contract
         is_open = str(position.status).upper() in OPEN_STATUSES
         timestamp = position.closed_at or position.opened_at or position.created_at
         return {
@@ -534,12 +546,13 @@ class UnifiedPaperTradingProjectionService:
             "risk_amount": _float(contract.get("risk_amount")),
             "gross_pnl": _float(position.gross_pnl) if not is_open else None,
             "net_pnl": _float(position.net_pnl) if not is_open else None,
-            "gross_pnl_eur": _float(position.gross_pnl) if not is_open else None,
-            "net_pnl_eur": _float(position.net_pnl) if not is_open else None,
-            "unrealized_pnl": _float(contract.get("unrealized_net_pnl")) if is_open else None,
+            "pnl_currency": _currency(contract.get("account_currency")),
+            "gross_pnl_eur": _float(position.gross_pnl) if not is_open and contract.get("account_currency") == "EUR" else None,
+            "net_pnl_eur": _float(position.net_pnl) if not is_open and contract.get("account_currency") == "EUR" else None,
+            "unrealized_pnl": _float(valuation.get("unrealized_net_pnl")) if is_open else None,
             "pnl_percent": _float(contract.get("pnl_percent")) if not is_open else None,
             "pnl_per_share": None,
-            "r_multiple": _float(position.realized_r) if not is_open else _float(contract.get("current_r")),
+            "r_multiple": _float(position.realized_r) if not is_open else _float(valuation.get("current_r")),
             "benchmark_ticker": contract.get("benchmark_ticker"),
             "benchmark_return": _float((evidence.payload_json or {}).get("benchmark_return")) if evidence else None,
             "benchmark_excess": _float((evidence.payload_json or {}).get("benchmark_excess")) if evidence else None,
@@ -563,7 +576,7 @@ class UnifiedPaperTradingProjectionService:
                     float(position.spread_cost or 0)
                     + float(position.slippage_cost or 0)
                     + float(position.commission or 0)
-                    + float(position.swap_accrued or 0),
+                    - float(position.swap_accrued or 0),
                     6,
                 ),
             },
@@ -645,7 +658,19 @@ class UnifiedPaperTradingProjectionService:
         unrealized = [float(row["unrealized_pnl"]) for row in opened if row["unrealized_pnl"] is not None]
         wins = [value for value in pnl if value > 0]
         losses = [value for value in pnl if value < 0]
-        drawdown = self._max_drawdown(closed)
+        monetary_rows = [*closed, *(row for row in opened if row["unrealized_pnl"] is not None)]
+        currencies = {row.get("pnl_currency") for row in monetary_rows}
+        known_currencies = {code for code in currencies if _currency(code)}
+        currency = next(iter(known_currencies)) if len(currencies) == len(known_currencies) == 1 else None
+        realized_by_currency = {
+            code: round(sum(float(row["net_pnl"]) for row in closed if row.get("pnl_currency") == code), 6)
+            for code in sorted(known_currencies) if any(row.get("pnl_currency") == code for row in closed)
+        }
+        unrealized_by_currency = {
+            code: round(sum(float(row["unrealized_pnl"]) for row in opened if row.get("pnl_currency") == code and row["unrealized_pnl"] is not None), 6)
+            for code in sorted(known_currencies) if any(row.get("pnl_currency") == code and row["unrealized_pnl"] is not None for row in opened)
+        }
+        drawdown = self._max_drawdown(closed) if currency else None
         return {
             "counts": {
                 "total": len(rows),
@@ -659,13 +684,17 @@ class UnifiedPaperTradingProjectionService:
                 "decisions_rejected": len(rejected),
             },
             "metrics": {
-                "realized_pnl": round(sum(pnl), 6) if pnl else None,
-                "unrealized_pnl": round(sum(unrealized), 6) if unrealized else None,
+                "realized_pnl": round(sum(pnl), 6) if pnl and currency else None,
+                "unrealized_pnl": round(sum(unrealized), 6) if unrealized and currency else None,
+                "pnl_currency": currency,
+                "realized_pnl_by_currency": realized_by_currency,
+                "unrealized_pnl_by_currency": unrealized_by_currency,
+                "unclassified_monetary_records": sum(row.get("pnl_currency") not in known_currencies for row in monetary_rows),
                 "win_rate": round(len(wins) / len(pnl), 6) if pnl else None,
                 "average_r": round(sum(r_values) / len(r_values), 6) if r_values else None,
                 "median_r": round(median(r_values), 6) if r_values else None,
                 "expectancy_r": round(sum(r_values) / len(r_values), 6) if r_values else None,
-                "profit_factor": round(sum(wins) / abs(sum(losses)), 6) if losses else None,
+                "profit_factor": round(sum(wins) / abs(sum(losses)), 6) if losses and currency else None,
                 "benchmark_excess": round(sum(excess) / len(excess), 6) if excess else None,
                 "max_drawdown": drawdown,
                 "sample_size": len(closed),

@@ -61,6 +61,11 @@ def runtime_status(db: Session = Depends(get_db)) -> dict:
     return BlumRuntimeFacade().status(db)
 
 
+@router.get("/api/runtime/operating-state")
+def operating_state(db: Session = Depends(get_db)) -> dict:
+    return BlumRuntimeFacade().operating_state(db)
+
+
 @router.get("/runtime/contracts")
 @router.get("/api/runtime/contracts")
 def runtime_contracts() -> dict:

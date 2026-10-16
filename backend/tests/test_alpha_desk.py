@@ -258,7 +258,8 @@ def test_desk_api_is_read_only_and_does_not_register_a_legacy_row(db):
         client=TestClient(app)
         response=client.get('/api/alpha/desk')
         assert response.status_code==200
-        assert response.json()['registered_count']==0
+        assert response.json()['registered_count'] is None
+        assert response.json()['snapshot_status']=='missing'
         assert client.post('/api/alpha/desk',json={}).status_code==405
         assert db.get(LiveForwardPaperTrade,row.id).status=='OPEN'
     finally:
@@ -506,6 +507,30 @@ def test_account_currency_totals_are_not_pooled(db):
     assert result['qualified_closed']==2
     assert result['observed_net_pnl'] is None
     assert result['observed_net_pnl_by_currency']=={'EUR':9,'USD':9}
+
+
+@pytest.mark.parametrize('frozen_accounting,executed_accounting,currency',[
+    ({'account_currency':'USD'},None,'USD'),
+    ({'account_currency':'USD'},{'account_currency':'EUR'},None),
+    ({'account_currency':'EUR'},{'account_currency':None},None),
+    ({'account_currency':'usd'},None,None),
+    ({'account_currency':'ÉUR'},None,None),
+    ('malformed',None,None),
+])
+def test_qualified_results_respect_frozen_currency_and_reject_ambiguous_contracts(
+    db,frozen_accounting,executed_accounting,currency,
+):
+    row=paper(db)
+    row.frozen_decision_payload={**row.frozen_decision_payload,'accounting':frozen_accounting}
+    register(db,row)
+    close(row)
+    if executed_accounting is not None:
+        row.execution_costs={**row.execution_costs,'accounting':executed_accounting}
+    result=snapshot(db)
+    call=result['journal'][0]
+    assert call['account_currency']==currency
+    assert call['qualified_closed'] is (currency is not None)
+    assert result['markets']['equity']['observed_net_pnl_by_currency']==({currency:9} if currency else {})
 
 
 @pytest.mark.parametrize('field',['costs_paid','spread_cost'])

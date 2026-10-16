@@ -12,6 +12,10 @@ JsonType = JSON().with_variant(JSONB, "postgresql")
 
 class AlphaCallRegistration(Base):
     __tablename__ = "alpha_call_registrations"
+    __table_args__ = (
+        Index("ix_alpha_calls_market_registered", "market", "registered_at", "id"),
+        Index("ix_alpha_calls_source", "source_type", "source_id"),
+    )
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     source_uid: Mapped[str] = mapped_column(String(220), unique=True)
     source_type: Mapped[str] = mapped_column(String(32))

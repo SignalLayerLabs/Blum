@@ -92,6 +92,8 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
     }
 
     assert required_tables.issubset(tables)
+    alpha_indexes = {index['name'] for index in inspect(engine).get_indexes('alpha_call_registrations')}
+    assert {'ix_alpha_calls_market_registered', 'ix_alpha_calls_source'}.issubset(alpha_indexes)
     paper_trade_columns = {
         column["name"]
         for column in inspect(engine).get_columns("live_forward_paper_trades")
@@ -103,7 +105,7 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "accounting_recomputed_at",
     }.issubset(paper_trade_columns)
     with engine.connect() as connection:
-        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0045_alpha_call_registry"
+        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0046_alpha_desk_indexes"
 
     downgrade = subprocess.run(
         [sys.executable, "-m", "alembic", "downgrade", "base"],

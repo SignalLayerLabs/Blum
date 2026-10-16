@@ -12,11 +12,11 @@ import json
 import math
 import random
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import and_, desc, func, select, union_all
 
 from app.core.release import source_revision, source_content_hash
 from app.models import AlphaCallRegistration, ForexDecision, ForexPosition, LiveForwardPaperTrade
-from app.services.paper_forward_direction import is_forex_identity, normalize_side, paper_trade_evidence_is_eligible, validate_trade_plan
+from app.services.paper_forward_direction import is_forex_identity, normalize_side, paper_trade_evidence_is_eligible, recorded_account_currency, validate_trade_plan
 from app.services.persistence import database_persistence_status
 
 WINDOW = 2000
@@ -203,7 +203,31 @@ def holding_benchmark(trade, frozen, opened, closed_at):
 class AlphaDeskService:
     def snapshot(self,db,*,now=None):
         now=utc(now or datetime.now(timezone.utc))
-        records=list(db.scalars(select(AlphaCallRegistration).order_by(desc(AlphaCallRegistration.registered_at),desc(AlphaCallRegistration.id)).limit(WINDOW)))
+        per_market = max(1, WINDOW // 2)
+        selected = {}
+        windows = {}
+        totals = dict(db.execute(select(AlphaCallRegistration.market, func.count(AlphaCallRegistration.id)).group_by(AlphaCallRegistration.market)).all())
+        for market in ('equity', 'forex'):
+            recent = list(db.scalars(select(AlphaCallRegistration).where(AlphaCallRegistration.market == market)
+                .order_by(desc(AlphaCallRegistration.registered_at), desc(AlphaCallRegistration.id)).limit(per_market)))
+            paper_closed = select(AlphaCallRegistration.id.label('registration_id'), LiveForwardPaperTrade.closed_at.label('closed_at')).join(
+                LiveForwardPaperTrade, and_(AlphaCallRegistration.source_type == 'paper', AlphaCallRegistration.source_id == LiveForwardPaperTrade.id)
+            ).where(AlphaCallRegistration.market == market, func.upper(LiveForwardPaperTrade.status).in_(['CLOSED','EXPIRED','INVALIDATED']),
+                LiveForwardPaperTrade.position_size > 0, LiveForwardPaperTrade.opened_at.is_not(None),
+                LiveForwardPaperTrade.closed_at.is_not(None), LiveForwardPaperTrade.exit_price.is_not(None))
+            forex_closed = select(AlphaCallRegistration.id.label('registration_id'), ForexPosition.closed_at.label('closed_at')).join(
+                ForexPosition, and_(AlphaCallRegistration.source_type == 'forex', AlphaCallRegistration.source_id == ForexPosition.decision_id)
+            ).where(AlphaCallRegistration.market == market, func.upper(ForexPosition.status) == 'CLOSED', ForexPosition.quantity_lots > 0,
+                ForexPosition.opened_at.is_not(None), ForexPosition.closed_at.is_not(None), ForexPosition.exit_price.is_not(None))
+            executed = union_all(paper_closed, forex_closed).subquery()
+            executed_ids = select(executed.c.registration_id, func.max(executed.c.closed_at).label('closed_at')).group_by(executed.c.registration_id).subquery()
+            history = list(db.scalars(select(AlphaCallRegistration).join(executed_ids, AlphaCallRegistration.id == executed_ids.c.registration_id)
+                .order_by(desc(executed_ids.c.closed_at), desc(AlphaCallRegistration.id)).limit(per_market + 1)))
+            for row in [*recent, *history[:per_market]]:
+                selected[row.id] = row
+            windows[market] = {'recent_limit':per_market, 'recent_evaluated':len(recent), 'recent_truncated':int(totals.get(market,0)) > per_market,
+                'executed_limit':per_market, 'executed_evaluated':min(len(history),per_market), 'executed_truncated':len(history) > per_market}
+        records = sorted(selected.values(), key=lambda row:(row.registered_at,row.id), reverse=True)
         paper_ids=[r.source_id for r in records if r.source_type=='paper']
         forex_ids=[r.source_id for r in records if r.source_type=='forex']
         papers={r.id:r for r in db.scalars(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.id.in_(paper_ids)))} if paper_ids else {}
@@ -217,11 +241,15 @@ class AlphaDeskService:
             rows=positions[record.source_id] if record.source_type=='forex' else []
             journal.append(self._call(record,source,rows,now))
         markets={key:self._market([r for r in journal if r['market']==key]) for key in ('equity','forex')}
-        total=int(db.scalar(select(func.count(AlphaCallRegistration.id))) or 0)
+        for key,value in markets.items():
+            value['registered_total'] = int(totals.get(key,0))
+        visible_journal = sorted([row for market in ('equity','forex') for row in [item for item in journal if item['market']==market][:20]], key=lambda row:row['registered_at'], reverse=True)
+        total=sum(int(value) for value in totals.values())
         persistence=database_persistence_status()
         return {'status':'READY','methodology_version':METHODOLOGY,'generated_at':now.isoformat(),
-            'registered_count':total,'window':{'limit':WINDOW,'evaluated':len(records),'truncated':total>WINDOW},
-            'markets':markets,'journal':journal[:40],
+            'registered_count':total,'window':{'limit':per_market*4,'evaluated':len(records),'truncated':any(row['recent_truncated'] or row['executed_truncated'] for row in windows.values()),'by_market':windows,
+                'scope':'Recent decisions plus bounded executed history; performance is not an all-history total.'},
+            'markets':markets,'journal':visible_journal,
             'durability':{'mode':persistence['mode'],
                 'strict_no_reset_mode':persistence['strict_no_reset_mode'],
                 'zero_loss_restart_guaranteed':False,
@@ -257,8 +285,7 @@ class AlphaDeskService:
         contract=mapping(getattr(trade,'contract_json',None)) if record.source_type=='forex' else {}
         execution=mapping(getattr(trade,'execution_costs',None)) if record.source_type=='paper' else {}
         accounting=mapping(execution.get('accounting'))
-        account_currency=accounting.get('account_currency','EUR') if record.source_type=='paper' else contract.get('account_currency')
-        if not isinstance(account_currency,str) or len(account_currency)!=3 or not account_currency.isalpha(): account_currency=None
+        account_currency=recorded_account_currency(inputs.get('accounting'), execution.get('accounting')) if record.source_type=='paper' else recorded_account_currency({'account_currency':contract.get('account_currency')})
         notional=number(getattr(trade,'notional_value',None) if record.source_type=='paper' else contract.get('notional_value'))
         net=number(getattr(trade,'net_pnl_eur',None) if record.source_type=='paper' else getattr(trade,'net_pnl',None))
         gross=number(getattr(trade,'gross_pnl_eur',None) if record.source_type=='paper' else getattr(trade,'gross_pnl',None))
@@ -290,7 +317,7 @@ class AlphaDeskService:
             outcome='CLOSED'
             if quantity is None or quantity<=0: blockers.append('MISSING_FILL')
             if closed_at is None or closed_at>now or opened is None or opened<utc(record.decision_at) or closed_at<=opened or closed_at<=utc(record.registered_at): blockers.append('NON_CAUSAL_OUTCOME')
-            if entry is None or exit_price is None or entry<=0 or exit_price<=0 or side is None or net is None or gross is None or costs is None or stored_cost is None:
+            if account_currency is None or entry is None or exit_price is None or entry<=0 or exit_price<=0 or side is None or net is None or gross is None or costs is None or stored_cost is None:
                 blockers.append('INVALID_ACCOUNTING')
             elif any(value is None or value<0 for value in parts[:3]): blockers.append('INVALID_ACCOUNTING')
             elif not math.isclose(gross-net,costs,rel_tol=1e-6,abs_tol=tolerance) or not math.isclose(costs,stored_cost,rel_tol=1e-6,abs_tol=tolerance): blockers.append('COST_RECONCILIATION_FAILED')

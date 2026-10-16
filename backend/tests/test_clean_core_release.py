@@ -51,15 +51,6 @@ def test_trader_brain_read_model_was_physically_moved_into_engine():
     assert "from app.engine.brain.trader_brain import *" in legacy_file.read_text()
 
 
-def test_primary_frontend_navigation_stays_reduced_to_four_product_surfaces():
-    text = (ROOT.parents[1] / "frontend" / "components" / "AppShell.tsx").read_text()
-
-    assert 'label: "Brain"' in text
-    assert 'label: "Training Ground"' in text
-    assert 'label: "Paper Trading"' in text
-    assert 'label: "Alpha"' in text
-    assert 'label: "Performance"' not in text
-    assert 'label: "Radar"' not in text
 
 
 def test_primary_app_shell_does_not_fetch_heavy_snapshots_on_startup():

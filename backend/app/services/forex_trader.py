@@ -1200,6 +1200,7 @@ class BlumForexTradingScheduler:
         self.refresh = ForexMarketDataRefreshService()
 
     def run_once(self, db: Session, *, now: datetime | None = None, inputs=None, strategies=None, cycle_key: str | None = None) -> dict:
+        live_clock = now is None
         now = now or datetime.utcnow()
         FinancialModelCouncil().ensure_registered(db)
         state = self._state(db)
@@ -1227,6 +1228,10 @@ class BlumForexTradingScheduler:
             data_blockers = []
             if inputs is None:
                 refresh_result = self.refresh.refresh(db, now=now)
+                # Data acquired during refresh was not available at cycle start.
+                # An explicit injected `now` remains a fixed test/replay clock.
+                if live_clock:
+                    now = datetime.utcnow()
                 inputs, data_blockers = self.market_inputs.load(
                     db,
                     now=now,
