@@ -21,7 +21,9 @@ These gates verify internal record consistency and declared source availability.
 
 ## Evaluation
 
-The service reads at most 2,000 recent registrations and reports truncation. Equity and Forex samples, exclusions and rankings are separate. Costs-qualified observations and paired benchmark observations have different counts. An absent P/L or benchmark displays as unavailable, not zero.
+Each market evaluates up to 1,000 recent registrations plus up to 1,000 registrations with executed closures, deduplicated by registration identity. The latter window prevents a burst of new unfilled decisions from erasing mature outcomes. Equity and Forex receive separate windows and journal slots. The response distinguishes the actual registration total from evaluated rows and reports truncation for both windows. Performance describes this bounded sample, never an all-history total. Costs-qualified observations and paired benchmark observations have different counts. An absent P/L or benchmark displays as unavailable, not zero.
+
+Cash units come from the frozen decision and execution accounting contracts. Conflicting, explicitly invalid or malformed units disqualify realized monetary evidence. Only older records without a recorded unit use the legacy named-EUR convention. USD and EUR totals are never pooled.
 
 A deterministic bootstrap resamples complete closure-date groups, with 800 draws and seed 3407. The interval is a two-sided 95% empirical interval. A positive paired-sample label requires 100 paired observations, 30 closure dates, three assets and a lower bound above zero. These are conservative application gates, not a universal statistical certification standard. The interval does not correct selection bias, repeated monitoring or every overlapping holding period; it never authorizes promotion.
 
@@ -29,7 +31,13 @@ Irregular trade returns are not annualized into Sharpe ratios. Mean trade excurs
 
 ## Operation and limits
 
-`GET /api/alpha/desk` and the existing Alpha snapshot read stored evidence. Page load cannot register calls, train weights or run orders. Public mutations remain blocked at Cloudflare and origin. Existing paid training stays disabled and all execution remains paper-only.
+`GET /api/alpha/desk` performs one SELECT of the stored `registered_alpha_desk_summary`; the registered-desk section of the existing Alpha snapshot uses the same projection. The background snapshot producer evaluates the bounded history on its existing ten-minute schedule. A missing snapshot stays unavailable; an expired snapshot retains its original evaluation time and an explicit stale state. A future or invalid evaluation clock is unavailable. Reads never recalculate history as a fallback.
+
+Cached eligibility is historical research, so these responses clear actionable eligibility and mark current call state as unverified. The evaluation time, read time and quote age are distinct. Registration in an execution transaction does not prove a user had advance notice: durable publication and entry lead-time evidence are required before a plan can be described as copyable.
+
+Page load cannot register calls, train weights or run orders. Public mutations remain blocked at Cloudflare and origin. Existing paid training stays disabled and all execution remains paper-only. The legacy portions of the broader Alpha snapshot retain their own calculation paths; the one-SELECT claim applies to the registered-desk projection.
+
+A synthetic local SQLite workload with 1,000 dense Forex decision payloads measured 3.24 seconds / 64.8 MB peak Python allocation for full evaluation, versus 1.8 ms / 99 KB and one SELECT for the stored read. This profiles request work, not market effectiveness or production latency. Cold/concurrent production availability must be rechecked after deployment.
 
 The maintained Space uses embedded PostgreSQL and periodic object-storage backups. Registrations inherit that recovery policy; they are not a guarantee of zero-loss restart durability. Failed logical restores stop startup. External PostgreSQL with a verified durability/recovery configuration is required for stricter guarantees.
 

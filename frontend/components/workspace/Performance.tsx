@@ -40,15 +40,21 @@ export function Performance() {
       />
       <div className="op-context">
         <MarketTabs market={market} onChange={setMarket} />
-        <Freshness at={data.desk?.generated_at} error={errors.desk} />
+        <Freshness
+          at={data.desk?.generated_at}
+          error={errors.desk}
+          status={data.desk?.snapshot_status}
+        />
       </div>
       <section className="op-verdict">
         <span className="op-eyebrow">PROSPECTIVE EVIDENCE</span>
         <h2>{human(view.verdict)}</h2>
         <p>
-          {view.paired
-            ? "Inspect the paired sample and uncertainty below. A positive sample alone does not establish a durable, deployable edge."
-            : "There are no qualified benchmark-paired outcomes in this sample. Market outperformance has not been established."}
+          {!sample
+            ? "Qualified benchmark evidence is unavailable in the current response."
+            : view.paired
+              ? "Inspect the paired sample and uncertainty below. A positive sample alone does not establish a durable, deployable edge."
+              : "There are no qualified benchmark-paired outcomes in this sample. Market outperformance has not been established."}
         </p>
         <span className="op-status">{human(evidence.level)}</span>
       </section>
@@ -195,6 +201,10 @@ export function Performance() {
           />
         </details>
       </Panel>
+      <p className="op-page-footer">
+        {data.desk?.window?.scope ??
+          "Performance describes the evaluated research sample, not an all-history total."}
+      </p>
       {Object.keys(errors).length > 0 && (
         <div role="alert" className="op-error-note">
           Some performance evidence could not refresh:{" "}

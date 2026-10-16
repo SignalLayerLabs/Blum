@@ -75,6 +75,7 @@ RUNTIME_MODULE_EVENT_SOURCES: dict[str, tuple[str, ...]] = {
 CRITICAL_SNAPSHOT_TYPES = [
     "learning_summary",
     "dashboard_overview_summary",
+    "registered_alpha_desk_summary",
     "trading_game_summary",
     "benchmark_summary",
     "intelligence_growth_summary",
@@ -337,6 +338,10 @@ class SnapshotProducerService:
         return {"produced": len(produced), "failed": failed, "requested": len(selected), "budget_items": limit}
 
     def _payload(self, db: Session, snapshot_type: str, missing_sections: list[str], warnings: list[str]) -> dict:
+        if snapshot_type == "registered_alpha_desk_summary":
+            from app.services.alpha_desk import AlphaDeskService
+
+            return AlphaDeskService().snapshot(db)
         if snapshot_type == "learning_summary":
             return LearningSummaryService().summary(db)
         if snapshot_type == "dashboard_overview_summary":

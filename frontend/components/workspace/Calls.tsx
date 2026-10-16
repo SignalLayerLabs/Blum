@@ -32,7 +32,11 @@ export function Calls() {
       />
       <div className="op-context">
         <MarketTabs market={market} onChange={setMarket} />
-        <Freshness at={data.desk?.generated_at} error={errors.desk} />
+        <Freshness
+          at={data.desk?.generated_at}
+          error={errors.desk}
+          status={data.desk?.snapshot_status}
+        />
       </div>
       <div className="op-metrics op-three">
         <Metric
@@ -42,7 +46,7 @@ export function Calls() {
         />
         <Metric
           label="Current eligible research calls"
-          value={data.desk ? number(state.active.length) : "—"}
+          value={state.current ? number(state.active.length) : "—"}
           detail="Reported by the current qualification contract."
         />
         <Metric
@@ -85,8 +89,8 @@ export function Calls() {
         ) : (
           <Empty
             title={
-              state.status === "UNAVAILABLE"
-                ? "Call evidence is unavailable"
+              !state.current
+                ? "Current call state is unverified"
                 : "No advance plan is available"
             }
           >

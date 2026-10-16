@@ -173,5 +173,5 @@ def test_trading_ml_settings_have_evidence_bound_defaults():
     assert settings.trading_ml_artifact_root == "/data/trading_ml"
 
 
-def test_migration_head_includes_ascent_after_evidence_decision_council():
-    assert migration_head() == "0045_alpha_call_registry"
+def test_migration_head_includes_alpha_desk_indexes():
+    assert migration_head() == "0046_alpha_desk_indexes"

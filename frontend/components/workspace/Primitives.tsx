@@ -143,20 +143,36 @@ export function Metric({
     </article>
   );
 }
-export function Freshness({ at, error }: { at?: string; error?: string }) {
+export function Freshness({
+  at,
+  error,
+  status,
+}: {
+  at?: string;
+  error?: string;
+  status?: string;
+}) {
   const age = snapshotAge(at);
+  const unavailable = status === "missing" || status === "invalid_clock";
+  const sourceStale = status === "stale";
   return (
     <div
-      className={`op-freshness ${error || age.state === "future" || age.state === "stale" ? "op-warning" : ""}`}
+      className={`op-freshness ${error || unavailable || sourceStale || age.state === "future" || age.state === "stale" ? "op-warning" : ""}`}
     >
       <span className="op-dot" />
       {error
         ? "Refresh unavailable; inspect the snapshot timestamp"
-        : age.state === "unknown"
-          ? "Snapshot timestamp unavailable"
-          : age.state === "future"
-            ? "Snapshot timestamp is ahead of the clock"
-            : `Snapshot ${stamp(at)}${age.state === "stale" ? " · older than 5 minutes" : ""}`}
+        : unavailable
+          ? status === "invalid_clock"
+            ? "Stored snapshot unavailable: invalid evaluation clock"
+            : "Stored snapshot unavailable"
+          : sourceStale
+            ? `Snapshot marked stale · ${stamp(at)}`
+            : age.state === "unknown"
+              ? "Snapshot timestamp unavailable"
+              : age.state === "future"
+                ? "Snapshot timestamp is ahead of the clock"
+                : `Snapshot ${stamp(at)}${age.state === "stale" ? " · older than 5 minutes" : ""}`}
     </div>
   );
 }

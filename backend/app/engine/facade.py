@@ -127,12 +127,12 @@ class BlumEngineFacade:
         return UnifiedPaperTradingProjectionService().detail(db, source_engine, source_trade_id)
 
     def alpha_snapshot(self, db: Session) -> dict:
-        from app.services.alpha_desk import AlphaDeskService
-        return {**TraderBrainService().alpha(db), "registered_alpha_desk": AlphaDeskService().snapshot(db)}
+        from app.services.alpha_desk_projection import AlphaDeskProjectionService
+        return {**TraderBrainService().alpha(db), "registered_alpha_desk": AlphaDeskProjectionService().latest(db)}
 
     def alpha_desk_snapshot(self, db: Session) -> dict:
-        from app.services.alpha_desk import AlphaDeskService
-        return AlphaDeskService().snapshot(db)
+        from app.services.alpha_desk_projection import AlphaDeskProjectionService
+        return AlphaDeskProjectionService().latest(db)
 
     def agent_evidence(self, db: Session, *, agents: list[str] | None = None, limit: int = 8) -> dict:
         return collect_agent_evidence(db, names=agents, limit=limit)

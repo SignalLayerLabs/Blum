@@ -22,6 +22,7 @@ from app.services.paper_forward_direction import (
     normalize_side,
     paper_trade_evidence_is_eligible,
     recover_trade_side,
+    recorded_account_currency,
 )
 
 
@@ -424,17 +425,7 @@ class UnifiedPaperTradingProjectionService:
 
     def _paper_row(self, trade: LiveForwardPaperTrade) -> dict:
         payload = trade.frozen_decision_payload or {}
-        accounting_contracts = [payload.get("accounting"), (trade.execution_costs or {}).get("accounting")]
-        recorded_currencies = [item["account_currency"] for item in accounting_contracts if isinstance(item, dict) and "account_currency" in item]
-        malformed_contract = any(item is not None and not isinstance(item, dict) for item in accounting_contracts)
-        if malformed_contract:
-            currency = None
-        elif not recorded_currencies:
-            currency = "EUR"  # Legacy named-EUR fields, before account contracts.
-        elif all(value == recorded_currencies[0] for value in recorded_currencies):
-            currency = _currency(recorded_currencies[0])
-        else:
-            currency = None
+        currency = recorded_account_currency(payload.get("accounting"), (trade.execution_costs or {}).get("accounting"))
         direction = normalize_side(trade.side) or recover_trade_side(payload)
         trading_lane = (
             "intraday"

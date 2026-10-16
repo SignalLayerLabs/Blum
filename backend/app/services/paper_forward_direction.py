@@ -54,6 +54,19 @@ def normalize_side(value: Any) -> str | None:
     return _SIDE_ALIASES.get(key)
 
 
+def recorded_account_currency(*accounting_contracts: Any) -> str | None:
+    """Recover the immutable cash unit; conflicting or malformed records stay unknown."""
+    if any(item is not None and not isinstance(item, dict) for item in accounting_contracts):
+        return None
+    values = [item['account_currency'] for item in accounting_contracts if isinstance(item, dict) and 'account_currency' in item]
+    if not values:
+        return 'EUR'  # Legacy named-EUR fields before currency contracts existed.
+    value = values[0]
+    if not all(item == value for item in values):
+        return None
+    return value if isinstance(value, str) and len(value) == 3 and value.isascii() and value.isalpha() and value.isupper() else None
+
+
 def direction_multiplier(side: Any) -> int:
     normalized = normalize_side(side)
     if normalized == LONG:

@@ -31,7 +31,7 @@ export function operatingMarket(
 export function callState(
   desk: any,
   market?: string,
-): { status: string; active: any[] };
+): { status: string; active: any[]; current: boolean };
 export function engineEvidence(
   sources?: { brain?: any; desk?: any },
   market?: string,

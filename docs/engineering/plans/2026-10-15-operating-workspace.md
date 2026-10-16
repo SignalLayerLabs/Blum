@@ -31,7 +31,7 @@ Unfilled terminal orders incorrectly counted as profitable/breakeven trades; nul
 ## Task 3 — Reliable snapshot delivery
 
 - [ ] Reproduce the observed cold/concurrent Alpha Desk failure and profile SQL/request work.
-- [ ] Test and implement bounded batched/persisted read models as warranted by evidence. Avoid recalculation or job launch from GET.
+- [x] Test and implement bounded batched/persisted read models as warranted by evidence. Avoid recalculation or job launch from GET.
 - [ ] Measure relevant before/after runtime behavior and retain outage visibility.
 
 ## Task 4 — Actual continuous cost-aware paper execution
@@ -66,3 +66,15 @@ Verification: 912 backend tests, 35 frontend tests, 12 gateway tests; static exp
 Current deployed evidence at 2026-10-16T05:17:10Z is still e83060a: 1,345 registrations, zero qualified closed calls in either market, Forex RUNNING / MARKET_SESSION_MONITOR_ONLY, zero orders/fills for the current day. Latest completed entry-session cycle is from 15 October. More registrations do not establish execution, intelligence improvement or alpha. No restart or scheduler mutation was performed during this increment.
 
 Next work remains Tasks 3–5: snapshot performance/window integrity, prospective execution and risk/accounting validation, durable publication with entry lead time/cancellation, and measured benchmark evidence. Do not treat the current UI or green tests as completion of the goal. Do not resurrect the quarantined Forex bootstrap strategy to manufacture activity. Current tests intentionally require an empty registry to remain research-only until replay validation.
+
+## Delivery increment — 16 October 2026
+
+Alpha Desk public delivery now reads one stored background evaluation with no calculation fallback. Missing, stale and invalid/future evaluation clocks remain explicit. Cached eligibility cannot be a current actionable call. Both markets receive separate recent and executed-history windows and journal slots; actual registration counts are distinct from bounded performance. Migration 0046 adds only indexes. A shared frozen/execution currency contract rejects ambiguous cash units in qualified results.
+
+A synthetic local workload of 1,000 dense Forex decisions measured full evaluation at 3.29 seconds / 64.8 MB peak Python allocation versus a stored read at 1.85 ms / 99 KB / one SELECT. This establishes lower request work, not repaired production availability or trading effectiveness. Cold/concurrent production HTTP verification remains pending deployment; Task 3 is not yet complete.
+
+Validation: 926 backend tests, 37 frontend tests and static export/type checking pass. Independent delivery review found an explicit stale/invalid-clock status could be hidden by a recent timestamp; a failing real React rendering test reproduced it, the indicators now prioritize the source state, and the full frontend suite/build pass after the fix. No additional material finding was reported. PostgreSQL production plans/index impact, deployed latency and the later execution/publication work remain unverified within this increment.
+
+Current read-only production capture at 2026-10-16T05:45:10Z remains e83060a: 1,346 registrations, zero qualified closures for both markets, zero orders/fills today and Forex RUNNING / MARKET_SESSION_MONITOR_ONLY. No runtime mutation or deployment was performed for this increment.
+
+Ruling: ship a reviewable workspace/delivery increment before the remaining engine lifecycle work, subject to the original merge approval rule. Live availability and prospective execution can only be observed after deployed code runs; their absence remains visible and the full goal stays active. This costs another release boundary and must never be described as completed trading efficacy.

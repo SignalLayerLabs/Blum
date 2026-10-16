@@ -81,7 +81,9 @@ export function operatingMarket({ paper, desk } = {}, market = "equity") {
   );
   return {
     available: Boolean(counts || metrics || qualified),
-    registered: finiteMetric(qualified?.registered),
+    registered: finiteMetric(
+      qualified?.registered_total ?? qualified?.registered,
+    ),
     open: finiteMetric(counts?.open),
     closed: finiteMetric(counts?.closed),
     noFill: finiteMetric(counts?.no_fill_outcomes),
@@ -100,7 +102,9 @@ export function operatingMarket({ paper, desk } = {}, market = "equity") {
 
 export function callState(desk, market = "equity") {
   const source = desk?.markets?.[market];
-  if (!source) return { status: "UNAVAILABLE", active: [] };
+  if (!source) return { status: "UNAVAILABLE", active: [], current: false };
+  if (source.active_calls_current === false)
+    return { status: "CURRENT_STATE_UNVERIFIED", active: [], current: false };
   const terminal = new Set(["CLOSED", "EXPIRED", "INVALIDATED", "CANCELLED"]);
   const active = (source.active_calls ?? []).filter(
     (row) =>
@@ -110,6 +114,7 @@ export function callState(desk, market = "equity") {
   return {
     status: active.length ? "CURRENT_RESEARCH_CALLS" : "NO_ACTIVE_CALL",
     active,
+    current: true,
   };
 }
 

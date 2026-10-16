@@ -62,9 +62,11 @@ export function Overview() {
           <h2>
             {!data.desk
               ? "Checking the research record"
-              : calls.active.length
-                ? "Research calls available for inspection"
-                : "No qualified call is available."}
+              : !calls.current
+                ? "Current call state is not established"
+                : calls.active.length
+                  ? "Research calls available for inspection"
+                  : "No qualified call is available."}
           </h2>
           <p>
             {!data.desk
@@ -79,7 +81,11 @@ export function Overview() {
           <span>Qualified closed calls</span>
           <strong>{number(view.qualifiedClosed)}</strong>
           <p>{human(view.verdict)}</p>
-          <Freshness at={data.desk?.generated_at} error={errors.desk} />
+          <Freshness
+            at={data.desk?.generated_at}
+            error={errors.desk}
+            status={data.desk?.snapshot_status}
+          />
         </div>
       </section>
       <div className="op-metrics">
@@ -112,8 +118,8 @@ export function Overview() {
         >
           <Empty
             title={
-              calls.status === "UNAVAILABLE"
-                ? "Call evidence is unavailable"
+              !calls.current
+                ? "Current call state is unverified"
                 : calls.active.length
                   ? "Inspect the current research calls"
                   : "No advance plan to follow"
@@ -152,7 +158,7 @@ export function Overview() {
             ) : (
               <Empty
                 title={
-                  data.desk
+                  data.desk?.markets?.[market]
                     ? "No exclusions reported"
                     : "Waiting for the call record"
                 }

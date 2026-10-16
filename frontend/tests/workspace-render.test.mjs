@@ -153,3 +153,21 @@ test("populated open and partial trade rows expose their mark and unrealized amo
     assert.doesNotMatch(markup, /Not realized/);
   }
 });
+
+test("snapshot source status overrides a recent timestamp", async () => {
+  const { Freshness } = await import("../components/workspace/Primitives.tsx");
+  for (const [status, message] of [
+    ["stale", /marked stale/],
+    ["missing", /unavailable/],
+    ["invalid_clock", /invalid evaluation clock/],
+  ]) {
+    const markup = renderToStaticMarkup(
+      React.createElement(Freshness, {
+        at: new Date().toISOString(),
+        status,
+      }),
+    );
+    assert.match(markup, /op-warning/);
+    assert.match(markup, message);
+  }
+});

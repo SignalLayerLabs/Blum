@@ -235,3 +235,19 @@ test("an explicitly unverified currency cannot fall back to a legacy EUR alias",
     { net: null, gross: null, currency: null },
   );
 });
+
+test("a cached research evaluation cannot become a current call", () => {
+  const value = callState(
+    {
+      markets: {
+        equity: {
+          active_calls_current: false,
+          active_calls: [{ active_eligible: true, status: "OPEN" }],
+        },
+      },
+    },
+    "equity",
+  );
+  assert.equal(value.current, false);
+  assert.deepEqual(value.active, []);
+});

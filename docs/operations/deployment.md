@@ -91,3 +91,5 @@ Report outages and missing evidence explicitly. Do not fill unavailable charts o
 ## Prospective call evidence
 
 New decisions register within their original database transactions. The read-only `/api/alpha/desk` never backfills legacy records or starts financial execution. Migration 0045 is additive. Source fingerprints establish recorded code content, not semantic data validity or model outperformance. See [Alpha Desk](../research/alpha-desk.md).
+
+Migration 0046 adds market-window and source-join indexes only. The background snapshot producer must publish `registered_alpha_desk_summary` after upgrade. Until it does, the public desk correctly reports unavailable; GET never launches a calculation. Verify the stored evaluation clock, expiry and per-market window metadata after deploy, then test sequential and concurrent reads. Do not interpret a successful historical snapshot as a currently executable plan.

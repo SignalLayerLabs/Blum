@@ -12,7 +12,7 @@ from app.models import DashboardSnapshot
 class DashboardSnapshotService:
     """Small stale-safe snapshot store for dashboard loading surfaces."""
 
-    def latest(self, db: Session, snapshot_type: str) -> dict:
+    def latest(self, db: Session, snapshot_type: str, *, now: datetime | None = None) -> dict:
         row = db.scalar(
             select(DashboardSnapshot)
             .where(DashboardSnapshot.snapshot_type == snapshot_type)
@@ -27,7 +27,7 @@ class DashboardSnapshotService:
                 "payload": None,
                 "warning": "No dashboard snapshot has been written yet.",
             }
-        now = datetime.utcnow()
+        now = now or datetime.utcnow()
         is_stale = bool(row.is_stale or (row.expires_at is not None and row.expires_at < now))
         record_snapshot_cache(snapshot_type, hit=not is_stale, status="stale" if is_stale else "ready")
         return {
