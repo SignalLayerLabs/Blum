@@ -15,6 +15,7 @@ These machine-readable records support the historical-source audit carried forwa
 | [bucket-novel-lineages.json](bucket-novel-lineages.json) | Additional lineages discovered in persistent archives |
 | [snapshot-boundary-crossing-outcomes.json](snapshot-boundary-crossing-outcomes.json) | Outcome occurrences crossing declared snapshot boundaries |
 | [snapshot-late-outcomes.json](snapshot-late-outcomes.json) | Late-outcome findings retained for inspection |
+| [learning-engine-evaluation.json](learning-engine-evaluation.json) | Local daily-bar v2 frozen-validation result and persistent-learning timings; no alpha or runtime acceptance |
 
 Reproduce the packaged-file policy check from the repository root:
 

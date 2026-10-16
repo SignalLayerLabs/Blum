@@ -1,0 +1,89 @@
+{
+  "scope": "Local historical research, one long next-open/close hypothesis; not executable trading or forward alpha.",
+  "source": {
+    "repo": "twelvedata/financial-world-model",
+    "revision": "a13200d8cc7537a9096e0d8c54eccd17dde8721e",
+    "sha256": {
+      "train": "46fe4f338aa5a4d42d426851e8a830654358f9efa3f3bf588168a285e406c851",
+      "val": "51aeca7ef0989d98b068bbfec689bde6436e15220b3ed452b517e379b699bbc1"
+    },
+    "transform": "daily-next-session-v2"
+  },
+  "rights": "Publisher MIT tag does not establish underlying vendor redistribution rights; raw files and checkpoints remain local.",
+  "market_family": "equity",
+  "forex": "Not evaluated: no accepted new executable Forex dataset.",
+  "training_samples": 100000,
+  "eligible_training_samples": 478650,
+  "validation_samples": 12852,
+  "asset_count": 51,
+  "training_first_decision": "2016-03-09T23:00:00",
+  "training_last_outcome": "2023-12-27T23:00:00",
+  "validation_first_decision": "2023-12-29T23:00:00",
+  "validation_last_outcome": "2024-12-31T23:00:00",
+  "purge_and_embargo_days": 1,
+  "round_trip_cost_bps": 10,
+  "sample_weight": 0.15,
+  "final_test_opened_by_experiment": false,
+  "decision_authority": false,
+  "runtime_ingestion_enabled": false,
+  "baseline": {
+    "samples": 12852,
+    "brier_score": 0.24954474359579826,
+    "mean_absolute_net_r_error": 0.46478058170009673
+  },
+  "candidates": {
+    "persistent_online": {
+      "samples": 12852,
+      "brier_score": 0.24957224732523312,
+      "mean_absolute_net_r_error": 0.46463015000924984,
+      "brier_improvement_fraction": -0.00011021562321267424
+    },
+    "fixed_hist_gradient_boosting": {
+      "samples": 12852,
+      "brier_score": 0.2496717693770511,
+      "mean_absolute_net_r_error": 0.4651600949998606,
+      "brier_improvement_fraction": -0.0005090300818301101
+    }
+  },
+  "throughput": {
+    "batch_size": 500,
+    "batches": 200,
+    "new_samples": 100000,
+    "online_training_seconds": 7.831159834011487,
+    "median_batch_seconds": 0.038926792001802824,
+    "repeated_batch_seconds": 0.007282124999619555,
+    "repeated_batch_optimizer_updates": 0,
+    "nonlinear_training_seconds": 1.440895667001314
+  },
+  "historical_prequential_subset": {
+    "sample_size": 100000,
+    "policy": "shadow_only",
+    "prequential_samples": 94976,
+    "overlap_samples_excluded": 5024,
+    "brier_score": 0.2493247037288308,
+    "mean_absolute_net_r_error": 0.4610006031807991,
+    "evaluation_scope": "Causal historical test-before-update subset; not prospective trading evidence."
+  },
+  "limitations": [
+    "Current large-cap universe/survivorship bias",
+    "Restated prices and conservative availability assumption",
+    "Observed past action windows excluded; future returns do not filter decisions; not a corporate-action audit",
+    "Missing historical spreads/borrow/fills",
+    "Page boundaries may conservatively reduce prequential coverage; frozen validation is separate"
+  ],
+  "duration_seconds": 34.738171207998676,
+  "experiment_id": "2026-10-16-daily-research-v2-frozen-validation",
+  "supersedes": "Exploratory v1 runs discarded after causal availability/eligibility fixes; not used for hyperparameter selection.",
+  "runtime": {
+    "python": "3.13.0",
+    "system": "Darwin",
+    "machine": "arm64",
+    "packages": {
+      "scikit-learn": "1.6.0",
+      "numpy": "1.26.4",
+      "pandas": "2.3.3",
+      "polars": "1.43.0",
+      "pyarrow": "24.0.0"
+    }
+  }
+}

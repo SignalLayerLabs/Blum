@@ -30,6 +30,8 @@ BLUM 2.3 provides prospective registration, paper accounting and bounded confide
 
 Existing reasoning archives remain quarantined for new training/promotion. Paid HF training and automatic dataset publication remain disabled pending a validated replacement dataset. Read the [data policy](docs/research/data-quality.md), [Alpha Desk contract](docs/research/alpha-desk.md) and [ASCENT guide](docs/research/ascent.md) before interpreting results.
 
+Trading ML retains separate incremental shadow learners for equity and Forex, with resumable unread-data queues and exactly-once sample identities. See the [learning-engine measurements](docs/research/learning-engine.md) for throughput, persistence requirements and the historical dataset experiment that did **not** beat its baseline.
+
 ## Run and operate
 
 Use [getting started](docs/guides/getting-started.md) for the complete Docker runtime, [development](docs/guides/development.md) for component setup and checks, and [deployment and recovery](docs/operations/deployment.md) for trusted operations.

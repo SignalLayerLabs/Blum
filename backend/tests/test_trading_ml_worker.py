@@ -50,7 +50,9 @@ class FakeProjector:
                 source_object_id=f"{market_family}-{offset + index + 1}",
                 market_family=market_family,
                 features={**dict(row.features), "market_family": market_family},
-                asset_key=(f"FX{index % 6}" if market_family == "forex" else row.asset_key),
+                asset_key=(
+                    f"FX{index % 6}" if market_family == "forex" else row.asset_key
+                ),
             )
             for index, row in enumerate(source)
         ]
@@ -71,7 +73,9 @@ class FakeProjector:
         )
 
     def scan(self, *, market_family):
-        return pl.DataFrame([_row_from_example(row) for row in self.rows[market_family]]).lazy()
+        return pl.DataFrame(
+            [_row_from_example(row) for row in self.rows[market_family]]
+        ).lazy()
 
     def manifest(self):
         return {
@@ -85,9 +89,22 @@ class FakeProjector:
             }
         }
 
+    def online_page(self, *, market_family, cursor, limit):
+        offset = int((cursor or {}).get("offset", 0))
+        rows = self.rows[market_family][offset : offset + limit]
+        return {
+            "rows": [_row_from_example(row) for row in rows],
+            "cursor": {"offset": offset + len(rows)},
+            "rows_considered": len(rows),
+            "rows_rejected": 0,
+            "exhausted": offset + len(rows) >= len(self.rows[market_family]),
+        }
+
 
 def worker(tmp_path):
-    instance = TradingMLLearningWorker(artifact_root=tmp_path, max_rows=8, max_runtime_seconds=30)
+    instance = TradingMLLearningWorker(
+        artifact_root=tmp_path, max_rows=8, max_runtime_seconds=30
+    )
     instance.projector = FakeProjector()
     return instance
 
@@ -95,23 +112,130 @@ def worker(tmp_path):
 def test_worker_resumes_cursor_after_budget(db, tmp_path):
     instance = worker(tmp_path)
     first = instance.run_once(db, "test")
-    first_cursor = dict(db.query(BackgroundJobState).filter_by(job_name=instance.job_name).one().cursor_json)
+    first_cursor = dict(
+        db.query(BackgroundJobState)
+        .filter_by(job_name=instance.job_name)
+        .one()
+        .cursor_json
+    )
     second = instance.run_once(db, "test")
-    second_cursor = db.query(BackgroundJobState).filter_by(job_name=instance.job_name).one().cursor_json
+    second_cursor = (
+        db.query(BackgroundJobState)
+        .filter_by(job_name=instance.job_name)
+        .one()
+        .cursor_json
+    )
     assert first["markets"]["equity"]["status"] == "SHADOW"
-    assert second_cursor["equity"]["last_source_id"] >= first_cursor["equity"]["last_source_id"]
-    assert db.query(DashboardSnapshot).filter_by(snapshot_type="trading_ml_status").count() == 2
-    assert db.query(BrainRuntimeEvent).filter_by(source_module=instance.job_name).count() == 2
+    assert (
+        second_cursor["equity"]["last_source_id"]
+        >= first_cursor["equity"]["last_source_id"]
+    )
+    assert (
+        db.query(DashboardSnapshot).filter_by(snapshot_type="trading_ml_status").count()
+        == 2
+    )
+    assert (
+        db.query(BrainRuntimeEvent).filter_by(source_module=instance.job_name).count()
+        == 2
+    )
+
+
+def test_optional_external_work_cannot_consume_the_core_learning_budget_first(
+    db, tmp_path, monkeypatch
+):
+    instance = worker(tmp_path)
+    clock = {"now": 0.0}
+    monkeypatch.setattr(
+        "app.services.trading_ml.worker.time.perf_counter", lambda: clock["now"]
+    )
+
+    def expensive_optional(started):
+        clock["now"] = 60.0
+        return {"status": "TIMEOUT", "paper_only": True}
+
+    monkeypatch.setattr(instance, "_run_finrlx", expensive_optional)
+    result = instance.run_once(db, "budget-priority")
+    assert result["markets"]["equity"]["status"] == "SHADOW"
+    assert result["markets"]["forex"]["status"] == "SHADOW"
+
+
+def test_worker_learns_old_unread_parts_and_does_not_retrain_unchanged_rows(
+    db, tmp_path
+):
+    from app.services.trading_ml.feature_store import TradingMLFeatureStoreProjector
+    from test_trading_ml_online_queue import Repository
+
+    instance = TradingMLLearningWorker(
+        artifact_root=tmp_path, max_rows=5, online_max_rows=5, max_runtime_seconds=30
+    )
+    instance.projector = TradingMLFeatureStoreProjector(
+        root=tmp_path / "feature_store",
+        repository=Repository(examples(20)),
+        max_partition_rows=7,
+    )
+    instance.projector.project(None, market_family="equity", limit=20)
+    results = [
+        instance._run_market(db, "equity", "queue-test", time.perf_counter())
+        for _ in range(5)
+    ]
+    assert [row["online"]["new_samples"] for row in results] == [5, 5, 5, 5, 0]
+    assert [row["online"]["total_samples"] for row in results] == [5, 10, 15, 20, 20]
+
+
+def test_empty_rejected_page_never_learns_the_latest_stable_window(tmp_path):
+    instance = worker(tmp_path)
+    stable = examples(8)
+
+    class RejectedPage:
+        def online_page(self, **kwargs):
+            return dict(
+                rows=[],
+                cursor={"offset": 5},
+                rows_considered=5,
+                rows_rejected=5,
+                exhausted=False,
+            )
+
+    instance.projector = RejectedPage()
+    result, progress = instance._update_online("equity", stable)
+    assert result is None
+    assert progress["new_samples"] == progress["total_samples"] == 0
+
+
+def test_lost_checkpoint_cannot_resume_from_a_reader_that_skips_old_history(
+    db, tmp_path
+):
+    instance = worker(tmp_path)
+    instance.run_once(db, "first")
+    (tmp_path / "shadow" / "equity.sqlite").unlink()
+    result = instance.run_once(db, "lost-checkpoint")
+    assert result["markets"]["equity"]["status"] == "FAILED"
+    assert "ONLINE_READER_CHECKPOINT_MISSING" in result["markets"]["equity"]["error"]
+
+
+def test_online_progress_survives_registry_publication_failure(
+    db, tmp_path, monkeypatch
+):
+    instance = worker(tmp_path)
+
+    def broken_publication(*args, **kwargs):
+        raise OSError("artifact disk unavailable")
+
+    monkeypatch.setattr(instance.registry, "store_candidate", broken_publication)
+    result = instance.run_once(db, "publication-failure")
+    assert result["new_examples_learned"] == 16
+    assert result["markets"]["equity"]["online"]["new_samples"] == 8
+    assert result["markets"]["forex"]["online"]["new_samples"] == 8
 
 
 def test_worker_isolates_market_family_failure(db, tmp_path, monkeypatch):
     instance = worker(tmp_path)
     original = instance._run_market
 
-    def isolated(session, market_family, trigger, started):
+    def isolated(session, market_family, trigger, started, **kwargs):
         if market_family == "equity":
             raise RuntimeError("equity lane failed")
-        return original(session, market_family, trigger, started)
+        return original(session, market_family, trigger, started, **kwargs)
 
     monkeypatch.setattr(instance, "_run_market", isolated)
     result = instance.run_once(db, "test")
@@ -119,8 +243,12 @@ def test_worker_isolates_market_family_failure(db, tmp_path, monkeypatch):
     assert result["markets"]["forex"]["status"] == "SHADOW"
 
 
-def test_worker_records_insufficient_chronology_as_evidence_gap(db, tmp_path, monkeypatch):
-    instance = TradingMLLearningWorker(artifact_root=tmp_path, max_rows=320, max_runtime_seconds=30)
+def test_worker_records_insufficient_chronology_as_evidence_gap(
+    db, tmp_path, monkeypatch
+):
+    instance = TradingMLLearningWorker(
+        artifact_root=tmp_path, max_rows=320, max_runtime_seconds=30
+    )
     instance.projector = FakeProjector(source_count=320)
 
     def insufficient(*args, **kwargs):
@@ -128,16 +256,19 @@ def test_worker_records_insufficient_chronology_as_evidence_gap(db, tmp_path, mo
             "Insufficient chronological history after applying purge and embargo for fold 1"
         )
 
-    monkeypatch.setattr("app.services.trading_ml.worker.BoundedOptunaChallengerSearch.search", insufficient)
+    monkeypatch.setattr(
+        "app.services.trading_ml.worker.BoundedOptunaChallengerSearch.search",
+        insufficient,
+    )
 
     result = instance.run_once(db, "test")
 
     assert result["status"] == "COMPLETED"
     assert result["markets"]["equity"]["status"] == "INSUFFICIENT_EVIDENCE"
     assert result["markets"]["forex"]["status"] == "INSUFFICIENT_EVIDENCE"
-    assert {
-        row.status for row in db.query(TradingMLTrainingRun).all()
-    } == {"INSUFFICIENT_EVIDENCE"}
+    assert {row.status for row in db.query(TradingMLTrainingRun).all()} == {
+        "INSUFFICIENT_EVIDENCE"
+    }
 
 
 def test_worker_governs_invalid_active_artifact_outside_read_path(db, tmp_path):
@@ -219,7 +350,9 @@ def test_worker_runs_optional_finrlx_research_inside_existing_budget(db, tmp_pat
     assert finrlx.training_requests[1][0] == "equity"
     assert finrlx.training_requests[0][1]["max_rows"] == 8
     assert set(result["finrlx"]["markets"]) == {"equity", "forex"}
-    stored = db.query(DashboardSnapshot).filter_by(snapshot_type="trading_ml_status").first()
+    stored = (
+        db.query(DashboardSnapshot).filter_by(snapshot_type="trading_ml_status").first()
+    )
     assert stored.payload_json["finrlx"]["paper_only"] is True
 
 
@@ -269,7 +402,7 @@ def test_worker_retrains_finrlx_only_when_feature_dataset_changed(tmp_path):
     assert [market for market, _ in stale.training_requests] == ["forex", "equity"]
 
 
-def test_worker_initializes_finrlx_before_core_lanes_exhaust_budget(
+def test_optional_finrlx_respects_the_budget_remaining_after_core_work(
     db,
     tmp_path,
     monkeypatch,
@@ -279,7 +412,7 @@ def test_worker_initializes_finrlx_before_core_lanes_exhaust_budget(
     finrlx = FakeFinRLXEngine()
     instance.finrlx = finrlx
 
-    def consume_budget(session, market_family, trigger, started):
+    def consume_budget(session, market_family, trigger, started, **kwargs):
         time.sleep(2.05)
         return {"status": "SHADOW", "rows_considered": 0}
 
@@ -287,8 +420,50 @@ def test_worker_initializes_finrlx_before_core_lanes_exhaust_budget(
 
     result = instance.run_once(db, "test")
 
-    assert result["finrlx"]["status"] == "VALIDATED_SHADOW"
-    assert len(finrlx.training_requests) == 2
+    assert result["finrlx"]["status"] == "BUDGET_EXHAUSTED"
+    assert finrlx.training_requests == []
+
+
+def test_both_online_lanes_update_before_equity_challenger_consumes_remaining_budget(
+    db, tmp_path, monkeypatch
+):
+    instance = TradingMLLearningWorker(
+        artifact_root=tmp_path, max_rows=320, max_runtime_seconds=30
+    )
+    instance.projector = FakeProjector(source_count=320)
+    clock = {"now": 0.0}
+    monkeypatch.setattr(
+        "app.services.trading_ml.worker.time.perf_counter", lambda: clock["now"]
+    )
+
+    def consume_challenger(*args, **kwargs):
+        clock["now"] = 60.0
+        raise InsufficientTrainingEvidenceError("bounded test search")
+
+    monkeypatch.setattr(
+        "app.services.trading_ml.worker.BoundedOptunaChallengerSearch.search",
+        consume_challenger,
+    )
+    result = instance.run_once(db, "fair-core-budget")
+    assert result["markets"]["equity"]["online"]["new_samples"] == 320
+    assert result["markets"]["forex"]["online"]["new_samples"] == 320
+    assert result["new_examples_learned"] == 640
+
+
+def test_an_entirely_skipped_cycle_is_reported_as_budget_exhausted(
+    db, tmp_path, monkeypatch
+):
+    instance = worker(tmp_path)
+    calls = {"count": 0}
+
+    def clock():
+        calls["count"] += 1
+        return 0.0 if calls["count"] == 1 else 100.0
+
+    monkeypatch.setattr("app.services.trading_ml.worker.time.perf_counter", clock)
+    result = instance.run_once(db, "no-budget")
+    assert result["status"] == "BUDGET_EXHAUSTED"
+    assert result["new_examples_learned"] == 0
 
 
 def test_worker_can_validate_equity_when_forex_evidence_is_single_class(db, tmp_path):
@@ -325,6 +500,49 @@ def test_finrlx_market_training_gets_half_of_worker_budget(tmp_path):
 
     assert result["status"] == "VALIDATED_SHADOW"
     assert {
-        request["max_runtime_seconds"]
-        for _, request in finrlx.training_requests
+        request["max_runtime_seconds"] for _, request in finrlx.training_requests
     } == {60}
+
+
+def test_online_backlog_can_exceed_the_small_challenger_window(db, tmp_path):
+    from app.services.trading_ml.feature_store import TradingMLFeatureStoreProjector
+    from test_trading_ml_online_queue import Repository
+
+    instance = TradingMLLearningWorker(
+        artifact_root=tmp_path, max_rows=5, online_max_rows=20, max_runtime_seconds=30
+    )
+    instance.projector = TradingMLFeatureStoreProjector(
+        root=tmp_path / "feature_store",
+        repository=Repository(examples(20)),
+        max_partition_rows=7,
+    )
+    instance.projector.project(None, market_family="equity", limit=20)
+    result = instance._run_market(
+        db, "equity", "bigger-online-slice", time.perf_counter()
+    )
+    assert result["sample_count"] == 5
+    assert result["online"]["new_samples"] == result["online"]["total_samples"] == 20
+
+
+@pytest.mark.parametrize("cleanup_also_fails", [False, True])
+def test_cursor_publication_failure_reports_already_committed_online_progress(
+    db, tmp_path, monkeypatch, cleanup_also_fails
+):
+    instance = worker(tmp_path)
+
+    def no_replace(*args, **kwargs):
+        raise OSError("reader publication unavailable")
+
+    monkeypatch.setattr("app.services.trading_ml.worker.os.replace", no_replace)
+    if cleanup_also_fails:
+        original_unlink = Path.unlink
+
+        def failed_reader_cleanup(path, *args, **kwargs):
+            if "reader.json" in path.name and path.name.endswith(".tmp"):
+                raise OSError("reader cleanup also unavailable")
+            return original_unlink(path, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "unlink", failed_reader_cleanup)
+    result = instance.run_once(db, "cursor-publication-failed")
+    assert result["new_examples_learned"] == 16
+    assert result["markets"]["equity"]["online"]["new_samples"] == 8
