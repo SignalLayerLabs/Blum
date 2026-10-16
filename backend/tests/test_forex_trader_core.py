@@ -702,6 +702,41 @@ def test_scheduler_monitors_only_outside_permitted_entry_sessions(db):
     assert db.query(ForexDecision).count() == 0
 
 
+def test_scheduler_decides_after_market_acquisition_instead_of_cycle_start(db, monkeypatch):
+    from app.services import forex_trader
+
+    clock = [NOW]
+
+    class ClockMeta(type):
+        def __instancecheck__(cls, value):
+            return isinstance(value, datetime)
+
+    class CycleClock(datetime, metaclass=ClockMeta):
+        @classmethod
+        def utcnow(cls):
+            return clock[0]
+
+    scheduler = BlumForexTradingScheduler()
+    acquired_at = NOW + timedelta(seconds=2)
+
+    def refresh(session, *, now):
+        clock[0] = NOW + timedelta(seconds=3)
+        return {'status': 'READY', 'refreshed': [], 'blockers': []}
+
+    def load(session, *, now, limit):
+        market = market_input()
+        return [replace(market, as_of=now, frames={key: replace(frame, acquired_at=acquired_at) for key, frame in market.frames.items()})], []
+
+    monkeypatch.setattr(forex_trader, 'datetime', CycleClock)
+    monkeypatch.setattr(scheduler.refresh, 'refresh', refresh)
+    monkeypatch.setattr(scheduler.market_inputs, 'load', load)
+    scheduler.run_once(db, strategies={'EURUSD=X': strategy()}, cycle_key='post-acquisition')
+
+    decision = db.scalar(select(ForexDecision))
+    assert decision is not None
+    assert decision.decision_timestamp >= acquired_at
+
+
 def test_readiness_promotion_degradation_and_terminal_only_learning(db):
     learner = BlumForexLearningEngine()
     evidence = [

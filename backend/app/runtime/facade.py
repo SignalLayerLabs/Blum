@@ -30,6 +30,11 @@ class BlumRuntimeFacade:
         )
         return contract.to_dict()
 
+    def operating_state(self, db: Session) -> dict:
+        from app.runtime.operating_state import OperatingStateService
+
+        return OperatingStateService().read(db)
+
     def contract(self) -> dict:
         defaults = runtime_contract_defaults()
         return {

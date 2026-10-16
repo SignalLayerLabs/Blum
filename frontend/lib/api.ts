@@ -140,10 +140,11 @@ async function fetchBlum(path: string, options: RequestInit & { timeoutMs?: numb
 function reportFrontendTiming(path: string, method: string, duration_ms: number, status: string, force = false) {
   if (path.includes("/performance/frontend-widget") || path.includes("/api/performance/frontend-widget")) return;
   const onLearningPage = typeof location !== "undefined" && location.pathname.startsWith("/learning");
-  const onReadOnlyProductSurface = typeof location !== "undefined" && ["/paper-trading", "/copy-trading", "/brain", "/training-ground", "/alpha", "/evolution"].some((prefix) => location.pathname.startsWith(prefix));
+  const pathname = typeof location !== "undefined" ? location.pathname.replace(/\/+$/, "") || "/" : null;
+  const onReadOnlyProductSurface = pathname !== null && ["/", "/dashboard", "/paper-trading", "/copy-trading", "/brain", "/calls", "/training-ground", "/learning", "/alpha", "/evolution"].includes(pathname);
   const route = typeof location !== "undefined" ? `${location.pathname}${location.search}` : "";
   const initialLearningWindow = onLearningPage && isWithinLearningInitialWindow();
-  if (!force && onReadOnlyProductSurface) return;
+  if (onReadOnlyProductSurface) return;
   if (!force && !onLearningPage && duration_ms < 400 && !path.includes("/learning")) return;
   fetch(`${API_BASE}/api/performance/frontend-widget`, {
     method: "POST",
@@ -196,12 +197,14 @@ async function responseError(response: Response) {
 }
 
 export const api = {
+  alphaDesk: () => getJson<any>("/api/alpha/desk"),
   ascentStatus: () => getJson<AscentSnapshot>("/api/ascent/status"),
   clientRequestStats: () => ({ ...requestStats, initialLearningPage: [...requestStats.initialLearningPage] }),
   performanceDiagnostics: () => getJson<any>("/performance/diagnostics"),
   recordPerformanceWidget: (payload: { name: string; duration_ms: number; status?: string; source?: string; detail?: string }) =>
     postJson<any>("/performance/frontend-widget", payload),
   systemStatus: () => getJson<SystemStatus>("/system/status"),
+  operatingState: () => getJson<any>("/api/runtime/operating-state"),
   brainRuntimeState: () => getJson<any>("/brain/runtime-state"),
   brainCommandSummary: () => getJson<any>("/brain/command-summary"),
   brainCapabilities: () => getJson<any>("/brain/capabilities"),
