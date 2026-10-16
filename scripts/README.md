@@ -12,6 +12,7 @@ These entry points keep stable paths because Docker, CI, tests and trusted jobs 
 | [audit_blum_release_dataset.py](audit_blum_release_dataset.py) | Inspect a model-release dataset and its gates |
 | [build_historical_price_cache.py](build_historical_price_cache.py) | Build historical price inputs from configured providers; not a prospective track record |
 | [verify_ascent_replay.py](verify_ascent_replay.py) | Reproduce a bounded price-only ASCENT replay offline |
+| [benchmark_learning_engine.py](benchmark_learning_engine.py) | Pinned local daily-bar research, persistent-learning workload and frozen chronological validation; no runtime ingestion |
 
 ## Trusted research and model operations
 

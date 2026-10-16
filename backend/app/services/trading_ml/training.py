@@ -13,30 +13,46 @@ import numpy as np
 import optuna
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from .contracts import CATEGORICAL_FEATURES, FeatureSchema, NUMERIC_FEATURES, TradingMLExample
-from .validation import FoldPrediction, PurgedWalkForwardEvaluator, PurgedWalkForwardResult, example_source_uid
+from .contracts import (
+    CATEGORICAL_FEATURES,
+    FeatureSchema,
+    NUMERIC_FEATURES,
+    TradingMLExample,
+)
+from .validation import (
+    FoldPrediction,
+    PurgedWalkForwardEvaluator,
+    PurgedWalkForwardResult,
+    example_source_uid,
+)
 
 
 @dataclass(frozen=True)
 class TradingModelBundle:
     schema_hash: str
     feature_names: tuple[str, ...]
-    preprocessor: ColumnTransformer
+    preprocessor: object
     classifier: object
     regressor: object | None
     algorithm: str
 
-    def predict(self, examples: Iterable[TradingMLExample]) -> tuple[np.ndarray, np.ndarray | None]:
+    def predict(
+        self, examples: Iterable[TradingMLExample]
+    ) -> tuple[np.ndarray, np.ndarray | None]:
         rows = tuple(examples)
         matrix = self.preprocessor.transform(_feature_frame(rows))
         probability = self.classifier.predict_proba(matrix)[:, 1]
-        predicted_r = self.regressor.predict(matrix) if self.regressor is not None else None
+        predicted_r = (
+            self.regressor.predict(matrix) if self.regressor is not None else None
+        )
         return probability, predicted_r
 
 
@@ -70,35 +86,22 @@ class OnlineShadowTrainer:
         self.artifact_root = Path(artifact_root)
         self.seed = seed
 
-    def partial_fit(self, examples: Iterable[TradingMLExample]) -> TrainingResult:
+    def partial_fit(
+        self, examples: Iterable[TradingMLExample], *, as_of=None
+    ) -> TrainingResult:
         rows = tuple(examples)
         if not rows:
             raise ValueError("Online training requires at least one example")
-        preprocessor = _preprocessor()
-        matrix = preprocessor.fit_transform(_feature_frame(rows))
-        classifier = SGDClassifier(loss="log_loss", random_state=self.seed)
-        classifier.partial_fit(matrix, np.asarray([row.label_positive_r for row in rows]), classes=np.asarray([0, 1]))
-        bundle = TradingModelBundle(
-            schema_hash=FeatureSchema.current().hash,
-            feature_names=FeatureSchema.current().feature_names,
-            preprocessor=preprocessor,
-            classifier=classifier,
-            regressor=None,
-            algorithm="sgd_log_loss_shadow",
-        )
-        artifact = pickle.dumps(bundle, protocol=5)
-        return TrainingResult(
-            status="SHADOW",
-            decision_authority=False,
-            model_bundle=bundle,
-            validation_result=None,
-            validation_metrics={"sample_size": len(rows), "policy": "shadow_only"},
-            baseline_metrics={},
-            artifact_bytes=artifact,
-            artifact_sha256=hashlib.sha256(artifact).hexdigest(),
-            dataset_hash=_dataset_hash(rows),
-            parameters={"seed": self.seed, "loss": "log_loss"},
-            sample_count=len(rows),
+        from .online import update_shadow
+
+        return update_shadow(self.artifact_root, rows, seed=self.seed, as_of=as_of)
+
+    def current(self, market_family: str) -> TrainingResult | None:
+        """Load a verified checkpoint without consuming any training examples."""
+        from .online import update_shadow
+
+        return update_shadow(
+            self.artifact_root, (), seed=self.seed, market_family=market_family
         )
 
 
@@ -118,8 +121,13 @@ class _FoldModel:
             FoldPrediction(
                 source_uid=example_source_uid(row),
                 probability_positive_r=float(probability),
-                predicted_net_r=float(predicted_r[index]) if predicted_r is not None else None,
-                actionable=bool(probability >= 0.5 and (predicted_r is None or predicted_r[index] > 0)),
+                predicted_net_r=(
+                    float(predicted_r[index]) if predicted_r is not None else None
+                ),
+                actionable=bool(
+                    probability >= 0.5
+                    and (predicted_r is None or predicted_r[index] > 0)
+                ),
             )
             for index, (row, probability) in enumerate(zip(validation, probabilities))
         )
@@ -134,7 +142,11 @@ class _BaselineModel:
         positive = sum(row.label_positive_r * row.sample_weight for row in train)
         weight = sum(row.sample_weight for row in train)
         probability = min(0.99, max(0.01, positive / weight if weight else 0.5))
-        expected_r = sum(row.realized_net_r * row.sample_weight for row in train) / weight if weight else 0.0
+        expected_r = (
+            sum(row.realized_net_r * row.sample_weight for row in train) / weight
+            if weight
+            else 0.0
+        )
         return tuple(
             FoldPrediction(
                 source_uid=example_source_uid(row),
@@ -166,11 +178,15 @@ class SklearnTradingModelTrainer:
     ) -> None:
         self.seed = seed
         self.parameters = {**self.DEFAULT_PARAMETERS, **dict(parameters or {})}
-        self.evaluator = PurgedWalkForwardEvaluator(min_folds=min_folds, embargo_days=embargo_days)
+        self.evaluator = PurgedWalkForwardEvaluator(
+            min_folds=min_folds, embargo_days=embargo_days
+        )
 
     def fit(self, examples: Iterable[TradingMLExample]) -> TrainingResult:
         rows = tuple(examples)
-        validation = self.evaluator.evaluate(_FoldModel(self.parameters, self.seed), _BaselineModel(), rows)
+        validation = self.evaluator.evaluate(
+            _FoldModel(self.parameters, self.seed), _BaselineModel(), rows
+        )
         bundle = _fit_bundle(rows, self.parameters, self.seed)
         artifact = pickle.dumps(bundle, protocol=5)
         return TrainingResult(
@@ -182,7 +198,7 @@ class SklearnTradingModelTrainer:
             baseline_metrics=_result_metrics(validation, candidate=False),
             artifact_bytes=artifact,
             artifact_sha256=hashlib.sha256(artifact).hexdigest(),
-            dataset_hash=_dataset_hash(rows),
+            dataset_hash=dataset_fingerprint(rows),
             parameters=dict(self.parameters),
             sample_count=len(rows),
         )
@@ -191,7 +207,14 @@ class SklearnTradingModelTrainer:
 class BoundedOptunaChallengerSearch:
     """Small deterministic search; it can improve a challenger, never promote it."""
 
-    def __init__(self, *, seed: int = 17, max_trials: int = 12, timeout_seconds: int = 90, min_folds: int = 3) -> None:
+    def __init__(
+        self,
+        *,
+        seed: int = 17,
+        max_trials: int = 12,
+        timeout_seconds: int = 90,
+        min_folds: int = 3,
+    ) -> None:
         self.seed = seed
         self.max_trials = min(12, max(1, int(max_trials)))
         self.timeout_seconds = min(90, max(1, int(timeout_seconds)))
@@ -202,21 +225,29 @@ class BoundedOptunaChallengerSearch:
         started = time.perf_counter()
         sampler = optuna.samplers.TPESampler(seed=self.seed)
         pruner = optuna.pruners.MedianPruner(n_startup_trials=3)
-        study = optuna.create_study(direction="minimize", sampler=sampler, pruner=pruner)
+        study = optuna.create_study(
+            direction="minimize", sampler=sampler, pruner=pruner
+        )
 
         def objective(trial: optuna.Trial) -> float:
             parameters = {
-                "learning_rate": trial.suggest_float("learning_rate", 0.02, 0.15, log=True),
+                "learning_rate": trial.suggest_float(
+                    "learning_rate", 0.02, 0.15, log=True
+                ),
                 "max_leaf_nodes": trial.suggest_int("max_leaf_nodes", 7, 31),
                 "max_iter": trial.suggest_int("max_iter", 60, 180),
-                "l2_regularization": trial.suggest_float("l2_regularization", 1e-4, 1.0, log=True),
+                "l2_regularization": trial.suggest_float(
+                    "l2_regularization", 1e-4, 1.0, log=True
+                ),
             }
             result = SklearnTradingModelTrainer(
                 seed=self.seed,
                 min_folds=self.min_folds,
                 parameters=parameters,
             ).fit(rows)
-            metrics = result.validation_result.candidate if result.validation_result else None
+            metrics = (
+                result.validation_result.candidate if result.validation_result else None
+            )
             if metrics is None or metrics.brier_score is None:
                 return 10.0
             penalty = max(0.0, -(metrics.net_expectancy or 0.0)) * 2.0
@@ -229,9 +260,17 @@ class BoundedOptunaChallengerSearch:
             show_progress_bar=False,
             gc_after_trial=True,
         )
-        completed = [trial for trial in study.trials if trial.state == optuna.trial.TrialState.COMPLETE]
+        completed = [
+            trial
+            for trial in study.trials
+            if trial.state == optuna.trial.TrialState.COMPLETE
+        ]
         return SearchResult(
-            parameters=dict(study.best_params) if completed else dict(SklearnTradingModelTrainer.DEFAULT_PARAMETERS),
+            parameters=(
+                dict(study.best_params)
+                if completed
+                else dict(SklearnTradingModelTrainer.DEFAULT_PARAMETERS)
+            ),
             value=float(study.best_value) if completed else None,
             trials_completed=len(completed),
             duration_seconds=round(time.perf_counter() - started, 4),
@@ -239,7 +278,9 @@ class BoundedOptunaChallengerSearch:
 
 
 def _preprocessor() -> ColumnTransformer:
-    numeric = Pipeline([("imputer", SimpleImputer(strategy="median")), ("scale", StandardScaler())])
+    numeric = Pipeline(
+        [("imputer", SimpleImputer(strategy="median")), ("scale", StandardScaler())]
+    )
     categorical = Pipeline(
         [
             ("imputer", SimpleImputer(strategy="most_frequent")),
@@ -255,20 +296,28 @@ def _preprocessor() -> ColumnTransformer:
     )
 
 
-def _fit_bundle(rows: tuple[TradingMLExample, ...], parameters: Mapping[str, object], seed: int) -> TradingModelBundle:
+def _fit_bundle(
+    rows: tuple[TradingMLExample, ...], parameters: Mapping[str, object], seed: int
+) -> TradingModelBundle:
     if not rows:
         raise ValueError("Stable training requires labeled examples")
     preprocessor = _preprocessor()
     matrix = preprocessor.fit_transform(_feature_frame(rows))
     labels = np.asarray([row.label_positive_r for row in rows])
     if len(np.unique(labels)) < 2:
-        raise ValueError("Stable training requires both positive and non-positive outcomes")
+        raise ValueError(
+            "Stable training requires both positive and non-positive outcomes"
+        )
     weights = np.asarray([row.sample_weight for row in rows], dtype=float)
     params = dict(parameters)
     classifier = HistGradientBoostingClassifier(random_state=seed, **params)
     regressor = HistGradientBoostingRegressor(random_state=seed, **params)
     classifier.fit(matrix, labels, sample_weight=weights)
-    regressor.fit(matrix, np.clip([row.realized_net_r for row in rows], -3.0, 5.0), sample_weight=weights)
+    regressor.fit(
+        matrix,
+        np.clip([row.realized_net_r for row in rows], -3.0, 5.0),
+        sample_weight=weights,
+    )
     return TradingModelBundle(
         schema_hash=FeatureSchema.current().hash,
         feature_names=FeatureSchema.current().feature_names,
@@ -280,16 +329,19 @@ def _fit_bundle(rows: tuple[TradingMLExample, ...], parameters: Mapping[str, obj
 
 
 def _feature_frame(rows: Iterable[TradingMLExample]) -> pd.DataFrame:
-    return pd.DataFrame([
-        {
-            name: row.features.get(name)
-            for name in FeatureSchema.current().feature_names
-        }
-        for row in rows
-    ], columns=list(FeatureSchema.current().feature_names))
+    return pd.DataFrame(
+        [
+            {
+                name: row.features.get(name)
+                for name in FeatureSchema.current().feature_names
+            }
+            for row in rows
+        ],
+        columns=list(FeatureSchema.current().feature_names),
+    )
 
 
-def _dataset_hash(rows: Iterable[TradingMLExample]) -> str:
+def dataset_fingerprint(rows: Iterable[TradingMLExample]) -> str:
     payload = [
         {
             "source": example_source_uid(row),
@@ -298,15 +350,23 @@ def _dataset_hash(rows: Iterable[TradingMLExample]) -> str:
             "features": dict(row.features),
             "r": row.realized_net_r,
             "label": row.label_positive_r,
+            "weight": row.sample_weight,
+            "lane": row.evidence_lane,
+            "asset": row.asset_key,
+            "benchmark": row.benchmark_excess,
         }
         for row in rows
     ]
     return hashlib.sha256(
-        __import__("json").dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
+        __import__("json")
+        .dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+        .encode()
     ).hexdigest()
 
 
-def _result_metrics(result: PurgedWalkForwardResult, *, candidate: bool) -> dict[str, object]:
+def _result_metrics(
+    result: PurgedWalkForwardResult, *, candidate: bool
+) -> dict[str, object]:
     metrics = result.candidate if candidate else result.baseline
     payload = _metrics_dict(metrics)
     payload["folds"] = [
@@ -315,7 +375,9 @@ def _result_metrics(result: PurgedWalkForwardResult, *, candidate: bool) -> dict
             "validation_start": fold.fold.validation_start.isoformat(),
             "train_size": len(fold.fold.train),
             "validation_size": len(fold.fold.validation),
-            "metrics": _metrics_dict(fold.candidate.metrics if candidate else fold.baseline.metrics),
+            "metrics": _metrics_dict(
+                fold.candidate.metrics if candidate else fold.baseline.metrics
+            ),
         }
         for fold in result.folds
     ]

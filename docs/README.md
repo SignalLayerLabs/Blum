@@ -11,6 +11,7 @@ Start with the task you want to complete. The [project homepage](../.github/READ
 | Assess benchmark and evidence claims | [Research methodology](research/methodology.md) |
 | Check which historical sources were accepted or rejected | [Data quality](research/data-quality.md) and [audit ledgers](evidence/README.md) |
 | Understand bounded source experiments | [ASCENT](research/ascent.md) |
+| Inspect persistent learning, throughput and source acceptance | [Learning engine](research/learning-engine.md) |
 
 ## Build and operate
 

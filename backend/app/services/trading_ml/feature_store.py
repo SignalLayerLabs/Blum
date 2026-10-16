@@ -18,10 +18,14 @@ from filelock import FileLock, Timeout as FileLockTimeout
 import polars as pl
 from sqlalchemy.orm import Session
 
-from .contracts import CATEGORICAL_FEATURES, FeatureSchema, NUMERIC_FEATURES, TradingMLExample
+from .contracts import (
+    CATEGORICAL_FEATURES,
+    FeatureSchema,
+    NUMERIC_FEATURES,
+    TradingMLExample,
+)
 from .dataset import DatasetSlice, TradingMLDatasetRepository
 from .forex_history import FOREX_HISTORY_TRANSFORM_VERSION
-
 
 MarketFamily = Literal["equity", "forex"]
 _MANIFEST_NAME = "manifest.json"
@@ -88,7 +92,10 @@ class TradingMLFeatureStoreProjector:
     ) -> ProjectionResult:
         """Append one bounded source slice; never rehydrate historical store rows."""
 
-        row_limit = min(max(1, limit or self._max_rows_per_projection), self._max_rows_per_projection)
+        row_limit = min(
+            max(1, limit or self._max_rows_per_projection),
+            self._max_rows_per_projection,
+        )
         source_manifest = self._load_manifest()
         cursor = self._cursor_for(source_manifest, market_family)
         dataset_slice = self._repository.read_slice(
@@ -97,7 +104,9 @@ class TradingMLFeatureStoreProjector:
             after_cursor=cursor,
             limit=row_limit,
         )
-        unique_examples, rejected_duplicates = _deduplicate_examples(dataset_slice.examples)
+        unique_examples, rejected_duplicates = _deduplicate_examples(
+            dataset_slice.examples
+        )
 
         with _manifest_update_lock(
             self.root,
@@ -108,12 +117,16 @@ class TradingMLFeatureStoreProjector:
             committed_partitions = _merge_partitions(manifest["partitions"], partitions)
             if dataset_slice.next_cursor is not None:
                 current_cursor = self._cursor_for(manifest, market_family)
-                manifest.setdefault("source_cursors", {})[market_family] = _merge_source_cursors(
-                    current_cursor,
-                    dataset_slice.next_cursor,
+                manifest.setdefault("source_cursors", {})[market_family] = (
+                    _merge_source_cursors(
+                        current_cursor,
+                        dataset_slice.next_cursor,
+                    )
                 )
             manifest["partitions"].extend(committed_partitions)
-            manifest["evidence_lane_counts"] = self._evidence_lane_counts(manifest["partitions"])
+            manifest["evidence_lane_counts"] = self._evidence_lane_counts(
+                manifest["partitions"]
+            )
             manifest["dataset_hash"] = self._dataset_hash(manifest["partitions"])
             self._write_manifest(manifest)
             committed_cursor = self._cursor_for(manifest, market_family)
@@ -168,7 +181,9 @@ class TradingMLFeatureStoreProjector:
             partitions = self._write_partitions(unique_examples, "forex")
             committed_partitions = _merge_partitions(manifest["partitions"], partitions)
             manifest["partitions"].extend(committed_partitions)
-            external_sources[source_id] = json.loads(json.dumps(provenance, default=str))
+            external_sources[source_id] = json.loads(
+                json.dumps(provenance, default=str)
+            )
             manifest["evidence_lane_counts"] = self._evidence_lane_counts(
                 manifest["partitions"]
             )
@@ -206,7 +221,9 @@ class TradingMLFeatureStoreProjector:
         # Keep old immutable files for audit while excluding their rejected data.
         frame = frame.filter(
             (pl.col("source_object_type") != "external_forex_history")
-            | pl.col("source_object_id").str.contains(FOREX_HISTORY_TRANSFORM_VERSION, literal=True)
+            | pl.col("source_object_id").str.contains(
+                FOREX_HISTORY_TRANSFORM_VERSION, literal=True
+            )
         )
         if predicate is not None:
             frame = frame.filter(predicate)
@@ -219,6 +236,78 @@ class TradingMLFeatureStoreProjector:
 
         return json.loads(json.dumps(self._load_manifest()))
 
+    def online_page(
+        self, *, market_family: MarketFamily, cursor: dict | None, limit: int
+    ) -> dict:
+        """Consume bounded immutable parts in commit order, including old backlog."""
+        if limit <= 0:
+            raise ValueError("Online page limit must be positive")
+        partitions = self._load_manifest()["partitions"]
+        index = int((cursor or {}).get("partition_index", 0))
+        offset = int((cursor or {}).get("row_offset", 0))
+
+        def anchor():
+            prefix = [
+                (row["path"], row["content_hash"])
+                for row in partitions[: index + int(offset > 0)]
+            ]
+            return hashlib.sha256(
+                json.dumps(prefix, separators=(",", ":")).encode()
+            ).hexdigest()
+
+        if (
+            index < 0
+            or index > len(partitions)
+            or offset < 0
+            or (index == len(partitions) and offset)
+        ):
+            raise ValueError("ONLINE_CURSOR_OUT_OF_RANGE")
+        if cursor and cursor.get("anchor") != anchor():
+            raise ValueError("ONLINE_CURSOR_PREFIX_CHANGED")
+        rows = []
+        considered = rejected = 0
+        while index < len(partitions) and considered < limit:
+            partition = partitions[index]
+            if partition["market_family"] != market_family:
+                index += 1
+                offset = 0
+                continue
+            remaining = int(partition["rows"]) - offset
+            if remaining < 0:
+                raise ValueError("ONLINE_CURSOR_ROW_OUT_OF_RANGE")
+            requested = min(limit - considered, remaining)
+            raw = (
+                pl.scan_parquet(self.root / partition["path"])
+                .slice(offset, requested)
+                .collect()
+            )
+            if raw.height != requested:
+                raise ValueError("ONLINE_PARTITION_LENGTH_CHANGED")
+            accepted = raw.filter(
+                (pl.col("source_object_type") != "external_forex_history")
+                | pl.col("source_object_id").str.contains(
+                    FOREX_HISTORY_TRANSFORM_VERSION, literal=True
+                )
+            )
+            rows.extend(accepted.to_dicts())
+            considered += raw.height
+            rejected += raw.height - accepted.height
+            offset += raw.height
+            if offset == int(partition["rows"]):
+                index += 1
+                offset = 0
+        return {
+            "rows": rows,
+            "rows_considered": considered,
+            "rows_rejected": rejected,
+            "exhausted": index >= len(partitions),
+            "cursor": {
+                "partition_index": index,
+                "row_offset": offset,
+                "anchor": anchor(),
+            },
+        }
+
     def market_dataset_hash(self, market_family: MarketFamily) -> str:
         manifest = self._load_manifest()
         partition_hash = self._dataset_hash(
@@ -228,28 +317,41 @@ class TradingMLFeatureStoreProjector:
         )
         return quality_adjusted_hash(partition_hash, market_family, manifest)
 
-    def _write_partitions(self, examples: tuple[TradingMLExample, ...], market_family: MarketFamily) -> list[dict]:
+    def _write_partitions(
+        self, examples: tuple[TradingMLExample, ...], market_family: MarketFamily
+    ) -> list[dict]:
         partitions: list[dict] = []
         for year, month, monthly_examples in _examples_by_month(examples):
             for start in range(0, len(monthly_examples), self._max_partition_rows):
                 chunk = monthly_examples[start : start + self._max_partition_rows]
                 rows = [_row_from_example(example) for example in chunk]
                 content_hash = _content_hash(rows)
-                directory = self.root / "features" / f"market_family={market_family}" / f"year={year}" / f"month={month:02d}"
+                directory = (
+                    self.root
+                    / "features"
+                    / f"market_family={market_family}"
+                    / f"year={year}"
+                    / f"month={month:02d}"
+                )
                 directory.mkdir(parents=True, exist_ok=True)
                 filename = f"part-{content_hash}.parquet"
                 target = directory / filename
                 if not target.exists():
                     temporary = directory / f".{filename}.{uuid4().hex}.tmp"
                     try:
-                        _frame_from_rows(rows).write_parquet(temporary, compression="zstd")
+                        _frame_from_rows(rows).write_parquet(
+                            temporary, compression="zstd"
+                        )
                         verified = pl.read_parquet(temporary)
                         if (
                             verified.height != len(rows)
-                            or set(verified["source_uid"].to_list()) != {row["source_uid"] for row in rows}
+                            or set(verified["source_uid"].to_list())
+                            != {row["source_uid"] for row in rows}
                             or _content_hash(verified.to_dicts()) != content_hash
                         ):
-                            raise RuntimeError("Parquet feature partition verification failed")
+                            raise RuntimeError(
+                                "Parquet feature partition verification failed"
+                            )
                         os.replace(temporary, target)
                     finally:
                         temporary.unlink(missing_ok=True)
@@ -281,7 +383,9 @@ class TradingMLFeatureStoreProjector:
         with path.open("r", encoding="utf-8") as handle:
             manifest = json.load(handle)
         if manifest.get("schema_hash") != FeatureSchema.current().hash:
-            raise RuntimeError("Feature-store schema hash does not match the active feature contract")
+            raise RuntimeError(
+                "Feature-store schema hash does not match the active feature contract"
+            )
         manifest.setdefault("partitions", [])
         manifest.setdefault("source_cursors", {})
         manifest.setdefault("evidence_lane_counts", {})
@@ -298,7 +402,9 @@ class TradingMLFeatureStoreProjector:
         os.replace(temporary, self.root / _MANIFEST_NAME)
 
     @staticmethod
-    def _cursor_for(manifest: dict, market_family: MarketFamily) -> dict[str, object] | None:
+    def _cursor_for(
+        manifest: dict, market_family: MarketFamily
+    ) -> dict[str, object] | None:
         cursor = manifest.get("source_cursors", {}).get(market_family)
         return cursor if isinstance(cursor, dict) else None
 
@@ -356,7 +462,9 @@ def _merge_partitions(current: list[dict], incoming: list[dict]) -> list[dict]:
     return merged
 
 
-def _merge_source_cursors(current: dict[str, object] | None, incoming: dict[str, object]) -> dict[str, object]:
+def _merge_source_cursors(
+    current: dict[str, object] | None, incoming: dict[str, object]
+) -> dict[str, object]:
     if current is None:
         return json.loads(json.dumps(incoming))
     current_offsets = _cursor_offsets(current)
@@ -368,7 +476,11 @@ def _merge_source_cursors(current: dict[str, object] | None, incoming: dict[str,
     merged_offsets = dict(current_offsets)
     for source, source_id in incoming_offsets.items():
         merged_offsets[source] = max(merged_offsets.get(source, 0), source_id)
-    active_source = str(incoming.get("source_table")) if incoming_advanced else str(current.get("source_table"))
+    active_source = (
+        str(incoming.get("source_table"))
+        if incoming_advanced
+        else str(current.get("source_table"))
+    )
     if active_source not in merged_offsets:
         merged_offsets[active_source] = max(
             _cursor_last_id(incoming if incoming_advanced else current),
@@ -435,7 +547,9 @@ def _source_uid(example: TradingMLExample) -> str:
 
 def _feature_hash(example: TradingMLExample) -> str:
     return hashlib.sha256(
-        json.dumps(dict(example.features), sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+        json.dumps(
+            dict(example.features), sort_keys=True, separators=(",", ":"), default=str
+        ).encode("utf-8")
     ).hexdigest()
 
 
@@ -444,7 +558,9 @@ def _content_hash(rows: list[dict]) -> str:
         rows,
         sort_keys=True,
         separators=(",", ":"),
-        default=lambda value: value.isoformat() if isinstance(value, datetime) else str(value),
+        default=lambda value: (
+            value.isoformat() if isinstance(value, datetime) else str(value)
+        ),
     )
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
@@ -454,7 +570,9 @@ def _source_uid_hash(rows: list[dict]) -> str:
     return hashlib.sha256("\n".join(source_uids).encode("utf-8")).hexdigest()
 
 
-def _deduplicate_examples(examples: tuple[TradingMLExample, ...]) -> tuple[tuple[TradingMLExample, ...], int]:
+def _deduplicate_examples(
+    examples: tuple[TradingMLExample, ...],
+) -> tuple[tuple[TradingMLExample, ...], int]:
     seen: set[str] = set()
     unique: list[TradingMLExample] = []
     for example in examples:
@@ -476,12 +594,18 @@ def _dataset_hash(partitions: Iterable[dict]) -> str:
         }
         for partition in partitions
     ]
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
-def quality_adjusted_hash(partition_hash: str, market_family: str, manifest: dict) -> str:
+def quality_adjusted_hash(
+    partition_hash: str, market_family: str, manifest: dict
+) -> str:
     if market_family == "forex" and manifest.get("external_sources"):
-        return hashlib.sha256(f"{FOREX_HISTORY_TRANSFORM_VERSION}:{partition_hash}".encode()).hexdigest()
+        return hashlib.sha256(
+            f"{FOREX_HISTORY_TRANSFORM_VERSION}:{partition_hash}".encode()
+        ).hexdigest()
     return partition_hash
 
 
@@ -493,7 +617,9 @@ def _lane_counts(rows: list[dict]) -> dict[str, int]:
     return counts
 
 
-def _examples_by_month(examples: tuple[TradingMLExample, ...]) -> list[tuple[int, int, tuple[TradingMLExample, ...]]]:
+def _examples_by_month(
+    examples: tuple[TradingMLExample, ...],
+) -> list[tuple[int, int, tuple[TradingMLExample, ...]]]:
     buckets: dict[tuple[int, int], list[TradingMLExample]] = {}
     for example in examples:
         bucket = (example.decision_timestamp.year, example.decision_timestamp.month)
