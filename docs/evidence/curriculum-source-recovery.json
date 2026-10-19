@@ -1,0 +1,390 @@
+{
+  "source_policy": "declared-open-grid-v2",
+  "scope": "Isolated durable-worker recovery; not live trading or alpha qualification",
+  "sources": [
+    {
+      "kind": "repository_daily_cache",
+      "sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2"
+    },
+    {
+      "symbol": "EURUSD=X",
+      "kind": "raw_yahoo_chart",
+      "input_rows": 2601,
+      "sha256": "d631a51df243dd85d576588d8a336977219de436bbf90ece4b6a6f1a5f91a5eb"
+    },
+    {
+      "symbol": "GBPUSD=X",
+      "kind": "raw_yahoo_chart",
+      "input_rows": 2601,
+      "sha256": "cba52fd199fccfdb90fb7e46b74d73bc97c382439389c0e180af1bdff73a8aed"
+    }
+  ],
+  "clock": "2026-10-19T12:00:00",
+  "cycles": 32,
+  "seconds": 19.062,
+  "restart_duplicate_updates": 0,
+  "confirmation_opened": false,
+  "lanes": [
+    {
+      "lane": "FOREX:1d:EURUSD=X",
+      "market": "FOREX",
+      "timeframe": "1d",
+      "ticker": "EURUSD=X",
+      "checkpoint": "1cddb68dc1758a9c6acd197f4aa5ff8d6c7e9a89bd94ae17607c76aa47733775",
+      "training_episodes": 15,
+      "learned_outcomes": 70,
+      "training_status": "PACK_EXHAUSTED",
+      "source_hash": "74839775c8fa1285a18a3a3a287a4ca9624fc9d185909aae938d45d9327ba965",
+      "source_rows": 2600,
+      "benchmark": {
+        "window_hash": "0b59120f3b63e21f374f2de589dac70014c7f7c649cc72911cc6cffe5adbdb64",
+        "start": "2022-11-05T02:01:00",
+        "end": "2024-10-12T01:01:00",
+        "confirmation_opened": false,
+        "policy": {
+          "trade_count": 1,
+          "win_rate": 0.0,
+          "win_rate_interval": [
+            0,
+            0.7934567085261071
+          ],
+          "net_return": -0.0039041430151993683,
+          "blocked_count": 0,
+          "max_closed_trade_drawdown": 0.0039041430151993683,
+          "profit_factor": 0.0,
+          "expectancy_r": -0.7808286030398621,
+          "minimum_cash": 5606.845366449415,
+          "unfilled_count": 1,
+          "decision_diagnostics": {
+            "NO_EXPERT_TRIGGER": 97,
+            "INVALID_CONTEXT_BAR": 400,
+            "PROPOSAL_CREATED": 2
+          }
+        },
+        "fixed_expert": {
+          "trade_count": 1,
+          "win_rate": 1.0,
+          "win_rate_interval": [
+            0.20654329147389294,
+            1
+          ],
+          "net_return": null,
+          "blocked_count": 1,
+          "max_closed_trade_drawdown": 0.0,
+          "profit_factor": null,
+          "expectancy_r": 0.72360960954053,
+          "minimum_cash": 7829.6064177446015,
+          "unfilled_count": 1,
+          "decision_diagnostics": {
+            "NO_EXPERT_TRIGGER": 9,
+            "PROPOSAL_CREATED": 3
+          }
+        },
+        "cash_return": 0.0,
+        "buy_hold_price_return": 0.10122561349711656,
+        "note": "Repeated development monitoring, not final confirmation; hold excludes costs/dividends and remains fully invested.",
+        "previous_net_return": -0.0039041430151993683,
+        "return_change_from_previous": 0.0
+      },
+      "source_kind": "replay",
+      "source_policy": "declared-open-grid-v2",
+      "source_audit": {
+        "policy": "declared-open-grid-v2",
+        "invalid_rows": 67,
+        "missing_interval_boundaries": 7,
+        "usable_training_decisions": 270,
+        "start": "2016-10-18T23:00:00",
+        "end": "2026-10-17T01:01:00"
+      },
+      "source_readiness": null,
+      "training_diagnostics": {
+        "INVALID_CONTEXT_BAR": 8097,
+        "NO_EXPERT_TRIGGER": 1460,
+        "PROPOSAL_CREATED": 119,
+        "EXECUTION_CLOSED": 70,
+        "EXECUTION_BLOCKED": 9,
+        "EXECUTION_UNFILLED": 40,
+        "MISSING_CONTEXT_INTERVAL": 609
+      },
+      "productive_episodes": 8,
+      "source_history": [],
+      "forward": {
+        "status": "BLOCKED",
+        "closed_count": 0,
+        "cash_quote_units": 10000.0,
+        "reason": "INVALID_CONTEXT_BAR",
+        "updated_at": "2026-10-19T12:00:00"
+      }
+    },
+    {
+      "lane": "FOREX:1d:GBPUSD=X",
+      "market": "FOREX",
+      "timeframe": "1d",
+      "ticker": "GBPUSD=X",
+      "checkpoint": "f7b3e07d8ee7b2a0fa050c2c54f401a6ec3d3bad33c0ecfeac88c224724c33da",
+      "training_episodes": 15,
+      "learned_outcomes": 62,
+      "training_status": "PACK_EXHAUSTED",
+      "source_hash": "6c08079cf195b2fd161984a9a3713c6fd8cba504ae17ac1cf6c2861cfc172bb1",
+      "source_rows": 2600,
+      "benchmark": {
+        "window_hash": "b48214b4a9e74153d81883a6e0f9aca85397c2ad8c891f0b88d5d91a9a1bacec",
+        "start": "2022-11-05T02:01:00",
+        "end": "2024-10-12T01:01:00",
+        "confirmation_opened": false,
+        "policy": {
+          "trade_count": 3,
+          "win_rate": 0.0,
+          "win_rate_interval": [
+            0,
+            0.5615060804490177
+          ],
+          "net_return": -0.009681948701874,
+          "blocked_count": 0,
+          "max_closed_trade_drawdown": 0.009681948701874,
+          "profit_factor": 0.0,
+          "expectancy_r": -0.6472814166715511,
+          "minimum_cash": 5537.054763886223,
+          "unfilled_count": 11,
+          "decision_diagnostics": {
+            "NO_EXPERT_TRIGGER": 208,
+            "PROPOSAL_CREATED": 14,
+            "INVALID_CONTEXT_BAR": 257
+          }
+        },
+        "fixed_expert": {
+          "trade_count": 10,
+          "win_rate": 0.5,
+          "win_rate_interval": [
+            0.23658959361548731,
+            0.7634104063845126
+          ],
+          "net_return": 0.01406407765747164,
+          "blocked_count": 0,
+          "max_closed_trade_drawdown": 0.009064190481594125,
+          "profit_factor": 2.2629782065744357,
+          "expectancy_r": 0.28094429157702977,
+          "minimum_cash": 4292.059814105473,
+          "unfilled_count": 6,
+          "decision_diagnostics": {
+            "NO_EXPERT_TRIGGER": 141,
+            "PROPOSAL_CREATED": 16,
+            "INVALID_CONTEXT_BAR": 257
+          }
+        },
+        "cash_return": 0.0,
+        "buy_hold_price_return": 0.15208288012492632,
+        "note": "Repeated development monitoring, not final confirmation; hold excludes costs/dividends and remains fully invested.",
+        "previous_net_return": -0.0020607183685232844,
+        "return_change_from_previous": -0.007621230333350715
+      },
+      "source_kind": "replay",
+      "source_policy": "declared-open-grid-v2",
+      "source_audit": {
+        "policy": "declared-open-grid-v2",
+        "invalid_rows": 59,
+        "missing_interval_boundaries": 7,
+        "usable_training_decisions": 243,
+        "start": "2016-10-18T23:00:00",
+        "end": "2026-10-17T01:01:00"
+      },
+      "source_readiness": null,
+      "training_diagnostics": {
+        "INVALID_CONTEXT_BAR": 8530,
+        "NO_EXPERT_TRIGGER": 1267,
+        "PROPOSAL_CREATED": 140,
+        "EXECUTION_CLOSED": 62,
+        "EXECUTION_UNFILLED": 64,
+        "EXECUTION_BLOCKED": 14,
+        "MISSING_CONTEXT_INTERVAL": 312
+      },
+      "productive_episodes": 7,
+      "source_history": [],
+      "forward": {
+        "status": "BLOCKED",
+        "closed_count": 0,
+        "cash_quote_units": 10000.0,
+        "reason": "INVALID_CONTEXT_BAR",
+        "updated_at": "2026-10-19T12:00:00"
+      }
+    },
+    {
+      "lane": "USA:1d:QQQ",
+      "market": "USA",
+      "timeframe": "1d",
+      "ticker": "QQQ",
+      "checkpoint": "329bc759cbc724365b5a938f76e3a3efd8456c3687cf488381694a72a6fed929",
+      "training_episodes": 15,
+      "learned_outcomes": 475,
+      "training_status": "PACK_EXHAUSTED",
+      "source_hash": "863c5549ec42bc4e1c57aa1c55ac94437a75d846781084a2caf530ba2a0aae90",
+      "source_rows": 2515,
+      "benchmark": {
+        "window_hash": "12b9fecc9c1c78fbfafa30e1aec66f61e4639bcf2961735ec946f5772d8bd0a0",
+        "start": "2022-06-30T20:01:00",
+        "end": "2024-06-10T20:01:00",
+        "confirmation_opened": false,
+        "policy": {
+          "trade_count": 7,
+          "win_rate": 0.42857142857142855,
+          "win_rate_interval": [
+            0.15821692226262685,
+            0.7495457695909742
+          ],
+          "net_return": 0.003445847307260941,
+          "blocked_count": 0,
+          "max_closed_trade_drawdown": 0.0110987076515634,
+          "profit_factor": 1.152748412445204,
+          "expectancy_r": 0.10342302268319019,
+          "minimum_cash": 7531.813250308556,
+          "unfilled_count": 6,
+          "decision_diagnostics": {
+            "PROPOSAL_CREATED": 13,
+            "NO_EXPERT_TRIGGER": 425
+          }
+        },
+        "fixed_expert": {
+          "trade_count": 24,
+          "win_rate": 0.375,
+          "win_rate_interval": [
+            0.21159133433631458,
+            0.5729038096209293
+          ],
+          "net_return": 0.028952052356364888,
+          "blocked_count": 0,
+          "max_closed_trade_drawdown": 0.02327550564325709,
+          "profit_factor": 1.5502619322481925,
+          "expectancy_r": 0.2419443556132561,
+          "minimum_cash": 7289.4986405179725,
+          "unfilled_count": 17,
+          "decision_diagnostics": {
+            "NO_EXPERT_TRIGGER": 238,
+            "PROPOSAL_CREATED": 41
+          }
+        },
+        "cash_return": 0.0,
+        "buy_hold_price_return": 0.6663559777737946,
+        "note": "Repeated development monitoring, not final confirmation; hold excludes costs/dividends and remains fully invested.",
+        "previous_net_return": -0.007839598071843867,
+        "return_change_from_previous": 0.011285445379104808
+      },
+      "source_kind": "price_history",
+      "source_policy": "declared-open-grid-v2",
+      "source_audit": {
+        "policy": "declared-open-grid-v2",
+        "invalid_rows": 0,
+        "missing_interval_boundaries": 0,
+        "usable_training_decisions": 1410,
+        "start": "2016-06-13T13:30:00",
+        "end": "2026-06-12T20:01:00"
+      },
+      "source_readiness": null,
+      "training_diagnostics": {
+        "PROPOSAL_CREATED": 997,
+        "NO_EXPERT_TRIGGER": 6525,
+        "EXECUTION_UNFILLED": 522,
+        "EXECUTION_CLOSED": 475
+      },
+      "productive_episodes": 15,
+      "source_history": [],
+      "forward": {
+        "status": "STALE_CONTEXT",
+        "closed_count": 0,
+        "cash_quote_units": 10000.0,
+        "updated_at": "2026-10-19T12:00:00"
+      }
+    },
+    {
+      "lane": "USA:1d:SPY",
+      "market": "USA",
+      "timeframe": "1d",
+      "ticker": "SPY",
+      "checkpoint": "cefbe23d54a00c528edf506cac0de7a4b092556b8ef36771f29c20170026dfd5",
+      "training_episodes": 15,
+      "learned_outcomes": 502,
+      "training_status": "PACK_EXHAUSTED",
+      "source_hash": "992a8046b4d31ec1e58fb6cb7e01c97ec1822212380d994d8805eca897ffe18e",
+      "source_rows": 2515,
+      "benchmark": {
+        "window_hash": "2ddac71e7df4b5432e948d5dd2f468483ea9564f4fb70fe04010e9ca6637949c",
+        "start": "2022-06-30T20:01:00",
+        "end": "2024-06-10T20:01:00",
+        "confirmation_opened": false,
+        "policy": {
+          "trade_count": 2,
+          "win_rate": 0.0,
+          "win_rate_interval": [
+            0,
+            0.6576280471103807
+          ],
+          "net_return": -0.0034495646343360997,
+          "blocked_count": 0,
+          "max_closed_trade_drawdown": 0.0034495646343360997,
+          "profit_factor": 0.0,
+          "expectancy_r": -0.34517184141145524,
+          "minimum_cash": 6178.891474244061,
+          "unfilled_count": 2,
+          "decision_diagnostics": {
+            "NO_EXPERT_TRIGGER": 479,
+            "PROPOSAL_CREATED": 4
+          }
+        },
+        "fixed_expert": {
+          "trade_count": 25,
+          "win_rate": 0.48,
+          "win_rate_interval": [
+            0.30031003928960015,
+            0.6650178204685269
+          ],
+          "net_return": 0.0356541330097877,
+          "blocked_count": 0,
+          "max_closed_trade_drawdown": 0.01983367900283417,
+          "profit_factor": 1.6489338233756978,
+          "expectancy_r": 0.284345284820359,
+          "minimum_cash": 5483.50799823874,
+          "unfilled_count": 16,
+          "decision_diagnostics": {
+            "NO_EXPERT_TRIGGER": 249,
+            "PROPOSAL_CREATED": 41
+          }
+        },
+        "cash_return": 0.0,
+        "buy_hold_price_return": 0.4225090291055873,
+        "note": "Repeated development monitoring, not final confirmation; hold excludes costs/dividends and remains fully invested.",
+        "previous_net_return": -0.0026340501624292356,
+        "return_change_from_previous": -0.0008155144719068641
+      },
+      "source_kind": "price_history",
+      "source_policy": "declared-open-grid-v2",
+      "source_audit": {
+        "policy": "declared-open-grid-v2",
+        "invalid_rows": 0,
+        "missing_interval_boundaries": 0,
+        "usable_training_decisions": 1410,
+        "start": "2016-06-13T13:30:00",
+        "end": "2026-06-12T20:01:00"
+      },
+      "source_readiness": null,
+      "training_diagnostics": {
+        "NO_EXPERT_TRIGGER": 6365,
+        "PROPOSAL_CREATED": 947,
+        "EXECUTION_UNFILLED": 445,
+        "EXECUTION_CLOSED": 502
+      },
+      "productive_episodes": 15,
+      "source_history": [],
+      "forward": {
+        "status": "STALE_CONTEXT",
+        "closed_count": 0,
+        "cash_quote_units": 10000.0,
+        "updated_at": "2026-10-19T12:00:00"
+      }
+    }
+  ],
+  "limitations": [
+    "Dependent expert outcomes, not independent trades or forward alpha.",
+    "Source clock cleanup changes the corpus; returns cannot be compared with legacy contaminated partitions.",
+    "Current-date cash and corporate actions are not independently audited point-in-time vendor vintages.",
+    "No production state was read or written; live learning still requires post-deployment verification."
+  ]
+}

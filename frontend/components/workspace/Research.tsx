@@ -27,7 +27,7 @@ function riskMultiple(value: unknown) {
 }
 
 function BenchmarkRow({ label, detail, metrics, returnValue }: {
-  label: string; detail: string; metrics?: CurriculumMetrics; returnValue?: number;
+  label: string; detail: string; metrics?: CurriculumMetrics; returnValue?: number | null;
 }) {
   const interval = metrics?.win_rate_interval;
   return (
@@ -54,24 +54,36 @@ const forwardLabels: Record<string, string> = {
   WAITING_SIGNAL: "Waiting for a signal",
   UNFILLED: "Research order unfilled",
   BLOCKED: "Research execution blocked",
+  WAITING_CONTEXT: "Waiting for valid market context",
 };
 
 function CurriculumLaneCard({ lane }: { lane: CurriculumLane }) {
   const benchmark = lane.benchmark;
   const forward = lane.forward;
+  const trainingLabels: Record<string,string> = {
+    PACK_EXHAUSTED: "Source pack exhausted", PACK_EXHAUSTED_NO_OUTCOMES: "Source exhausted without learning outcomes",
+    TRAINING: "Training", TRAINING_NO_OUTCOMES: "Training block without learning outcomes", DATA_BLOCKED: "Training blocked by source data",
+  };
   return (
     <article className="op-call-card">
       <div className="op-context">
         <h3>{lane.ticker} · {lane.market} · {lane.timeframe}</h3>
         <span className="op-status">
-          {lane.training_status === "PACK_EXHAUSTED" ? "Source pack exhausted" : lane.training_status === "TRAINING" ? "Training" : "Training state unavailable"}
+          {trainingLabels[lane.training_status] ?? "Training state unavailable"}
         </span>
       </div>
       <div className="op-metrics op-three">
-        <Metric label="Training episodes" value={number(lane.training_episodes)} detail="Unique completed training blocks." />
+        <Metric label="Training episodes" value={number(lane.training_episodes)} detail="Unique attempted blocks; some produce no learning outcomes." />
         <Metric label="Learned outcomes" value={number(lane.learned_outcomes)} detail="Dependent expert outcomes; not independent forward evidence." />
         <Metric label="Source rows" value={number(lane.source_rows)} detail="Rows in this frozen source pack." />
       </div>
+      {lane.productive_episodes !== undefined && <p className="op-footnote">Productive training blocks: {number(lane.productive_episodes)} · closed expert outcomes were available for learning.</p>}
+      {lane.source_readiness?.reason && <p className="op-error-note">{human(lane.source_readiness.reason)}</p>}
+      {lane.source_audit && <p className="op-footnote">Invalid source rows: {number(lane.source_audit.invalid_rows)} · missing interval boundaries: {number(lane.source_audit.missing_interval_boundaries)} · usable training decisions: {number(lane.source_audit.usable_training_decisions)}. Invalid canonical bars remain in the frozen source.</p>}
+      {lane.training_diagnostics && Object.keys(lane.training_diagnostics).length > 0 && <details className="op-disclosure">
+        <summary>Training decisions and execution diagnostics</summary>
+        {Object.entries(lane.training_diagnostics).map(([reason,count]) => <p className="op-footnote" key={reason}>{human(reason)}: {number(count)}</p>)}
+      </details>}
       <div className="op-evidence-line">
         <span>Policy checkpoint</span>
         <code title={lane.checkpoint}>{lane.checkpoint?.slice(0, 12) ?? "Unavailable"}</code>
@@ -108,6 +120,7 @@ function CurriculumLaneCard({ lane }: { lane: CurriculumLane }) {
         <span>Observation status</span>
         <strong>{forwardLabels[forward?.status ?? ""] ?? "Prospective observation unavailable"}</strong>
       </div>
+      {forward?.reason && <p className="op-footnote">{human(forward.reason)}</p>}
       <div className="op-evidence-line"><span>Live outcome learning updates</span><strong>{number(forward?.learned_outcomes)}</strong></div>
       <div className="op-evidence-line"><span>Closed prospective outcomes</span><strong>{number(forward?.closed_count)}</strong></div>
       <div className="op-evidence-line"><span>Lane balance · quote units</span><strong>{number(forward?.cash_quote_units, 2)}</strong></div>
@@ -116,6 +129,11 @@ function CurriculumLaneCard({ lane }: { lane: CurriculumLane }) {
         <p className="op-footnote">Last stored outcome: {riskMultiple(forward.last_outcome.net_r)} · {human(forward.last_outcome.reason)}</p>
       )}
       <p className="op-footnote">These observations are separate from native paper orders and filled-order counts. The lane balance is realized cash before any open-position reservation; it is not a consolidated portfolio return.</p>
+      {!!lane.source_history?.length && <details className="op-disclosure">
+        <summary>Preserved previous sources</summary>
+        <p className="op-footnote">Previous source versions keep their journals and checkpoints. Their results are separate from this source and are not added to its learning count.</p>
+        {lane.source_history.map((old,index) => <p className="op-footnote" key={`${old.source_hash}-${index}`} style={{overflowWrap:"anywhere"}}><code>{old.source_hash}</code> · {number(old.training_episodes)} attempted blocks · {number(old.learned_outcomes)} learned outcomes · {human(old.reason)}</p>)}
+      </details>}
       <details className="op-disclosure">
         <summary>Checkpoint and source identity</summary>
         <p className="op-footnote" style={{ overflowWrap: "anywhere" }}>Checkpoint: <code>{lane.checkpoint ?? "Unavailable"}</code></p>

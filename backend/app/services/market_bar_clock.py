@@ -6,6 +6,28 @@ from zoneinfo import ZoneInfo
 from app.services.executable_strategy import normalize_market
 
 
+def canonical_open(start: datetime, timeframe: str, market: str) -> bool:
+    """Recognize declared candle labels, never round a last-trade quote into OHLC."""
+    if start.tzinfo is not None or start.second or start.microsecond:
+        return False
+    if timeframe == "1d":
+        if normalize_market(market) == "USA":
+            # PriceHistory/yfinance day labels or Yahoo's actual NY opening.
+            return start.time() == time() or start == session_start(
+                start, timeframe, market
+            )
+        local = start.replace(tzinfo=timezone.utc).astimezone(ZoneInfo("Europe/London"))
+        return local.time() == time() and local.weekday() < 5
+    minutes = {"1m": 1, "5m": 5, "15m": 15, "1h": 60}[timeframe]
+    if normalize_market(market) == "USA":
+        local = start.replace(tzinfo=timezone.utc).astimezone(
+            ZoneInfo("America/New_York")
+        )
+        offset = local.hour * 60 + local.minute - 570
+        return local.weekday() < 5 and 0 <= offset < 390 and offset % minutes == 0
+    return (start.hour * 60 + start.minute) % minutes == 0
+
+
 def session_start(start: datetime, timeframe: str, market: str) -> datetime:
     if timeframe == "1d" and normalize_market(market) == "USA":
         opening = datetime.combine(

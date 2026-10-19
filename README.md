@@ -34,6 +34,7 @@ Trading ML retains separate incremental shadow learners for equity and Forex, wi
 
 The [outcome-driven trading curriculum](docs/research/trading-curriculum.md) adds random historical practice, frozen per-market checkpoints and prospective research-paper observations. Its calendar-checked benchmark shows four underperforming comparisons and two incomplete baseline paths; the selector remains experimental. The Research workspace exposes the measurements rather than treating memory growth as trading skill.
 
+The curriculum source correction and its reproducible recovery evidence are documented in [Curriculum source recovery](docs/research/curriculum-source-recovery.md). Attempted blocks and useful outcomes are reported separately; the results do not establish alpha.
 
 ## Run and operate
 

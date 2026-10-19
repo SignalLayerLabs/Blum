@@ -324,3 +324,14 @@ def test_missing_first_execution_session_does_not_select_a_later_favorable_open(
     outcome = curriculum.resolve(proposal, source[81:100], market="USA", complete=True)
     assert outcome["status"] == "UNFILLED"
     assert outcome["reason"] == "MISSING_FIRST_EXECUTION_BAR"
+
+
+def test_replay_reports_missing_context_instead_of_counting_empty_learning():
+    source = bars(220)
+    source[80] = {**source[80], "high": 1}
+    report = curriculum.simulate(
+        source, market="USA", timeframe="1d", start=81, end=140
+    )
+    assert report["trade_count"] == 0
+    assert report["decision_diagnostics"]["INVALID_CONTEXT_BAR"] > 0
+    assert report["decision_diagnostics"].get("PROPOSAL_CREATED", 0) == 0

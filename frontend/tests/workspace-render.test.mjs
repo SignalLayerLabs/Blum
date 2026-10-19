@@ -235,3 +235,15 @@ test("snapshot source status overrides a recent timestamp", async () => {
     assert.match(markup, message);
   }
 });
+
+test("curriculum exposes unproductive blocks, data blockers and preserved source versions", async () => {
+  const { CurriculumPanel } = await import("../components/workspace/Research.tsx");
+  const lane = { ...curriculumSnapshot.lanes[0], training_status: "PACK_EXHAUSTED_NO_OUTCOMES", learned_outcomes: 0,
+    productive_episodes: 0, training_diagnostics: { MISSING_CONTEXT_INTERVAL: 42 },
+    source_audit: { invalid_rows: 2, missing_interval_boundaries: 3, usable_training_decisions: 120 },
+    source_history: [{ source_hash: "old-source-hash", training_episodes: 30, learned_outcomes: 0, reason: "SOURCE_CLOCK_POLICY_REPLACED" }],
+    forward: { ...curriculumSnapshot.lanes[0].forward, status: "WAITING_CONTEXT", reason: "MISSING_CONTEXT_INTERVAL" } };
+  const markup=renderToStaticMarkup(React.createElement(CurriculumPanel,{snapshot:{...curriculumSnapshot,lanes:[lane]},pending:false}));
+  for(const text of ["Source exhausted without learning outcomes","Productive training blocks","Missing context interval","Preserved previous sources","old-source-hash","Invalid source rows"])
+    assert.ok(markup.includes(text),text);
+});
