@@ -5,6 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timedelta
 import threading
+import math
 import time
 
 from sqlalchemy import select, update, or_, func
@@ -166,6 +167,7 @@ class TradingCurriculumWorker:
                         .join(Asset, Asset.id == ReplayDataCoverage.asset_id)
                         .where(
                             ReplayDataCoverage.timeframe == timeframe,
+                            Asset.is_active.is_(True),
                             ReplayDataCoverage.rows_available >= 600,
                             ReplayDataCoverage.data_quality_score >= 80,
                             market_filter,
@@ -199,7 +201,7 @@ class TradingCurriculumWorker:
             if counts.get(group, 0) >= 2:
                 continue
             pack = self._bars(db, asset.id, row.timeframe, market, now, limit=5000)
-            if len(pack) < 600:
+            if len(pack) < 600 or any(not kernel.valid_bar(b) for b in pack):
                 continue
             windows = kernel.training_windows(len(pack), seed=17)
             payload = dict(
@@ -270,7 +272,6 @@ class TradingCurriculumWorker:
             ReplayMarketBar.timeframe == timeframe,
             ReplayMarketBar.bar_timestamp <= now,
             ReplayMarketBar.acquired_at <= now,
-            ReplayMarketBar.data_quality_score >= 80,
         )
         if after:
             query = query.where(
@@ -308,11 +309,19 @@ class TradingCurriculumWorker:
                 volume=float(row.volume or 0),
                 provider=row.provider,
             )
-            if (
-                available <= now
-                and kernel.valid_bar(bar)
-                and (after is None or bar["start"] > after.isoformat())
-            ):
+            invalid_fields = [
+                key
+                for key in ("open", "high", "low", "close", "volume")
+                if isinstance(bar[key], (int, float)) and not math.isfinite(bar[key])
+            ]
+            if invalid_fields:
+                for key in invalid_fields:
+                    bar[key] = None
+                bar["invalid_reason"] = "NON_FINITE_MARKET_DATA"
+                bar["invalid_fields"] = invalid_fields
+            if row.data_quality_score < 80 and not bar.get("invalid_reason"):
+                bar["invalid_reason"] = "LOW_SOURCE_QUALITY"
+            if available <= now and (after is None or bar["start"] > after.isoformat()):
                 pack.append(bar)
         return pack[:limit] if after else pack
 
@@ -521,6 +530,13 @@ class TradingCurriculumWorker:
             or now - datetime.fromisoformat(history[-1]["available"]) > freshness
         ):
             forward.update(status="STALE_CONTEXT", updated_at=now.isoformat())
+            return
+        if any(not kernel.valid_bar(b) for b in history):
+            forward.update(
+                status="BLOCKED",
+                reason="INVALID_CONTEXT_BAR",
+                updated_at=now.isoformat(),
+            )
             return
         if forward.get("last_feature") == history[-1]["available"]:
             return

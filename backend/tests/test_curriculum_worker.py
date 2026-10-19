@@ -29,7 +29,9 @@ def database():
     )
     db.add(asset)
     db.flush()
-    start = datetime(2020, 1, 1)
+    from app.services.market_bar_clock import nyse_calendar
+
+    sessions = nyse_calendar().sessions_in_range("2020-01-01", "2024-01-01")[:800]
     for i in range(800):
         price = 100 + i * 0.1
         db.add(
@@ -39,7 +41,7 @@ def database():
                 normalized_symbol="TEST",
                 market="USA",
                 timeframe="1d",
-                bar_timestamp=start + timedelta(days=i),
+                bar_timestamp=sessions[i].to_pydatetime(),
                 open=price,
                 high=price + 1,
                 low=price - 0.2,
@@ -47,7 +49,7 @@ def database():
                 volume=1e6,
                 provider="fixture",
                 data_quality_score=95,
-                acquired_at=datetime(2023, 1, 1),
+                acquired_at=datetime(2024, 1, 1),
             )
         )
     db.add(
@@ -60,7 +62,7 @@ def database():
             provider="fixture",
             rows_available=800,
             data_quality_score=95,
-            available_end=start + timedelta(days=799),
+            available_end=sessions[-1].to_pydatetime(),
         )
     )
     db.commit()
@@ -181,8 +183,11 @@ def test_prospective_journal_freezes_decision_then_learns_only_when_future_close
         payload = deepcopy(db.scalar(select(worker.TradingCurriculumState)).payload)
         historical = deepcopy(payload["model"])
         # Fresh context follows the frozen research corpus; it is never imported into development.
-        for i in range(65):
-            day = datetime(2026, 8, 13) + timedelta(days=i)
+        from app.services.market_bar_clock import nyse_calendar
+
+        sessions = nyse_calendar().sessions_in_range("2026-07-01", "2026-10-16")[-65:]
+        for i, session in enumerate(sessions):
+            day = session.to_pydatetime()
             price = 200 + i * 0.15
             db.add(
                 ReplayMarketBar(
@@ -216,8 +221,9 @@ def test_prospective_journal_freezes_decision_then_learns_only_when_future_close
             is None
         )
         assert not payload.get("live_updates")
-        for i in range(12):
-            day = datetime(2026, 10, 19) + timedelta(days=i)
+        sessions = nyse_calendar().sessions_in_range("2026-10-19", "2026-11-06")[:12]
+        for i, session in enumerate(sessions):
+            day = session.to_pydatetime()
             db.add(
                 ReplayMarketBar(
                     asset_id=payload["asset_id"],
@@ -237,7 +243,7 @@ def test_prospective_journal_freezes_decision_then_learns_only_when_future_close
                 )
             )
         db.commit()
-        service._forward(db, payload, now + timedelta(days=13))
+        service._forward(db, payload, now + timedelta(days=20))
         assert payload["forward"]["status"] == "CLOSED"
         assert payload["forward"]["closed_count"] == 1
         assert payload["forward"]["learned_outcomes"] == 1
@@ -247,3 +253,82 @@ def test_prospective_journal_freezes_decision_then_learns_only_when_future_close
         assert outcome["entry_at"] > proposal["decision_at"]
         assert outcome["input_hash"] == proposal["input_hash"]
         assert outcome["entry_at"].startswith("2026-10-19T13:30")
+
+
+def test_inactive_recent_coverage_cannot_hide_active_eligible_history():
+    with database() as db:
+        for i in range(13):
+            asset = Asset(
+                ticker=f"OFF{i}",
+                name="Inactive",
+                sector="Technology",
+                country="USA",
+                category="Stock",
+                asset_type="Stock",
+                currency="USD",
+                exchange="NASDAQ",
+                is_active=False,
+            )
+            db.add(asset)
+            db.flush()
+            db.add(
+                ReplayDataCoverage(
+                    asset_id=asset.id,
+                    source_symbol=asset.ticker,
+                    normalized_symbol=asset.ticker,
+                    market="USA",
+                    timeframe="1d",
+                    provider="fixture",
+                    rows_available=800,
+                    data_quality_score=95,
+                    available_end=datetime(2025, 1, 1),
+                )
+            )
+        db.commit()
+        worker.TradingCurriculumWorker().run_once(db, now=datetime(2026, 10, 19))
+        assert (
+            worker.TradingCurriculumWorker().snapshot(db)["lanes"][0]["ticker"]
+            == "TEST"
+        )
+
+
+def test_adapter_preserves_invalid_and_low_quality_future_bar_evidence():
+    with database() as db:
+        row = db.scalar(select(ReplayMarketBar).order_by(ReplayMarketBar.bar_timestamp))
+        row.high = 1
+        row.data_quality_score = 20
+        db.commit()
+        result = worker.TradingCurriculumWorker()._bars(
+            db,
+            row.asset_id,
+            "1d",
+            "USA",
+            datetime(2026, 10, 19),
+            limit=2,
+            after=row.bar_timestamp - timedelta(hours=1),
+        )
+        assert len(result) == 2
+        assert result[0]["invalid_reason"] == "LOW_SOURCE_QUALITY"
+        assert result[0]["high"] == 1
+
+
+def test_rejected_nonfinite_market_values_are_json_safe_for_durable_blocked_paths():
+    from app.services import trading_curriculum as k
+
+    with database() as db:
+        row = db.scalar(select(ReplayMarketBar).order_by(ReplayMarketBar.bar_timestamp))
+        row.high = float("inf")
+        db.commit()
+        result = worker.TradingCurriculumWorker()._bars(
+            db,
+            row.asset_id,
+            "1d",
+            "USA",
+            datetime(2026, 10, 19),
+            limit=1,
+            after=row.bar_timestamp - timedelta(hours=1),
+        )
+        assert result[0]["high"] is None
+        assert result[0]["invalid_reason"] == "NON_FINITE_MARKET_DATA"
+        assert not k.valid_bar(result[0])
+        assert k.digest(result)

@@ -32,7 +32,7 @@ function BenchmarkRow({ label, detail, metrics, returnValue }: {
   const interval = metrics?.win_rate_interval;
   return (
     <tr>
-      <td><strong>{label}</strong><span>{detail}</span></td>
+      <td><strong>{label}</strong><span>{detail}{metrics?.blocked_count ? " · incomplete account path" : ""}</span></td>
       <td>{percent(returnValue ?? metrics?.net_return)}</td>
       <td>{number(metrics?.trade_count)}</td>
       <td>

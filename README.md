@@ -32,7 +32,7 @@ Existing reasoning archives remain quarantined for new training/promotion. Paid 
 
 Trading ML retains separate incremental shadow learners for equity and Forex, with resumable unread-data queues and exactly-once sample identities. See the [learning-engine measurements](docs/research/learning-engine.md) for throughput, persistence requirements and the historical dataset experiment that did **not** beat its baseline.
 
-The [outcome-driven trading curriculum](docs/research/trading-curriculum.md) adds random historical practice, frozen per-market checkpoints and prospective research-paper observations. Its first six-series benchmark improves one series and underperforms five; the selector remains experimental. The Research workspace exposes the measurements rather than treating memory growth as trading skill.
+The [outcome-driven trading curriculum](docs/research/trading-curriculum.md) adds random historical practice, frozen per-market checkpoints and prospective research-paper observations. Its calendar-checked benchmark shows four underperforming comparisons and two incomplete baseline paths; the selector remains experimental. The Research workspace exposes the measurements rather than treating memory growth as trading skill.
 
 
 ## Run and operate

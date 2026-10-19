@@ -1,5 +1,6 @@
 export type CurriculumMetrics = {
   trade_count: number;
+  blocked_count?: number;
   win_rate: number | null;
   win_rate_interval: [number, number] | null;
   net_return: number | null;

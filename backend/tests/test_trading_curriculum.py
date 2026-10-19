@@ -6,10 +6,19 @@ from app.services import trading_curriculum as curriculum
 
 
 def bars(count=600, start=datetime(2020, 1, 1), step=0.15):
+    from app.services.market_bar_clock import nyse_calendar
+
+    sessions = nyse_calendar().sessions_in_range(
+        start.date(), (start + timedelta(days=count * 2 + 30)).date()
+    )[:count]
     return [
         dict(
-            start=(start + timedelta(days=i)).isoformat(),
-            available=(start + timedelta(days=i, hours=21, minutes=1)).isoformat(),
+            start=curriculum.session_start(
+                sessions[i].to_pydatetime(), "1d", "USA"
+            ).isoformat(),
+            available=curriculum.available_at(
+                sessions[i].to_pydatetime(), "1d", "USA"
+            ).isoformat(),
             open=100 + i * step,
             high=101 + i * step,
             low=99.8 + i * step,
@@ -266,3 +275,52 @@ def test_daily_open_is_an_exchange_session_time_not_midnight():
 def test_daily_forex_bar_starting_at_23utc_does_not_become_available_one_hour_later():
     start = datetime(2025, 7, 7, 23)
     assert curriculum.available_at(start, "1d", "FOREX") >= start + timedelta(hours=24)
+
+
+def test_invalid_stop_bar_cannot_disappear_into_a_later_winner():
+    source = bars()
+    proposal = curriculum.propose(
+        source[:80],
+        market="USA",
+        timeframe="1d",
+        model=curriculum.Selector({}),
+        decision_at=datetime.fromisoformat(source[79]["available"]),
+    )
+    broken = {**source[81], "high": 1, "low": proposal["stop"] - 1}
+    outcome = curriculum.resolve(
+        proposal,
+        [source[80], broken, {**source[82], "high": proposal["target"] + 1}],
+        market="USA",
+        complete=True,
+    )
+    assert outcome["status"] == "BLOCKED"
+    assert "pnl" not in outcome
+
+
+def test_calendar_detects_missing_session_without_treating_christmas_as_a_gap():
+    assert curriculum.consecutive(
+        datetime(2025, 12, 24, 14, 30), datetime(2025, 12, 26, 14, 30), "1d", "USA"
+    )
+    assert not curriculum.consecutive(
+        datetime(2025, 12, 23, 14, 30), datetime(2025, 12, 26, 14, 30), "1d", "USA"
+    )
+    assert curriculum.consecutive(
+        datetime(2025, 7, 3, 16, 55), datetime(2025, 7, 7, 13, 30), "5m", "USA"
+    )
+    assert not curriculum.consecutive(
+        datetime(2025, 7, 7, 13, 30), datetime(2025, 7, 7, 13, 40), "5m", "USA"
+    )
+
+
+def test_missing_first_execution_session_does_not_select_a_later_favorable_open():
+    source = bars()
+    proposal = curriculum.propose(
+        source[:80],
+        market="USA",
+        timeframe="1d",
+        model=curriculum.Selector({}),
+        decision_at=datetime.fromisoformat(source[79]["available"]),
+    )
+    outcome = curriculum.resolve(proposal, source[81:100], market="USA", complete=True)
+    assert outcome["status"] == "UNFILLED"
+    assert outcome["reason"] == "MISSING_FIRST_EXECUTION_BAR"

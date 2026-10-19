@@ -10,7 +10,12 @@ import json
 import math
 import random
 from types import SimpleNamespace
-from app.services.market_bar_clock import available_at, session_start
+from app.services.market_bar_clock import (
+    available_at,
+    session_start,
+    consecutive,
+    first_execution_start,
+)
 
 import numpy as np
 
@@ -43,6 +48,12 @@ def digest(value) -> str:
 
 def valid_bar(bar: dict) -> bool:
     try:
+        if bar.get("invalid_reason"):
+            return False
+        opening = datetime.fromisoformat(bar["start"])
+        closing = datetime.fromisoformat(bar["available"])
+        if opening.tzinfo is not None or closing.tzinfo is not None:
+            return False
         o, h, l, c, v = (
             float(bar[k]) for k in ("open", "high", "low", "close", "volume")
         )
@@ -50,7 +61,7 @@ def valid_bar(bar: dict) -> bool:
             all(math.isfinite(x) for x in (o, h, l, c, v))
             and 0 < l <= min(o, c) <= max(o, c) <= h
             and v >= 0
-            and bar["start"] < bar["available"]
+            and opening < closing
         )
     except (KeyError, TypeError, ValueError):
         return False
@@ -169,7 +180,17 @@ def propose(
         for b in history
         if valid_bar(b) and datetime.fromisoformat(b["available"]) <= decision_at
     ]
-    if len(closed) < WARMUP:
+    if any(not valid_bar(b) for b in history) or len(closed) < WARMUP:
+        return None
+    if any(
+        not consecutive(
+            datetime.fromisoformat(a["start"]),
+            datetime.fromisoformat(b["start"]),
+            timeframe,
+            market,
+        )
+        for a, b in zip(closed, closed[1:])
+    ):
         return None
     context = features(closed)
     rows = [
@@ -238,13 +259,20 @@ def resolve(
     complete: bool,
     cash: float = CAPITAL,
 ) -> dict | None:
-    eligible = [
-        b for b in future if valid_bar(b) and b["start"] > proposal["decision_at"]
-    ]
+    eligible = [b for b in future if b["start"] > proposal["decision_at"]]
     if not eligible:
         return None
     first = eligible[0]
     base = {**proposal, "cash_before": cash}
+    if not valid_bar(first):
+        return {**base, "status": "BLOCKED", "reason": "INVALID_OUTCOME_BAR"}
+    expected = first_execution_start(
+        datetime.fromisoformat(proposal["decision_at"]),
+        proposal["strategy"]["execution_timeframe"],
+        market,
+    )
+    if first["start"] != expected.isoformat():
+        return {**base, "status": "UNFILLED", "reason": "MISSING_FIRST_EXECUTION_BAR"}
     # Cancel at the first later open, before consulting that bar's high/low/close.
     if not proposal["stop"] < first["open"] <= proposal["limit"]:
         return {**base, "status": "UNFILLED", "reason": "OPEN_OUTSIDE_ENTRY_COLLAR"}
@@ -287,7 +315,22 @@ def resolve(
         entry_commission=entry.costs.commission_cost,
         cash_after_entry=cash - price * quantity - entry.costs.commission_cost,
     )
-    observed = eligible[:HOLD]
+    observed = []
+    path_blocked = False
+    timeframe = proposal["strategy"]["execution_timeframe"]
+    for bar in eligible[:HOLD]:
+        if not valid_bar(bar) or (
+            observed
+            and not consecutive(
+                datetime.fromisoformat(observed[-1]["start"]),
+                datetime.fromisoformat(bar["start"]),
+                timeframe,
+                market,
+            )
+        ):
+            path_blocked = True
+            break
+        observed.append(bar)
     exit_result = engine.evaluate_exit(
         side="LONG",
         quantity=quantity,
@@ -299,6 +342,13 @@ def resolve(
         commission_bps=COMMISSION_BPS,
     )
     if exit_result.status != "CLOSED":
+        if path_blocked:
+            return {
+                **base,
+                **entry_data,
+                "status": "BLOCKED",
+                "reason": "INCOMPLETE_OUTCOME_PATH",
+            }
         if not complete and len(observed) < HOLD:
             return {**base, **entry_data, "status": "OPEN"}
         last = observed[-1]
