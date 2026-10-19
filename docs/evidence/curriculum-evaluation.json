@@ -1,0 +1,2146 @@
+{
+  "version": "curriculum-v1",
+  "cost_version": "curriculum-limit-collar-v1",
+  "created_at": "2026-10-19T10:45:57.616228",
+  "elapsed_seconds": 24.109932374998607,
+  "lanes": [
+    {
+      "symbol": "DIA",
+      "market": "USA",
+      "status": "RESEARCH_ONLY",
+      "source": {
+        "path": "backend/app/data/historical_prices_seed.csv.gz",
+        "sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2",
+        "provider": "repository Nasdaq/Stooq historical cache; mixed provider provenance"
+      },
+      "source_pack_hash": "ec0dfed04854cc3a6bf152991156b68663a6e6a7ed9ecb82edd31b54ba8a2070",
+      "accepted_rows": 2515,
+      "rejected_rows": 0,
+      "train_end": "2022-06-08T20:01:00",
+      "development_start": "2022-06-30T20:01:00",
+      "development_end": "2024-06-10T20:01:00",
+      "window_hash": "1fb9719a436f360545e50a3b5e81c3d41411d687ce92f1b9b41cef74c792f3df",
+      "confirmation_opened": false,
+      "checkpoints": [
+        {
+          "training_episodes": 0,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 25,
+            "win_rate": 0.4,
+            "win_rate_interval": [
+              0.23403057664190918,
+              0.5926087221487266
+            ],
+            "net_return": 0.02817450054348747,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.016936999500633987,
+            "profit_factor": 1.5023008440629078,
+            "expectancy_r": 0.22630632274753185,
+            "minimum_cash": 4856.25618262906,
+            "unfilled_count": 14
+          }
+        },
+        {
+          "training_episodes": 1,
+          "learned_dependent_outcomes": 31,
+          "model_hash": "06571a5f0a9d54c2e2bd53a58da39bffd17c0de51f313db3dd9f54873fa63b9b",
+          "metrics": {
+            "trade_count": 26,
+            "win_rate": 0.4230769230769231,
+            "win_rate_interval": [
+              0.255441899027294,
+              0.6105170307888017
+            ],
+            "net_return": 0.009510161342393575,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.020753543357270643,
+            "profit_factor": 1.1385832957676798,
+            "expectancy_r": 0.0767989562743415,
+            "minimum_cash": 5721.797067004473,
+            "unfilled_count": 20
+          }
+        },
+        {
+          "training_episodes": 2,
+          "learned_dependent_outcomes": 58,
+          "model_hash": "c748726fddce0dccff1ddadd7bfcfceb56fd8153dd400939e28f9e8c8bdd471f",
+          "metrics": {
+            "trade_count": 41,
+            "win_rate": 0.43902439024390244,
+            "win_rate_interval": [
+              0.2988990477210983,
+              0.5895973484824271
+            ],
+            "net_return": 0.04592591473299534,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02258702230762777,
+            "profit_factor": 1.4524023449730914,
+            "expectancy_r": 0.22342747114992348,
+            "minimum_cash": 4925.839998771444,
+            "unfilled_count": 22
+          }
+        },
+        {
+          "training_episodes": 3,
+          "learned_dependent_outcomes": 89,
+          "model_hash": "5a21b92af19c0a0600318d3c39d36f24a977524c7d1ee0d6075cd71148bf3acc",
+          "metrics": {
+            "trade_count": 27,
+            "win_rate": 0.48148148148148145,
+            "win_rate_interval": [
+              0.3074295064970908,
+              0.6601467541378958
+            ],
+            "net_return": 0.03346718065677723,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02214730598838388,
+            "profit_factor": 1.5776111334082115,
+            "expectancy_r": 0.24747840597331447,
+            "minimum_cash": 5414.03221182882,
+            "unfilled_count": 17
+          }
+        },
+        {
+          "training_episodes": 4,
+          "learned_dependent_outcomes": 120,
+          "model_hash": "4a80868e275825290f599480c8e0df25747e9637cd3aadfd629adab709c627d7",
+          "metrics": {
+            "trade_count": 17,
+            "win_rate": 0.47058823529411764,
+            "win_rate_interval": [
+              0.26164801196088106,
+              0.6903710268845051
+            ],
+            "net_return": 0.023781938331092434,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.016229058360497595,
+            "profit_factor": 1.6173121881337587,
+            "expectancy_r": 0.2806236174071334,
+            "minimum_cash": 5486.6017694576085,
+            "unfilled_count": 12
+          }
+        },
+        {
+          "training_episodes": 5,
+          "learned_dependent_outcomes": 161,
+          "model_hash": "7abb59fbb5131139c05c2b1d2993b3b44a3cf4c473bf80f1e7f31ea460e992e3",
+          "metrics": {
+            "trade_count": 23,
+            "win_rate": 0.391304347826087,
+            "win_rate_interval": [
+              0.22157377982382145,
+              0.5921482039625402
+            ],
+            "net_return": 0.015820245056072713,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.016936999493096017,
+            "profit_factor": 1.2911694181599005,
+            "expectancy_r": 0.14020789289535357,
+            "minimum_cash": 4846.7460914082285,
+            "unfilled_count": 12
+          }
+        },
+        {
+          "training_episodes": 6,
+          "learned_dependent_outcomes": 189,
+          "model_hash": "29e5272af61f84cf6df2af332040a527eafa958b28b8dcc9bd182392c6f4643f",
+          "metrics": {
+            "trade_count": 22,
+            "win_rate": 0.45454545454545453,
+            "win_rate_interval": [
+              0.26920014432004846,
+              0.6534052671095845
+            ],
+            "net_return": 0.024658369977711425,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.014655728253255007,
+            "profit_factor": 1.536464020205324,
+            "expectancy_r": 0.22516854591254062,
+            "minimum_cash": 4862.658255447273,
+            "unfilled_count": 10
+          }
+        },
+        {
+          "training_episodes": 7,
+          "learned_dependent_outcomes": 226,
+          "model_hash": "032c4500367ed6c3bd88bef5c7253c7ba8ccf3798f799e50c02ab39aa77ec997",
+          "metrics": {
+            "trade_count": 33,
+            "win_rate": 0.5151515151515151,
+            "win_rate_interval": [
+              0.3521810458621024,
+              0.6749621835307578
+            ],
+            "net_return": 0.04991664262440887,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02064695280866158,
+            "profit_factor": 1.675398832881639,
+            "expectancy_r": 0.2994620324518701,
+            "minimum_cash": 4954.2813868620315,
+            "unfilled_count": 24
+          }
+        },
+        {
+          "training_episodes": 8,
+          "learned_dependent_outcomes": 259,
+          "model_hash": "a53714927f85c5cc08aca637bd2189ea86206fd36b2c9319a8794b7b95e5a5bb",
+          "metrics": {
+            "trade_count": 18,
+            "win_rate": 0.3333333333333333,
+            "win_rate_interval": [
+              0.1627855436366286,
+              0.5625093065574964
+            ],
+            "net_return": 0.00676841306235576,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.021822656800816298,
+            "profit_factor": 1.143312299459513,
+            "expectancy_r": 0.0788946800290342,
+            "minimum_cash": 4803.557414255727,
+            "unfilled_count": 14
+          }
+        },
+        {
+          "training_episodes": 9,
+          "learned_dependent_outcomes": 297,
+          "model_hash": "95601449ae86ba9a1373a5818535d0d3920ecc583fa539a9ac22a8c8f3e93795",
+          "metrics": {
+            "trade_count": 18,
+            "win_rate": 0.3888888888888889,
+            "win_rate_interval": [
+              0.20304991926931162,
+              0.6138133141934384
+            ],
+            "net_return": 0.020468738437442457,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.015048864202429346,
+            "profit_factor": 1.4588626064980643,
+            "expectancy_r": 0.2296188350919389,
+            "minimum_cash": 4868.925276433332,
+            "unfilled_count": 11
+          }
+        },
+        {
+          "training_episodes": 10,
+          "learned_dependent_outcomes": 334,
+          "model_hash": "cecd88fa4c8588f866ee421fa93173a5ea2ee072152aff12a1f84cc8e9152735",
+          "metrics": {
+            "trade_count": 24,
+            "win_rate": 0.375,
+            "win_rate_interval": [
+              0.21159133433631458,
+              0.5729038096209293
+            ],
+            "net_return": 0.007822832961725812,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.027379590849088142,
+            "profit_factor": 1.1358088140570528,
+            "expectancy_r": 0.06850315937982113,
+            "minimum_cash": 4741.357621351435,
+            "unfilled_count": 15
+          }
+        },
+        {
+          "training_episodes": 11,
+          "learned_dependent_outcomes": 373,
+          "model_hash": "615b4a26f5e7d5bee3ac3f956482f48aadb89153f716f9a19eef9f2f7d481c82",
+          "metrics": {
+            "trade_count": 18,
+            "win_rate": 0.3888888888888889,
+            "win_rate_interval": [
+              0.20304991926931162,
+              0.6138133141934384
+            ],
+            "net_return": -0.003146176331106698,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.021397238559335507,
+            "profit_factor": 0.9310014222980912,
+            "expectancy_r": -0.031610065062929626,
+            "minimum_cash": 5307.051054084046,
+            "unfilled_count": 8
+          }
+        },
+        {
+          "training_episodes": 12,
+          "learned_dependent_outcomes": 396,
+          "model_hash": "2293e45742aaef248810a51149422ded80a0e99e1def513ae60c13c11ea24959",
+          "metrics": {
+            "trade_count": 17,
+            "win_rate": 0.35294117647058826,
+            "win_rate_interval": [
+              0.17309486143904904,
+              0.5870003327878818
+            ],
+            "net_return": -0.0031993239940222296,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.018522477083383282,
+            "profit_factor": 0.925349775948191,
+            "expectancy_r": -0.03430876693559347,
+            "minimum_cash": 5335.3007821427445,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 13,
+          "learned_dependent_outcomes": 436,
+          "model_hash": "1d4e6372b39f97bbe11ce02905eaf454528070253a03885d5d2c445e1a837e86",
+          "metrics": {
+            "trade_count": 24,
+            "win_rate": 0.4583333333333333,
+            "win_rate_interval": [
+              0.2789105835168143,
+              0.6492544644689336
+            ],
+            "net_return": 0.0041866825064516,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.023487540653731598,
+            "profit_factor": 1.0676459925820243,
+            "expectancy_r": 0.03831707625655006,
+            "minimum_cash": 5363.194741977173,
+            "unfilled_count": 15
+          }
+        },
+        {
+          "training_episodes": 14,
+          "learned_dependent_outcomes": 472,
+          "model_hash": "c092e890c0d5e23dd223b1d8ff9ad315b48d28383d33ad9d3dd14cd4b41b8f7d",
+          "metrics": {
+            "trade_count": 26,
+            "win_rate": 0.4230769230769231,
+            "win_rate_interval": [
+              0.255441899027294,
+              0.6105170307888017
+            ],
+            "net_return": 0.014536007746533741,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02219329033068773,
+            "profit_factor": 1.2109178601514126,
+            "expectancy_r": 0.11520000715267052,
+            "minimum_cash": 5424.26016234668,
+            "unfilled_count": 16
+          }
+        },
+        {
+          "training_episodes": 15,
+          "learned_dependent_outcomes": 507,
+          "model_hash": "1bd0a55a981421b7a7e68701ecb4031c74e865b2c758027314511a05cf368562",
+          "metrics": {
+            "trade_count": 30,
+            "win_rate": 0.4,
+            "win_rate_interval": [
+              0.24590394326083403,
+              0.5767994750172616
+            ],
+            "net_return": 0.010851029331425899,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02324143677777879,
+            "profit_factor": 1.1439466075670939,
+            "expectancy_r": 0.07555919734343754,
+            "minimum_cash": 4809.117610219332,
+            "unfilled_count": 18
+          }
+        }
+      ],
+      "fixed_expert": {
+        "trade_count": 25,
+        "win_rate": 0.4,
+        "win_rate_interval": [
+          0.23403057664190918,
+          0.5926087221487266
+        ],
+        "net_return": 0.02817450054348747,
+        "blocked_count": 0,
+        "max_closed_trade_drawdown": 0.016936999500633987,
+        "profit_factor": 1.5023008440629078,
+        "expectancy_r": 0.22630632274753185,
+        "minimum_cash": 4856.25618262906,
+        "unfilled_count": 14
+      },
+      "cash_net_return": 0.0,
+      "initial_to_final_return_change": -0.01732347121206157
+    },
+    {
+      "symbol": "IWM",
+      "market": "USA",
+      "status": "RESEARCH_ONLY",
+      "source": {
+        "path": "backend/app/data/historical_prices_seed.csv.gz",
+        "sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2",
+        "provider": "repository Nasdaq/Stooq historical cache; mixed provider provenance"
+      },
+      "source_pack_hash": "d98e0f5a7546043a3fc2be965edfbcf1c3411a99ed838159558b87e99a3c9ebc",
+      "accepted_rows": 2514,
+      "rejected_rows": 1,
+      "train_end": "2022-06-07T20:01:00",
+      "development_start": "2022-06-29T20:01:00",
+      "development_end": "2024-06-10T20:01:00",
+      "window_hash": "a24343bb86ecab64bb75f1f1f98f28f047aa0c90c8757ecd70c8e8c21ba6fb67",
+      "confirmation_opened": false,
+      "checkpoints": [
+        {
+          "training_episodes": 0,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 6,
+            "win_rate": 0.3333333333333333,
+            "win_rate_interval": [
+              0.09676933255921683,
+              0.7000116786584712
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.012976100597353324,
+            "profit_factor": 1.1335113085574628,
+            "expectancy_r": 0.060869350166052216,
+            "minimum_cash": 8154.15683963038,
+            "unfilled_count": 11
+          }
+        },
+        {
+          "training_episodes": 1,
+          "learned_dependent_outcomes": 25,
+          "model_hash": "fa80ca84d081517a2c6aa8de028bd0dba528b8f79784c19baf4bae4ac43713fa",
+          "metrics": {
+            "trade_count": 21,
+            "win_rate": 0.2857142857142857,
+            "win_rate_interval": [
+              0.13813675745628204,
+              0.49956773822837586
+            ],
+            "net_return": -0.013268751605193918,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.025715804461118097,
+            "profit_factor": 0.7811159089709151,
+            "expectancy_r": -0.12406293480321488,
+            "minimum_cash": 7445.324711622538,
+            "unfilled_count": 18
+          }
+        },
+        {
+          "training_episodes": 2,
+          "learned_dependent_outcomes": 56,
+          "model_hash": "f77ca2d66ae6e131f8fc9f92008863e26f0ec62976ac3cd90f5c55146ace2e92",
+          "metrics": {
+            "trade_count": 16,
+            "win_rate": 0.375,
+            "win_rate_interval": [
+              0.18480982554752806,
+              0.613593529020652
+            ],
+            "net_return": -0.006672241983855409,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.021382216421373612,
+            "profit_factor": 0.834996828899452,
+            "expectancy_r": -0.08087601280827396,
+            "minimum_cash": 7532.704867873893,
+            "unfilled_count": 9
+          }
+        },
+        {
+          "training_episodes": 3,
+          "learned_dependent_outcomes": 84,
+          "model_hash": "a2910be5ce457ce67860d4ee9e67a0d714392134ee4b1c07c8424f1f1a50a166",
+          "metrics": {
+            "trade_count": 16,
+            "win_rate": 0.25,
+            "win_rate_interval": [
+              0.10181901984237346,
+              0.49498768929398645
+            ],
+            "net_return": -0.012765508646560564,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.023631164940831617,
+            "profit_factor": 0.7355167976174117,
+            "expectancy_r": -0.1572291583471051,
+            "minimum_cash": 7486.49778402678,
+            "unfilled_count": 9
+          }
+        },
+        {
+          "training_episodes": 4,
+          "learned_dependent_outcomes": 112,
+          "model_hash": "589736c98d4204e6f2da481d9bb50942c93bf4fb4baf350cbde7b2cfd19a2dfb",
+          "metrics": {
+            "trade_count": 16,
+            "win_rate": 0.25,
+            "win_rate_interval": [
+              0.10181901984237346,
+              0.49498768929398645
+            ],
+            "net_return": -0.012782143805919022,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.023647617011040012,
+            "profit_factor": 0.7352633840428462,
+            "expectancy_r": -0.15743890446783773,
+            "minimum_cash": 7486.371633695414,
+            "unfilled_count": 11
+          }
+        },
+        {
+          "training_episodes": 5,
+          "learned_dependent_outcomes": 145,
+          "model_hash": "2cc8963df17e01f4da51fd3bc11d4909abe8142ccbba848b8fe8c63db3576746",
+          "metrics": {
+            "trade_count": 14,
+            "win_rate": 0.42857142857142855,
+            "win_rate_interval": [
+              0.21380509930400526,
+              0.6740973309713064
+            ],
+            "net_return": 0.011660594845980032,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.017033114267215987,
+            "profit_factor": 1.3171104333035712,
+            "expectancy_r": 0.1698213629214182,
+            "minimum_cash": 7510.252372957135,
+            "unfilled_count": 13
+          }
+        },
+        {
+          "training_episodes": 6,
+          "learned_dependent_outcomes": 167,
+          "model_hash": "714605d6b06138b0b1bf539c859af5254c5776c7726c71e9f26d1134eff50e25",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.4,
+            "win_rate_interval": [
+              0.16817758120350967,
+              0.6873304525498135
+            ],
+            "net_return": 0.010999634329459385,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.016687394646735743,
+            "profit_factor": 1.4453433667662259,
+            "expectancy_r": 0.22308856943011204,
+            "minimum_cash": 7920.295456111885,
+            "unfilled_count": 7
+          }
+        },
+        {
+          "training_episodes": 7,
+          "learned_dependent_outcomes": 200,
+          "model_hash": "f2109355944667b34a46162e30cc10a695578c36927d852b0ad346f39e37b31f",
+          "metrics": {
+            "trade_count": 20,
+            "win_rate": 0.35,
+            "win_rate_interval": [
+              0.18118954786794464,
+              0.5671494897805354
+            ],
+            "net_return": 0.005994912384116979,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.03438915704203016,
+            "profit_factor": 1.1097334328396975,
+            "expectancy_r": 0.06376553261785164,
+            "minimum_cash": 7354.342470926932,
+            "unfilled_count": 24
+          }
+        },
+        {
+          "training_episodes": 8,
+          "learned_dependent_outcomes": 229,
+          "model_hash": "c723d7de26fb704a4569c06fab7af997abe3f58007823a3490d4265c0d05fb9d",
+          "metrics": {
+            "trade_count": 14,
+            "win_rate": 0.35714285714285715,
+            "win_rate_interval": [
+              0.16344490737202735,
+              0.6123599531785959
+            ],
+            "net_return": 0.011866163538763796,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.018253655062164698,
+            "profit_factor": 1.3446147628919387,
+            "expectancy_r": 0.17265901208265141,
+            "minimum_cash": 7397.264350130132,
+            "unfilled_count": 17
+          }
+        },
+        {
+          "training_episodes": 9,
+          "learned_dependent_outcomes": 264,
+          "model_hash": "6fb8488dc1d6eef624d85c29042bae9f4b1ef2c58e7f84d8be941d604b5c2362",
+          "metrics": {
+            "trade_count": 8,
+            "win_rate": 0.25,
+            "win_rate_interval": [
+              0.07147768885802763,
+              0.5907301208974108
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.01900044389811184,
+            "profit_factor": 0.6860249916757248,
+            "expectancy_r": -0.19944049150636345,
+            "minimum_cash": 7858.595205908053,
+            "unfilled_count": 10
+          }
+        },
+        {
+          "training_episodes": 10,
+          "learned_dependent_outcomes": 296,
+          "model_hash": "417236fc0eab0e1c9ad417a9239032803cfecf0c9b27e49091442e2b4e9680eb",
+          "metrics": {
+            "trade_count": 12,
+            "win_rate": 0.4166666666666667,
+            "win_rate_interval": [
+              0.19325746190524656,
+              0.6804926643446272
+            ],
+            "net_return": 0.013958805180278366,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.016687394646735743,
+            "profit_factor": 1.4725888859270793,
+            "expectancy_r": 0.23542413589816258,
+            "minimum_cash": 7919.868802489426,
+            "unfilled_count": 17
+          }
+        },
+        {
+          "training_episodes": 11,
+          "learned_dependent_outcomes": 331,
+          "model_hash": "3619935c0beb348d0726c747b2d7f7aafe5f0e5d5bca1b90c01939f356c65f0d",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.4,
+            "win_rate_interval": [
+              0.16817758120350967,
+              0.6873304525498135
+            ],
+            "net_return": 0.015758037197862285,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.020143494469791245,
+            "profit_factor": 1.6346634961928725,
+            "expectancy_r": 0.317809986388426,
+            "minimum_cash": 8124.813450959372,
+            "unfilled_count": 14
+          }
+        },
+        {
+          "training_episodes": 12,
+          "learned_dependent_outcomes": 362,
+          "model_hash": "53042b10d50f8ede42858448715c2733f59e7b0a42d83d31c2c4ed0f44beaa2c",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.7,
+            "win_rate_interval": [
+              0.39677321997956516,
+              0.892210712513788
+            ],
+            "net_return": 0.050679372154750046,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.004204918233738697,
+            "profit_factor": 5.032843528341575,
+            "expectancy_r": 0.9949107471956553,
+            "minimum_cash": 8137.608039584922,
+            "unfilled_count": 5
+          }
+        },
+        {
+          "training_episodes": 13,
+          "learned_dependent_outcomes": 390,
+          "model_hash": "8da6d58cb9f6a36a78e95f1a63a56c91fad853ce8d9532b35fa6827b0179da7b",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.0189323174053051,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.013022083484628744,
+            "profit_factor": 1.87865918137516,
+            "expectancy_r": 0.37977125882734486,
+            "minimum_cash": 8027.445944787408,
+            "unfilled_count": 10
+          }
+        },
+        {
+          "training_episodes": 14,
+          "learned_dependent_outcomes": 423,
+          "model_hash": "74d16f2634cb1e36bcc958eabc1d81ec61e133f9f59b666f2cb9563cb1d36065",
+          "metrics": {
+            "trade_count": 9,
+            "win_rate": 0.6666666666666666,
+            "win_rate_interval": [
+              0.35419734749908977,
+              0.879418401317257
+            ],
+            "net_return": 0.033176592636879,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.007683171120293486,
+            "profit_factor": 3.537191256743831,
+            "expectancy_r": 0.730618791693467,
+            "minimum_cash": 8182.680680545561,
+            "unfilled_count": 10
+          }
+        },
+        {
+          "training_episodes": 15,
+          "learned_dependent_outcomes": 454,
+          "model_hash": "af9e59aeea10f225417a779aa686cde8f82a7389e053403fcb605a981b7604e7",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01890454573170941,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.016687394646593412,
+            "profit_factor": 1.8907895868569367,
+            "expectancy_r": 0.3791842348868905,
+            "minimum_cash": 8130.839815619539,
+            "unfilled_count": 10
+          }
+        }
+      ],
+      "fixed_expert": {
+        "trade_count": 6,
+        "win_rate": 0.3333333333333333,
+        "win_rate_interval": [
+          0.09676933255921683,
+          0.7000116786584712
+        ],
+        "net_return": null,
+        "blocked_count": 1,
+        "max_closed_trade_drawdown": 0.012976100597353324,
+        "profit_factor": 1.1335113085574628,
+        "expectancy_r": 0.060869350166052216,
+        "minimum_cash": 8154.15683963038,
+        "unfilled_count": 11
+      },
+      "cash_net_return": 0.0,
+      "initial_to_final_return_change": null
+    },
+    {
+      "symbol": "QQQ",
+      "market": "USA",
+      "status": "RESEARCH_ONLY",
+      "source": {
+        "path": "backend/app/data/historical_prices_seed.csv.gz",
+        "sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2",
+        "provider": "repository Nasdaq/Stooq historical cache; mixed provider provenance"
+      },
+      "source_pack_hash": "8c2c2ded4552d04e7f9ac1703240262c4f7e1bcad15501b861f99d5501bf243a",
+      "accepted_rows": 2515,
+      "rejected_rows": 0,
+      "train_end": "2022-06-08T20:01:00",
+      "development_start": "2022-06-30T20:01:00",
+      "development_end": "2024-06-10T20:01:00",
+      "window_hash": "d66a2ac286dc64a59226cd92e7c9c055a23783dd58e1cf66f83862d1c114ca7b",
+      "confirmation_opened": false,
+      "checkpoints": [
+        {
+          "training_episodes": 0,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 24,
+            "win_rate": 0.375,
+            "win_rate_interval": [
+              0.21159133433631458,
+              0.5729038096209293
+            ],
+            "net_return": 0.028952052356364888,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02327550564325709,
+            "profit_factor": 1.5502619322481925,
+            "expectancy_r": 0.2419443556132561,
+            "minimum_cash": 7289.4986405179725,
+            "unfilled_count": 17
+          }
+        },
+        {
+          "training_episodes": 1,
+          "learned_dependent_outcomes": 23,
+          "model_hash": "0c60cf7ac6425d038450141a986b64a9aa58af9269ebac94f3dcc1a0132b211c",
+          "metrics": {
+            "trade_count": 32,
+            "win_rate": 0.375,
+            "win_rate_interval": [
+              0.2293366846595921,
+              0.5474589941047487
+            ],
+            "net_return": 0.028526276212354595,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.013228665478174584,
+            "profit_factor": 1.360139618955417,
+            "expectancy_r": 0.18014725521874347,
+            "minimum_cash": 6911.113625476008,
+            "unfilled_count": 13
+          }
+        },
+        {
+          "training_episodes": 2,
+          "learned_dependent_outcomes": 51,
+          "model_hash": "6ae19b78a6c4013925c6035b40522c80b05c6dea8ced4ccdf5f1e18f1deb8cae",
+          "metrics": {
+            "trade_count": 22,
+            "win_rate": 0.45454545454545453,
+            "win_rate_interval": [
+              0.26920014432004846,
+              0.6534052671095845
+            ],
+            "net_return": 0.020118803738497393,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.016061277577839816,
+            "profit_factor": 1.346770550291608,
+            "expectancy_r": 0.1858641006594037,
+            "minimum_cash": 6564.9628718609865,
+            "unfilled_count": 15
+          }
+        },
+        {
+          "training_episodes": 3,
+          "learned_dependent_outcomes": 79,
+          "model_hash": "4f518c11eeac2ca93d35850ed96c1d5f56afcfa750a947d4bf58eccdc9eb5ac3",
+          "metrics": {
+            "trade_count": 13,
+            "win_rate": 0.46153846153846156,
+            "win_rate_interval": [
+              0.2320575430148814,
+              0.7085656756816796
+            ],
+            "net_return": 0.028846248458463286,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009866876357136567,
+            "profit_factor": 1.8411524039861709,
+            "expectancy_r": 0.4439119041398944,
+            "minimum_cash": 7122.3914808509435,
+            "unfilled_count": 15
+          }
+        },
+        {
+          "training_episodes": 4,
+          "learned_dependent_outcomes": 119,
+          "model_hash": "367a557853efc279fbbf0cfc70b4c268381d69e24dbaf4589aed917f985d6b74",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.4,
+            "win_rate_interval": [
+              0.16817758120350967,
+              0.6873304525498135
+            ],
+            "net_return": 0.018366819506958842,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.01563483144990363,
+            "profit_factor": 1.719044215958291,
+            "expectancy_r": 0.3699902297491627,
+            "minimum_cash": 6969.929030176325,
+            "unfilled_count": 10
+          }
+        },
+        {
+          "training_episodes": 5,
+          "learned_dependent_outcomes": 159,
+          "model_hash": "9dd4ee05041e89d93ba30344f072a5a72990cea47d512cc55a3427523f93d953",
+          "metrics": {
+            "trade_count": 6,
+            "win_rate": 0.16666666666666666,
+            "win_rate_interval": [
+              0.03005258587173032,
+              0.563509436563646
+            ],
+            "net_return": -0.007257450740095872,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.018502927040747852,
+            "profit_factor": 0.6077674238182261,
+            "expectancy_r": -0.23926110171438672,
+            "minimum_cash": 6837.485734403253,
+            "unfilled_count": 5
+          }
+        },
+        {
+          "training_episodes": 6,
+          "learned_dependent_outcomes": 183,
+          "model_hash": "e7f1e342c68cb989ac2e851d5f1c927e0d35781920df15271697c13833376667",
+          "metrics": {
+            "trade_count": 5,
+            "win_rate": 0.4,
+            "win_rate_interval": [
+              0.1176182311592533,
+              0.769280067791163
+            ],
+            "net_return": 0.0066461434199383,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009325147964475033,
+            "profit_factor": 1.4598156588845723,
+            "expectancy_r": 0.2709494032052966,
+            "minimum_cash": 6933.246341166873,
+            "unfilled_count": 7
+          }
+        },
+        {
+          "training_episodes": 7,
+          "learned_dependent_outcomes": 221,
+          "model_hash": "94b2c25821c9852360fbca64ba42423116a7c09f0699a2e8de071834ed079f38",
+          "metrics": {
+            "trade_count": 6,
+            "win_rate": 0.3333333333333333,
+            "win_rate_interval": [
+              0.09676933255921683,
+              0.7000116786584712
+            ],
+            "net_return": -0.006760960532693261,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.013857027392288002,
+            "profit_factor": 0.6903457761134613,
+            "expectancy_r": -0.222213900208884,
+            "minimum_cash": 7488.466678139049,
+            "unfilled_count": 7
+          }
+        },
+        {
+          "training_episodes": 8,
+          "learned_dependent_outcomes": 250,
+          "model_hash": "6b03e94140f12a3dee154f7c447b3ce1767abd37688d90c36fc7e2e5c72b2a61",
+          "metrics": {
+            "trade_count": 7,
+            "win_rate": 0.2857142857142857,
+            "win_rate_interval": [
+              0.0822171657090155,
+              0.6410709098517873
+            ],
+            "net_return": -0.007468504749412963,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.010228725848831943,
+            "profit_factor": 0.676092005288034,
+            "expectancy_r": -0.21071288995897833,
+            "minimum_cash": 7449.890678968525,
+            "unfilled_count": 4
+          }
+        },
+        {
+          "training_episodes": 9,
+          "learned_dependent_outcomes": 278,
+          "model_hash": "18fdc28333b607e86a503382373ba5ea24dd2d8a2b8caf9f448e3595da5c4a77",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.4,
+            "win_rate_interval": [
+              0.16817758120350967,
+              0.6873304525498135
+            ],
+            "net_return": -0.00717632952090097,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.017653586546343747,
+            "profit_factor": 0.7743497960618603,
+            "expectancy_r": -0.14053290570997842,
+            "minimum_cash": 7416.006816652845,
+            "unfilled_count": 7
+          }
+        },
+        {
+          "training_episodes": 10,
+          "learned_dependent_outcomes": 313,
+          "model_hash": "f5a0271e7d16286e02a4bf954d97f13330d82b312e01ffe21d3707b939281567",
+          "metrics": {
+            "trade_count": 13,
+            "win_rate": 0.3076923076923077,
+            "win_rate_interval": [
+              0.12680497161618087,
+              0.5763111218666236
+            ],
+            "net_return": -0.00673042272027069,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02464736377167509,
+            "profit_factor": 0.8348567771606193,
+            "expectancy_r": -0.09997375611665457,
+            "minimum_cash": 6876.104941053169,
+            "unfilled_count": 10
+          }
+        },
+        {
+          "training_episodes": 11,
+          "learned_dependent_outcomes": 346,
+          "model_hash": "bbc0920b1c7edde91ac696eb75a55211f76d6021ca028bb52f52749d09ae0836",
+          "metrics": {
+            "trade_count": 12,
+            "win_rate": 0.3333333333333333,
+            "win_rate_interval": [
+              0.13811783989736134,
+              0.609382412602386
+            ],
+            "net_return": -0.011239681748503427,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.020808878910896222,
+            "profit_factor": 0.7166391025089344,
+            "expectancy_r": -0.1845037063379521,
+            "minimum_cash": 7301.992769349423,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 12,
+          "learned_dependent_outcomes": 379,
+          "model_hash": "644980b695cb6fd84dd24968f0234c029762ef97aaa3e5a57cbf165e7ca73b10",
+          "metrics": {
+            "trade_count": 6,
+            "win_rate": 0.3333333333333333,
+            "win_rate_interval": [
+              0.09676933255921683,
+              0.7000116786584712
+            ],
+            "net_return": -0.006150119256205677,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009508125169191639,
+            "profit_factor": 0.7178857209297707,
+            "expectancy_r": -0.2015664117010448,
+            "minimum_cash": 7493.072079586537,
+            "unfilled_count": 8
+          }
+        },
+        {
+          "training_episodes": 13,
+          "learned_dependent_outcomes": 413,
+          "model_hash": "25a8269ca2e5d305423ab46aa13c964d38946dac59d7aa3d5956068833473329",
+          "metrics": {
+            "trade_count": 9,
+            "win_rate": 0.3333333333333333,
+            "win_rate_interval": [
+              0.12058159868274293,
+              0.6458026525009102
+            ],
+            "net_return": -0.006289521121100372,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.013388956118124296,
+            "profit_factor": 0.7841107060061117,
+            "expectancy_r": -0.1365795637247811,
+            "minimum_cash": 7492.021067730595,
+            "unfilled_count": 7
+          }
+        },
+        {
+          "training_episodes": 14,
+          "learned_dependent_outcomes": 443,
+          "model_hash": "ebe66f3631447f4a4d67718356ce4aaeb382dd63fed334cbb0a925742057dbce",
+          "metrics": {
+            "trade_count": 9,
+            "win_rate": 0.3333333333333333,
+            "win_rate_interval": [
+              0.12058159868274293,
+              0.6458026525009102
+            ],
+            "net_return": -0.007839598071843867,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.014927958746128844,
+            "profit_factor": 0.7445391789355507,
+            "expectancy_r": -0.17116179200363593,
+            "minimum_cash": 7480.334353332521,
+            "unfilled_count": 8
+          }
+        },
+        {
+          "training_episodes": 15,
+          "learned_dependent_outcomes": 475,
+          "model_hash": "342820d09bbd56488b7e62303d416117343263775d224877e2ae059f01e51b60",
+          "metrics": {
+            "trade_count": 7,
+            "win_rate": 0.42857142857142855,
+            "win_rate_interval": [
+              0.15821692226262685,
+              0.7495457695909742
+            ],
+            "net_return": 0.003445847307260941,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0110987076515634,
+            "profit_factor": 1.152748412445204,
+            "expectancy_r": 0.10342302268319019,
+            "minimum_cash": 7531.813250308556,
+            "unfilled_count": 6
+          }
+        }
+      ],
+      "fixed_expert": {
+        "trade_count": 24,
+        "win_rate": 0.375,
+        "win_rate_interval": [
+          0.21159133433631458,
+          0.5729038096209293
+        ],
+        "net_return": 0.028952052356364888,
+        "blocked_count": 0,
+        "max_closed_trade_drawdown": 0.02327550564325709,
+        "profit_factor": 1.5502619322481925,
+        "expectancy_r": 0.2419443556132561,
+        "minimum_cash": 7289.4986405179725,
+        "unfilled_count": 17
+      },
+      "cash_net_return": 0.0,
+      "initial_to_final_return_change": -0.025506205049103947
+    },
+    {
+      "symbol": "SPY",
+      "market": "USA",
+      "status": "RESEARCH_ONLY",
+      "source": {
+        "path": "backend/app/data/historical_prices_seed.csv.gz",
+        "sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2",
+        "provider": "repository Nasdaq/Stooq historical cache; mixed provider provenance"
+      },
+      "source_pack_hash": "d1e37b15c68537e188fd84cd3977e6248d21f0c2fd26feb2675751b41f1d3891",
+      "accepted_rows": 2515,
+      "rejected_rows": 0,
+      "train_end": "2022-06-08T20:01:00",
+      "development_start": "2022-06-30T20:01:00",
+      "development_end": "2024-06-10T20:01:00",
+      "window_hash": "77bf84e165d0ac9d2ef5cb205bc7076ee636bb59106fa39c948bba21c64f06e9",
+      "confirmation_opened": false,
+      "checkpoints": [
+        {
+          "training_episodes": 0,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 25,
+            "win_rate": 0.48,
+            "win_rate_interval": [
+              0.30031003928960015,
+              0.6650178204685269
+            ],
+            "net_return": 0.0356541330097877,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.01983367900283417,
+            "profit_factor": 1.6489338233756978,
+            "expectancy_r": 0.284345284820359,
+            "minimum_cash": 5483.50799823874,
+            "unfilled_count": 16
+          }
+        },
+        {
+          "training_episodes": 1,
+          "learned_dependent_outcomes": 28,
+          "model_hash": "83b0eb0d72bc308829495be5218452870cf89e12f116757e512de312683d215a",
+          "metrics": {
+            "trade_count": 29,
+            "win_rate": 0.5172413793103449,
+            "win_rate_interval": [
+              0.3443073797056916,
+              0.6861418066920478
+            ],
+            "net_return": 0.05814284622840438,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.01667161734317013,
+            "profit_factor": 2.11381790390468,
+            "expectancy_r": 0.3934894631366665,
+            "minimum_cash": 5595.749410978692,
+            "unfilled_count": 18
+          }
+        },
+        {
+          "training_episodes": 2,
+          "learned_dependent_outcomes": 57,
+          "model_hash": "324441b52a10a9bed969160687edcabbb452466f2f942ac5175ef8e64230cd9e",
+          "metrics": {
+            "trade_count": 23,
+            "win_rate": 0.391304347826087,
+            "win_rate_interval": [
+              0.22157377982382145,
+              0.5921482039625402
+            ],
+            "net_return": 0.014849710562044427,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02017114941565623,
+            "profit_factor": 1.2715699415096917,
+            "expectancy_r": 0.13200085421718616,
+            "minimum_cash": 5834.41221891162,
+            "unfilled_count": 20
+          }
+        },
+        {
+          "training_episodes": 3,
+          "learned_dependent_outcomes": 86,
+          "model_hash": "2cc66933e0855c54c11ba4e4fa9c8c726d5ead04c23e0c7f80ece88797a78974",
+          "metrics": {
+            "trade_count": 6,
+            "win_rate": 0.6666666666666666,
+            "win_rate_interval": [
+              0.29998832134152864,
+              0.9032306674407831
+            ],
+            "net_return": 0.03001476143112658,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.007197871371020681,
+            "profit_factor": 5.057786266089029,
+            "expectancy_r": 0.9922767003154109,
+            "minimum_cash": 5918.954964070325,
+            "unfilled_count": 13
+          }
+        },
+        {
+          "training_episodes": 4,
+          "learned_dependent_outcomes": 124,
+          "model_hash": "32acb511b19d12ee300e3ccb88e5ad8da701fe0d7f26ddfcddc066ac06ab4006",
+          "metrics": {
+            "trade_count": 7,
+            "win_rate": 0.7142857142857143,
+            "win_rate_interval": [
+              0.35892909014821267,
+              0.9177828342909844
+            ],
+            "net_return": 0.023213064363214242,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.005482703149626955,
+            "profit_factor": 3.337705698096352,
+            "expectancy_r": 0.6606166995980052,
+            "minimum_cash": 5445.02092194588,
+            "unfilled_count": 9
+          }
+        },
+        {
+          "training_episodes": 5,
+          "learned_dependent_outcomes": 162,
+          "model_hash": "d2eadea0d6dbf4ec66e8958b89f0cf5729a21f8be0f98b958fd2c083305cf1ba",
+          "metrics": {
+            "trade_count": 6,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.3903430336530645
+            ],
+            "net_return": -0.02238151591587556,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.02238151591587556,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.7529823903698568,
+            "minimum_cash": 6118.406173472209,
+            "unfilled_count": 5
+          }
+        },
+        {
+          "training_episodes": 6,
+          "learned_dependent_outcomes": 195,
+          "model_hash": "c4cda9367ca6b8ba08c060cb6f14fb85e6afdd9adf556159484aa7af88b17b25",
+          "metrics": {
+            "trade_count": 5,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.43449149475208104
+            ],
+            "net_return": -0.018411892786909134,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.018411892786909134,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.7418155746188717,
+            "minimum_cash": 6143.249982951921,
+            "unfilled_count": 5
+          }
+        },
+        {
+          "training_episodes": 7,
+          "learned_dependent_outcomes": 229,
+          "model_hash": "de763db0a771ef0821c4988e75eeb71511bd2ba129adc6316b1e34750d0f6b92",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": 0.010069504682400865,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 2.0139009362770732,
+            "minimum_cash": 6887.580447005429,
+            "unfilled_count": 3
+          }
+        },
+        {
+          "training_episodes": 8,
+          "learned_dependent_outcomes": 262,
+          "model_hash": "21eb8d396ac4c4d58547d6a65752ee5efdb86b6b8ee1f03bf6ddc97ed5f340b4",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": 0.010069504682400865,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 2.0139009362770732,
+            "minimum_cash": 6887.580447005429,
+            "unfilled_count": 3
+          }
+        },
+        {
+          "training_episodes": 9,
+          "learned_dependent_outcomes": 298,
+          "model_hash": "1a9333dea0b2f3c296bf0f71fed87d5cbece70bd24933d6bc7aea57de47b8883",
+          "metrics": {
+            "trade_count": 0,
+            "win_rate": null,
+            "win_rate_interval": null,
+            "net_return": 0.0,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": null,
+            "minimum_cash": 10000.0,
+            "unfilled_count": 3
+          }
+        },
+        {
+          "training_episodes": 10,
+          "learned_dependent_outcomes": 336,
+          "model_hash": "7997821e4e2e9bdab219ae8a4a676a83b9932e8aaaac327232c0f44a65d63277",
+          "metrics": {
+            "trade_count": 0,
+            "win_rate": null,
+            "win_rate_interval": null,
+            "net_return": 0.0,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": null,
+            "minimum_cash": 10000.0,
+            "unfilled_count": 2
+          }
+        },
+        {
+          "training_episodes": 11,
+          "learned_dependent_outcomes": 371,
+          "model_hash": "ce7ca305851c07836efca41db60865087c8edbc3d62290c767c7c2ee57339c78",
+          "metrics": {
+            "trade_count": 0,
+            "win_rate": null,
+            "win_rate_interval": null,
+            "net_return": 0.0,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": null,
+            "minimum_cash": 10000.0,
+            "unfilled_count": 2
+          }
+        },
+        {
+          "training_episodes": 12,
+          "learned_dependent_outcomes": 398,
+          "model_hash": "5b75ca41f158f19ba34e21227bc1acdd8231a277371dc72d849205f256a5740d",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.7934567085261071
+            ],
+            "net_return": -0.0026340501624292356,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0026340501624292356,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.5268100323961722,
+            "minimum_cash": 6183.947891762803,
+            "unfilled_count": 2
+          }
+        },
+        {
+          "training_episodes": 13,
+          "learned_dependent_outcomes": 436,
+          "model_hash": "cca26b20f4f60790e82ab4b271fb4505f80a368a1772222c82f00ddd3461c682",
+          "metrics": {
+            "trade_count": 3,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.5615060804490177
+            ],
+            "net_return": -0.01169030079317257,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.01169030079317257,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.7823273165239893,
+            "minimum_cash": 6155.0490619091615,
+            "unfilled_count": 2
+          }
+        },
+        {
+          "training_episodes": 14,
+          "learned_dependent_outcomes": 470,
+          "model_hash": "9042441fa3efa92386fe6164e8f35c75c8ae3ff1f310122f3f08e5b393c4b728",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.7934567085261071
+            ],
+            "net_return": -0.0026340501624292356,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0026340501624292356,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.5268100323961722,
+            "minimum_cash": 6183.947891762803,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 15,
+          "learned_dependent_outcomes": 502,
+          "model_hash": "4394c0de43584f6d2390c1dc675bc42009db97e7944bee80a20e67fab00080a0",
+          "metrics": {
+            "trade_count": 2,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.6576280471103807
+            ],
+            "net_return": -0.0034495646343360997,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0034495646343360997,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.34517184141145524,
+            "minimum_cash": 6178.891474244061,
+            "unfilled_count": 2
+          }
+        }
+      ],
+      "fixed_expert": {
+        "trade_count": 25,
+        "win_rate": 0.48,
+        "win_rate_interval": [
+          0.30031003928960015,
+          0.6650178204685269
+        ],
+        "net_return": 0.0356541330097877,
+        "blocked_count": 0,
+        "max_closed_trade_drawdown": 0.01983367900283417,
+        "profit_factor": 1.6489338233756978,
+        "expectancy_r": 0.284345284820359,
+        "minimum_cash": 5483.50799823874,
+        "unfilled_count": 16
+      },
+      "cash_net_return": 0.0,
+      "initial_to_final_return_change": -0.0391036976441238
+    },
+    {
+      "symbol": "EURUSD=X",
+      "market": "FOREX",
+      "status": "RESEARCH_ONLY",
+      "source": {
+        "provider": "Yahoo Chart daily, research capacity scenario; provider exchange timezone determines daily opening/closing, one-minute publication lag",
+        "sha256": "d631a51df243dd85d576588d8a336977219de436bbf90ece4b6a6f1a5f91a5eb"
+      },
+      "source_pack_hash": "8285a1b6768c9606adb3a90e5d2782d898676edf39ffe3446067dc094d705db2",
+      "accepted_rows": 2533,
+      "rejected_rows": 68,
+      "train_end": "2022-10-11T23:01:00",
+      "development_start": "2022-11-02T00:01:00",
+      "development_end": "2024-10-03T23:01:00",
+      "window_hash": "d46a8ac2fd9b49bdce78cf1221f507961f15cb1ae92c281649f978213211bef1",
+      "confirmation_opened": false,
+      "checkpoints": [
+        {
+          "training_episodes": 0,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 1,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 2,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 3,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 4,
+          "learned_dependent_outcomes": 14,
+          "model_hash": "753f597f5a25a5ea8843c3659dd18e6e73d705414d54d0957db94ff7687918e2",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 5,
+          "learned_dependent_outcomes": 14,
+          "model_hash": "753f597f5a25a5ea8843c3659dd18e6e73d705414d54d0957db94ff7687918e2",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 6,
+          "learned_dependent_outcomes": 15,
+          "model_hash": "297497370d44a328915fb5d896ddcc58f06fca0b767d7de515a2fbb19653a313",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 7,
+          "learned_dependent_outcomes": 15,
+          "model_hash": "297497370d44a328915fb5d896ddcc58f06fca0b767d7de515a2fbb19653a313",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 8,
+          "learned_dependent_outcomes": 15,
+          "model_hash": "297497370d44a328915fb5d896ddcc58f06fca0b767d7de515a2fbb19653a313",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 9,
+          "learned_dependent_outcomes": 19,
+          "model_hash": "af180422fa3d3f4cb045795ef7a00a5d88b491bf3d82c74fe5f01d9fad0b9ae9",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 10,
+          "learned_dependent_outcomes": 38,
+          "model_hash": "e7fa498f6ccb209e4b1185c1cf06ee1f3a4659ed99ec00eb16c422d80925a2e5",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 11,
+          "learned_dependent_outcomes": 41,
+          "model_hash": "410916c32c7596b3a474aa3f37bbb983f8eb5b6cae5446b50f729a590ff9879b",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 1.0,
+            "win_rate_interval": [
+              0.20654329147389294,
+              1
+            ],
+            "net_return": null,
+            "blocked_count": 1,
+            "max_closed_trade_drawdown": 0.0,
+            "profit_factor": null,
+            "expectancy_r": 0.72360960954053,
+            "minimum_cash": 7829.6064177446015,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 12,
+          "learned_dependent_outcomes": 58,
+          "model_hash": "ff62e4e797d9516bd49dbbbc768bb5a2d7082176007919bd4c758d49e4b2964e",
+          "metrics": {
+            "trade_count": 2,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.09452865480086614,
+              0.9054713451991339
+            ],
+            "net_return": -0.002136398830972386,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.003904230703329792,
+            "profit_factor": 0.4537684596366441,
+            "expectancy_r": -0.21294697547880334,
+            "minimum_cash": 5616.795298214831,
+            "unfilled_count": 2
+          }
+        },
+        {
+          "training_episodes": 13,
+          "learned_dependent_outcomes": 70,
+          "model_hash": "d4bc309a4a469a543294f4f462ef374644c148d520dd12cc84b802b7e1a189c2",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.7934567085261071
+            ],
+            "net_return": -0.0039041430151993683,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0039041430151993683,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.7808286030398621,
+            "minimum_cash": 5606.845366449415,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 14,
+          "learned_dependent_outcomes": 71,
+          "model_hash": "8f6543e245eccbe1d5d5db78e746a3c71abaddf474e78a1ed686bf97209498bb",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.7934567085261071
+            ],
+            "net_return": -0.0039041430151993683,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0039041430151993683,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.7808286030398621,
+            "minimum_cash": 5606.845366449415,
+            "unfilled_count": 1
+          }
+        },
+        {
+          "training_episodes": 15,
+          "learned_dependent_outcomes": 71,
+          "model_hash": "8f6543e245eccbe1d5d5db78e746a3c71abaddf474e78a1ed686bf97209498bb",
+          "metrics": {
+            "trade_count": 1,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.7934567085261071
+            ],
+            "net_return": -0.0039041430151993683,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.0039041430151993683,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.7808286030398621,
+            "minimum_cash": 5606.845366449415,
+            "unfilled_count": 1
+          }
+        }
+      ],
+      "fixed_expert": {
+        "trade_count": 1,
+        "win_rate": 1.0,
+        "win_rate_interval": [
+          0.20654329147389294,
+          1
+        ],
+        "net_return": null,
+        "blocked_count": 1,
+        "max_closed_trade_drawdown": 0.0,
+        "profit_factor": null,
+        "expectancy_r": 0.72360960954053,
+        "minimum_cash": 7829.6064177446015,
+        "unfilled_count": 1
+      },
+      "cash_net_return": 0.0,
+      "initial_to_final_return_change": null
+    },
+    {
+      "symbol": "GBPUSD=X",
+      "market": "FOREX",
+      "status": "RESEARCH_ONLY",
+      "source": {
+        "provider": "Yahoo Chart daily, research capacity scenario; provider exchange timezone determines daily opening/closing, one-minute publication lag",
+        "sha256": "cba52fd199fccfdb90fb7e46b74d73bc97c382439389c0e180af1bdff73a8aed"
+      },
+      "source_pack_hash": "4b2ce56217b9b37c931410c3df1d14fba2c1fdb57c801f1e9ec80d9b470ce2a3",
+      "accepted_rows": 2541,
+      "rejected_rows": 60,
+      "train_end": "2022-10-19T23:01:00",
+      "development_start": "2022-11-10T00:01:00",
+      "development_end": "2024-10-10T23:01:00",
+      "window_hash": "181010ed2a144779e30d55728be6e9b907ba28dfa41fcd4a00b89809a9c76301",
+      "confirmation_opened": false,
+      "checkpoints": [
+        {
+          "training_episodes": 0,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 1,
+          "learned_dependent_outcomes": 0,
+          "model_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 2,
+          "learned_dependent_outcomes": 8,
+          "model_hash": "c132cdb4162616a1eab100239dabace2e60fd5d431b17faecaece2b5d4c039ab",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 3,
+          "learned_dependent_outcomes": 8,
+          "model_hash": "c132cdb4162616a1eab100239dabace2e60fd5d431b17faecaece2b5d4c039ab",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 4,
+          "learned_dependent_outcomes": 17,
+          "model_hash": "1a3e0eff21af4ff4d67a30146a3bec9c2bcb0bd0dfb9f5c59dd401d3c0b95b8d",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 5,
+          "learned_dependent_outcomes": 17,
+          "model_hash": "1a3e0eff21af4ff4d67a30146a3bec9c2bcb0bd0dfb9f5c59dd401d3c0b95b8d",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 6,
+          "learned_dependent_outcomes": 17,
+          "model_hash": "1a3e0eff21af4ff4d67a30146a3bec9c2bcb0bd0dfb9f5c59dd401d3c0b95b8d",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 7,
+          "learned_dependent_outcomes": 17,
+          "model_hash": "1a3e0eff21af4ff4d67a30146a3bec9c2bcb0bd0dfb9f5c59dd401d3c0b95b8d",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 8,
+          "learned_dependent_outcomes": 17,
+          "model_hash": "1a3e0eff21af4ff4d67a30146a3bec9c2bcb0bd0dfb9f5c59dd401d3c0b95b8d",
+          "metrics": {
+            "trade_count": 10,
+            "win_rate": 0.5,
+            "win_rate_interval": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "net_return": 0.01406407765747164,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.009064190481594125,
+            "profit_factor": 2.2629782065744357,
+            "expectancy_r": 0.28094429157702977,
+            "minimum_cash": 4292.059814105473,
+            "unfilled_count": 6
+          }
+        },
+        {
+          "training_episodes": 9,
+          "learned_dependent_outcomes": 23,
+          "model_hash": "a66026a3580051cea58b91c84f2f11725d196e931bdff9ce5899a9fc1a34ab01",
+          "metrics": {
+            "trade_count": 11,
+            "win_rate": 0.5454545454545454,
+            "win_rate_interval": [
+              0.28008775568998817,
+              0.7872904245601196
+            ],
+            "net_return": 0.011356221374510644,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.007976152107534884,
+            "profit_factor": 1.6694746224626296,
+            "expectancy_r": 0.20721354675181633,
+            "minimum_cash": 4280.599050297853,
+            "unfilled_count": 12
+          }
+        },
+        {
+          "training_episodes": 10,
+          "learned_dependent_outcomes": 25,
+          "model_hash": "105c4ee49c0924d78b6b5f44937c870434bced26fde857b96dc05018f130c151",
+          "metrics": {
+            "trade_count": 11,
+            "win_rate": 0.5454545454545454,
+            "win_rate_interval": [
+              0.28008775568998817,
+              0.7872904245601196
+            ],
+            "net_return": 0.011356221374510644,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.007976152107534884,
+            "profit_factor": 1.6694746224626296,
+            "expectancy_r": 0.20721354675181633,
+            "minimum_cash": 4280.599050297853,
+            "unfilled_count": 12
+          }
+        },
+        {
+          "training_episodes": 11,
+          "learned_dependent_outcomes": 28,
+          "model_hash": "7d64e5c60c7b9908ceb65a01459d4372c3770ed62c379049cd2560d9a831ffe4",
+          "metrics": {
+            "trade_count": 11,
+            "win_rate": 0.5454545454545454,
+            "win_rate_interval": [
+              0.28008775568998817,
+              0.7872904245601196
+            ],
+            "net_return": 0.011356221374510644,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.007976152107534884,
+            "profit_factor": 1.6694746224626296,
+            "expectancy_r": 0.20721354675181633,
+            "minimum_cash": 4280.599050297853,
+            "unfilled_count": 12
+          }
+        },
+        {
+          "training_episodes": 12,
+          "learned_dependent_outcomes": 55,
+          "model_hash": "3830f3a997f65f3aa3126f09b3005c2b4c0565c6c57d7bb95bb7ffb23291532e",
+          "metrics": {
+            "trade_count": 3,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.5615060804490177
+            ],
+            "net_return": -0.013789811011647224,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.013789811011647224,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.9235274452992891,
+            "minimum_cash": 5514.0876802069615,
+            "unfilled_count": 11
+          }
+        },
+        {
+          "training_episodes": 13,
+          "learned_dependent_outcomes": 55,
+          "model_hash": "3830f3a997f65f3aa3126f09b3005c2b4c0565c6c57d7bb95bb7ffb23291532e",
+          "metrics": {
+            "trade_count": 3,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.5615060804490177
+            ],
+            "net_return": -0.013789811011647224,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.013789811011647224,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.9235274452992891,
+            "minimum_cash": 5514.0876802069615,
+            "unfilled_count": 11
+          }
+        },
+        {
+          "training_episodes": 14,
+          "learned_dependent_outcomes": 58,
+          "model_hash": "85652a6fbc38413dc487d29caeceaf677d90e65b77dc1c8b8261d3160aadb73e",
+          "metrics": {
+            "trade_count": 3,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.5615060804490177
+            ],
+            "net_return": -0.013789811011647224,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.013789811011647224,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.9235274452992891,
+            "minimum_cash": 5514.0876802069615,
+            "unfilled_count": 11
+          }
+        },
+        {
+          "training_episodes": 15,
+          "learned_dependent_outcomes": 63,
+          "model_hash": "6ce903e170fd673873f5aeca7a871f743e5c566a645b06576fca42e9e7f5c698",
+          "metrics": {
+            "trade_count": 2,
+            "win_rate": 0.0,
+            "win_rate_interval": [
+              0,
+              0.6576280471103807
+            ],
+            "net_return": -0.00850910835144747,
+            "blocked_count": 0,
+            "max_closed_trade_drawdown": 0.00850910835144747,
+            "profit_factor": 0.0,
+            "expectancy_r": -0.8526889828972481,
+            "minimum_cash": 5543.612115798942,
+            "unfilled_count": 6
+          }
+        }
+      ],
+      "fixed_expert": {
+        "trade_count": 10,
+        "win_rate": 0.5,
+        "win_rate_interval": [
+          0.23658959361548731,
+          0.7634104063845126
+        ],
+        "net_return": 0.01406407765747164,
+        "blocked_count": 0,
+        "max_closed_trade_drawdown": 0.009064190481594125,
+        "profit_factor": 2.2629782065744357,
+        "expectancy_r": 0.28094429157702977,
+        "minimum_cash": 4292.059814105473,
+        "unfilled_count": 6
+      },
+      "cash_net_return": 0.0,
+      "initial_to_final_return_change": -0.02257318600891911
+    }
+  ],
+  "forex_status": "EVALUATED_RESEARCH_SCENARIO",
+  "limitations": [
+    "Development is reused across checkpoints and is not an independent final test.",
+    "Confirmation stays unopened. No promotion or forward alpha claim.",
+    "Long-only adaptations; quote-currency cash per lane; no consolidated capital or borrow assumptions.",
+    "OHLC fills, spread and capacity are modeled; corporate actions, survivorship and dividends are not fully audited."
+  ]
+}

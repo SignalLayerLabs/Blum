@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -34,6 +35,7 @@ from app.services.strategy_factory_statistics import (
 )
 from app.services.paper_execution_lifecycle import execution_reality_snapshot
 from app.services.promoted_strategy_registry import BlumPromotedStrategyRegistry
+from app.services.strategy_promotion_frontier import StrategyPromotionFrontierService
 from app.services.worker_runtime import WORKER_DEFINITIONS
 
 
@@ -288,6 +290,80 @@ def test_intraday_factory_variants_are_distinct_executable_strategies() -> None:
         for spec in executable
         if spec.regime_filter == "trend_down_only"
     )
+
+
+@pytest.mark.parametrize(
+    ("family", "setup_type", "required_timeframes", "execution_timeframe", "entry_rule"),
+    (
+        ("breakout", "swing_breakout", ["1d"], "1d", "breakout_close"),
+        ("pullback", "pullback", ["1d", "15m"], "15m", "pullback_to_mean"),
+        ("mean_reversion", "mean_reversion", ["15m", "5m"], "5m", "mean_reversion_deviation"),
+    ),
+)
+def test_implemented_factory_families_expose_their_actual_execution_contract(
+    family, setup_type, required_timeframes, execution_timeframe, entry_rule
+) -> None:
+    rows = StrategyFamilyRegistry().variants(family, max_variants=24, seed=11)
+    executable_rows = [row for row in rows if row["evidence_binding"] == "hyperbolic_replay_v1"]
+
+    assert len(executable_rows) == 16
+    assert all(row.get("executable_strategy") for row in executable_rows)
+    assert len({row["strategy_fingerprint"] for row in executable_rows}) == 16
+    for row in executable_rows:
+        spec = ExecutableStrategySpec.from_payload(row["executable_strategy"])
+        assert row["timeframe_stack"] == required_timeframes
+        assert row["strategy_fingerprint"] == spec.fingerprint
+        assert row["executable_strategy"] == {
+            "schema_version": "executable-strategy-v1",
+            "family": family,
+            "setup_type": setup_type,
+            "required_timeframes": required_timeframes,
+            "execution_timeframe": execution_timeframe,
+            "entry_rule": entry_rule,
+            "lookback": 10,
+            "minimum_relative_volume": 0.0,
+            "higher_timeframe_min_trend": 0.0,
+            "atr_period": 14,
+            "stop_atr_multiple": 1.0,
+            "minimum_stop_percent": 0.01,
+            "target_r_multiple": 2.0,
+            "trailing_atr_multiple": 1.2,
+            "maximum_holding_bars": 20,
+            "regime_filter": row["regime_filter"],
+            "market_filter": row.get("market_filter", "all"),
+            "strategy_fingerprint": spec.fingerprint,
+        }
+    research_rows = [row for row in rows if row["evidence_binding"] == "not_implemented"]
+    assert len(research_rows) == 8
+    assert all("executable_strategy" not in row for row in research_rows)
+    assert all("strategy_fingerprint" not in row for row in research_rows)
+
+
+def test_daily_factory_candidate_reaches_research_frontier_without_promotion() -> None:
+    with setup_db() as db:
+        first = AlphaStrategyFactory().run_once(
+            db, families=["breakout"], max_variants_per_family=1, seed=7, trigger="test"
+        )
+        second = AlphaStrategyFactory().run_once(
+            db, families=["breakout"], max_variants_per_family=1, seed=7, trigger="test"
+        )
+        plan = StrategyPromotionFrontierService().research_plan(db, limit=1, seed=7)
+        candidate = db.query(StrategyCandidateVariant).one()
+
+        assert len(plan["specs"]) == 1
+        spec = ExecutableStrategySpec.from_payload(plan["specs"][0])
+        assert spec.setup_type == "swing_breakout"
+        assert spec.required_timeframes == ("1d",)
+        assert spec.execution_timeframe == "1d"
+        assert candidate.fingerprint == spec.fingerprint
+        assert candidate.timeframe_stack == ["1d"]
+        assert candidate.is_champion is False
+        assert candidate.final_verdict == "NEEDS_MORE_EVIDENCE"
+        assert db.query(StrategyPromotionEvent).count() == 0
+
+    assert first["new_candidates"] == 1
+    assert first["promoted_to_paper"] == 0
+    assert second["new_candidates"] == 0
 
 
 def test_factory_run_is_idempotent_and_reports_missing_evidence() -> None:

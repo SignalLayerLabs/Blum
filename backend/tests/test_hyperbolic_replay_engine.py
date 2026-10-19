@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import hashlib
 
+import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,7 @@ from app.services.hyperbolic_replay import (
     SETUP_REQUIREMENTS,
     _choose_setup,
     _eligible_setups,
+    _manage_trade,
 )
 from app.services.replay_execution import ReplayExecutionModel, ReplayPositionSizer
 from app.services.replay_validation import ReplayExperimentService, ReplayLearningFeedbackService, ReplayWalkForwardValidator
@@ -73,6 +75,31 @@ def test_execution_costs_differ_between_liquid_us_and_less_liquid_europe():
     europe = model.profile(market="ITALY", asset_type="Stock", liquidity_score=35, session="regular")
 
     assert europe.total_round_trip_bps > us.total_round_trip_bps
+
+
+@pytest.mark.parametrize(
+    ("open_price", "high", "low", "close", "expected_price", "expected_reason"),
+    (
+        (90.0, 94.0, 88.0, 91.0, 90.0, "stop"),
+        (100.0, 104.0, 95.0, 102.0, 98.0, "stop"),
+        (100.0, 112.0, 95.0, 110.0, 98.0, "stop"),
+        (115.0, 118.0, 114.0, 116.0, 110.0, "target"),
+        (None, 104.0, 95.0, 100.0, 98.0, "stop"),
+    ),
+)
+def test_replay_long_exit_uses_gap_open_and_conservative_trigger_ordering(
+    open_price, high, low, close, expected_price, expected_reason
+):
+    bar = ReplayMarketBar(
+        bar_timestamp=datetime(2024, 1, 3, 16),
+        open=open_price, high=high, low=low, close=close,
+    )
+
+    exit_bar, exit_price, reason = _manage_trade([bar], 0, stop=98.0, target=110.0)
+
+    assert exit_bar is bar
+    assert exit_price == expected_price
+    assert reason == expected_reason
 
 
 def test_position_size_decreases_when_quality_or_liquidity_falls():

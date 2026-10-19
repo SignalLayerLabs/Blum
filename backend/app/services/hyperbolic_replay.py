@@ -659,7 +659,8 @@ def _manage_trade(
     for index in range(entry_index, last_index + 1):
         bar = bars[index]
         if float(bar.low or bar.close) <= stop:
-            return bar, stop, "stop"
+            open_price = float(bar.open if bar.open is not None else bar.close)
+            return bar, min(open_price, stop), "stop"
         if float(bar.high or bar.close) >= target:
             return bar, target, "target"
     bar = bars[last_index]

@@ -76,6 +76,14 @@ class BlumEngineFacade:
             "policy": "The Engine emits evidence-bound objects only; it does not execute real trades and does not own product delivery.",
         }
 
+    def curriculum_snapshot(self, db: Session) -> dict:
+        from app.services.curriculum_worker import TradingCurriculumWorker
+        return TradingCurriculumWorker().snapshot(db)
+
+    def run_curriculum(self, db: Session) -> dict:
+        from app.services.curriculum_worker import TradingCurriculumWorker
+        return TradingCurriculumWorker().run_once(db)
+
     def brain_snapshot(self, db: Session) -> dict:
         return TraderBrainService().brain(db)
 

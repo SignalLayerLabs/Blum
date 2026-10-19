@@ -34,3 +34,6 @@ polars==1.43.0
 optuna==4.9.0
 nautilus_trader==1.230.0
 pyarrow==24.0.0
+
+# Exchange sessions prevent missing candles from being learned as profitable paths.
+exchange_calendars==4.13.2

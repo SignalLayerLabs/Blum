@@ -83,6 +83,11 @@ logger = logging.getLogger(__name__)
 PAPER_FORWARD_INVALID_ENTRY_GEOMETRY = "PAPER_FORWARD_INVALID_ENTRY_GEOMETRY"
 
 
+def _daily_bar_available_at(day: date, market: str | None) -> datetime:
+    from app.services.market_bar_clock import available_at
+    return available_at(datetime.combine(day, time()), "1d", market or "")
+
+
 class LiveForwardPaperTradingService(_TradingLabLiveForwardService):
     """Foundation API for timestamp-frozen live-forward paper decisions.
 
@@ -1013,12 +1018,16 @@ class LiveForwardPaperTradingService(_TradingLabLiveForwardService):
             .where(
                 PriceHistory.asset_id == asset.id,
                 PriceHistory.date > after.date(),
+                PriceHistory.date <= now.date(),
             )
             .order_by(PriceHistory.date)
             .limit(32)
         ).all()
         bars: list[ExecutionMarketBar] = []
         for row in rows:
+            timestamp = _daily_bar_available_at(row.date, asset.country)
+            if timestamp > now:
+                continue
             close = safe_float(row.close)
             open_price = safe_float(row.open or close)
             high = safe_float(row.high or max(open_price, close))
@@ -1030,7 +1039,7 @@ class LiveForwardPaperTradingService(_TradingLabLiveForwardService):
             spread_bps = max(2.0, min(25.0, volatility_bps * 0.03))
             bars.append(
                 ExecutionMarketBar(
-                    timestamp=datetime.combine(row.date, time(hour=16)),
+                    timestamp=timestamp,
                     open=open_price,
                     high=high,
                     low=low,

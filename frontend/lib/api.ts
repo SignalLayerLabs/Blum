@@ -2,6 +2,7 @@ import { AccuracyOverview, AccuracyProfile, Asset, BrainAccuracy, BrainAssetMemo
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 import type { AscentSnapshot } from "./ascentView.mjs";
+import type { CurriculumSnapshot } from "./curriculum";
 const inFlightRequests = new Map<string, Promise<any>>();
 const memoryCache = new Map<string, { expiresAt: number; value: any }>();
 const LEARNING_INITIAL_RENDER_GUARD_MS = 4000;
@@ -211,6 +212,7 @@ export const api = {
   brainEvolution: () => getJson<any>("/brain/evolution"),
   traderBrain: () => getJson<any>("/api/brain/snapshot"),
   traderTrainingGround: () => getJson<any>("/api/training/snapshot"),
+  tradingCurriculum: () => getJson<CurriculumSnapshot>("/api/training/curriculum"),
   traderPaperTrading: (limit = 20) => getJson<any>(`/api/paper-trading/snapshot?limit=${limit}`),
   unifiedPaperTradingDetail: (sourceEngine: string, sourceTradeId: number) =>
     getJson<any>(`/api/paper-trading/trades/${encodeURIComponent(sourceEngine)}/${sourceTradeId}`),

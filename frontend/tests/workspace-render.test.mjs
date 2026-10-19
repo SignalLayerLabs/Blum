@@ -101,6 +101,7 @@ test("workspace data readers issue only the vetted GET requests", async () => {
         "/api/paper-trading/snapshot?limit=50",
         "/api/alpha/desk",
         "/api/training/snapshot",
+        "/api/training/curriculum",
       ]),
     );
     assert.ok(requests.every((row) => row.options.method === "GET"));
@@ -116,6 +117,69 @@ test("workspace data readers issue only the vetted GET requests", async () => {
     globalThis.fetch = previous;
     if (previousLocation === undefined) delete globalThis.location;
     else globalThis.location = previousLocation;
+  }
+});
+
+const curriculumSnapshot = {
+  version: "curriculum-v1",
+  status: "EXPERIMENTAL",
+  updated_at: "2026-10-19T12:00:00Z",
+  limitations: ["Development windows are reused; confirmation is reserved."],
+  lanes: [{
+    lane: "USA:1d:SPY", market: "USA", timeframe: "1d", ticker: "SPY",
+    checkpoint: "checkpoint1234567890", source_hash: "source1234567890", source_rows: 2500,
+    training_episodes: 12, learned_outcomes: 73, training_status: "PACK_EXHAUSTED",
+    benchmark: {
+      window_hash: "window1234567890", confirmation_opened: false,
+      policy: { trade_count: 10, win_rate: 0.6, win_rate_interval: [0.4, 0.76], net_return: 0.05, max_closed_trade_drawdown: 0.03, profit_factor: 1.4, expectancy_r: 0.25 },
+      fixed_expert: { trade_count: 8, win_rate: 0.5, win_rate_interval: [0.22, 0.78], net_return: -0.02, max_closed_trade_drawdown: 0.07, profit_factor: 0.8, expectancy_r: -0.1 },
+      cash_return: 0, buy_hold_price_return: 0.08,
+    },
+    forward: { status: "PENDING", decision_at: "2026-10-19T11:00:00Z", updated_at: "2026-10-19T12:00:00Z", closed_count: 2, cash_quote_units: 10025 },
+  }],
+};
+
+test("curriculum compares modeled outcomes on the stored window without upgrading forward evidence", async () => {
+  const { CurriculumPanel } = await import("../components/workspace/Research.tsx");
+  assert.equal(typeof CurriculumPanel, "function");
+  const markup = renderToStaticMarkup(React.createElement(CurriculumPanel, { snapshot: curriculumSnapshot, pending: false }));
+
+  for (const text of ["Outcome-driven curriculum", "SPY", "Selected policy", "Fixed expert", "Cash", "Price-only hold", "5%", "-2%", "8%", "60%", "40%", "76%", "0.25R", "Learned outcomes", "73", "checkpoint1234567890", "window1234567890", "Source pack exhausted", "Reserved confirmation unopened", "Prospective research paper", "Closed prospective outcomes", "quote units"])
+    assert.ok(markup.includes(text), text);
+  assert.match(markup, /separate from native paper orders/i);
+  assert.match(markup, /excludes dividends and costs/i);
+  assert.doesNotMatch(markup, /<pre|COPY_READY|guaranteed|certified/i);
+});
+
+test("curriculum distinguishes checking, missing snapshots and failed refreshes", async () => {
+  const { CurriculumPanel } = await import("../components/workspace/Research.tsx");
+  assert.equal(typeof CurriculumPanel, "function");
+  const checking = renderToStaticMarkup(React.createElement(CurriculumPanel, { pending: true }));
+  const empty = renderToStaticMarkup(React.createElement(CurriculumPanel, { snapshot: { ...curriculumSnapshot, lanes: [], updated_at: null }, pending: false }));
+  const failed = renderToStaticMarkup(React.createElement(CurriculumPanel, { pending: false, error: "503" }));
+  const cached = renderToStaticMarkup(React.createElement(CurriculumPanel, { snapshot: curriculumSnapshot, pending: false, error: "503" }));
+
+  assert.match(checking, /Checking curriculum snapshot/);
+  assert.match(empty, /No curriculum lanes stored/);
+  assert.match(failed, /Curriculum snapshot unavailable/);
+  assert.match(cached, /Showing the last stored curriculum/);
+  assert.match(cached, /checkpoint1234567890/);
+  for (const markup of [checking, empty, failed]) assert.doesNotMatch(markup, /0%|0 episodes|0 outcomes/);
+});
+
+test("curriculum keeps prospective outcomes distinct through every stored forward state", async () => {
+  const { CurriculumPanel } = await import("../components/workspace/Research.tsx");
+  assert.equal(typeof CurriculumPanel, "function");
+  for (const [status, label] of [
+    ["PENDING", "Pending later market bars"], ["CLOSED", "Research paper outcome closed"],
+    ["STALE_CONTEXT", "Waiting for fresh context"], ["WAITING_SIGNAL", "Waiting for a signal"],
+    ["UNFILLED", "Research order unfilled"],
+  ]) {
+    const lane = curriculumSnapshot.lanes[0];
+    const snapshot = { ...curriculumSnapshot, lanes: [{ ...lane, forward: { ...lane.forward, status } }] };
+    const markup = renderToStaticMarkup(React.createElement(CurriculumPanel, { snapshot, pending: false }));
+    assert.ok(markup.includes(label), status);
+    assert.match(markup, /separate from native paper orders/i);
   }
 });
 

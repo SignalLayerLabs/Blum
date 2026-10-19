@@ -4856,3 +4856,27 @@ class AgentCouncilReflection(Base):
 
     run = relationship("AgentCouncilRun")
     outcome = relationship("BlumThesisOutcome")
+
+
+class TradingCurriculumState(Base):
+    __tablename__ = 'trading_curriculum_states'
+    lane: Mapped[str] = mapped_column(String(120), primary_key=True)
+    revision: Mapped[int] = mapped_column(Integer, default=0)
+    payload: Mapped[dict] = mapped_column(JsonType, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class TradingCurriculumEpisode(Base):
+    __tablename__ = 'trading_curriculum_episodes'
+    uid: Mapped[str] = mapped_column(String(64), primary_key=True)
+    lane: Mapped[str] = mapped_column(String(120), index=True)
+    phase: Mapped[str] = mapped_column(String(16), index=True)
+    payload: Mapped[dict] = mapped_column(JsonType, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class TradingCurriculumSource(Base):
+    __tablename__ = 'trading_curriculum_sources'
+    uid: Mapped[str] = mapped_column(String(64), primary_key=True)
+    payload: Mapped[dict] = mapped_column(JsonType, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

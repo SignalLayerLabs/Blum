@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, time
+from test_live_forward_paper_trading import advance_execution_clock_with_fixture_market_days
 
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
@@ -72,6 +73,8 @@ def add_price(db: Session, asset: Asset, price_date: date, close: float) -> None
         )
     )
     db.commit()
+
+    db.info["fixture_market_time"] = max(db.info.get("fixture_market_time", datetime.utcnow()), datetime.combine(price_date, time(22)))
 
 
 def candidate(ticker: str = "NVDA") -> dict:
