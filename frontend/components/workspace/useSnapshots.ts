@@ -73,4 +73,7 @@ export const performanceReaders = {
   desk: api.alphaDesk,
   paper: () => api.traderPaperTrading(20),
 };
-export const researchReaders = { training: api.traderTrainingGround };
+export const researchReaders = {
+  curriculum: api.tradingCurriculum,
+  training: api.traderTrainingGround,
+};

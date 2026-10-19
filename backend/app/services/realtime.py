@@ -134,6 +134,8 @@ def start_realtime_services() -> None:
             jitter_seconds=60,
         )
     if settings.enable_learning_loop:
+        if settings.trading_curriculum_enabled:
+            _add_interval_job(run_trading_curriculum_job, minutes=settings.trading_curriculum_minutes, job_id="trading_curriculum", delay_seconds=165, jitter_seconds=10)
         if settings.replay_training_enabled:
             _add_interval_job(
                 run_hyperbolic_replay_training_job,
@@ -790,3 +792,13 @@ def _compact_dataset_metadata(value: dict) -> dict:
     if not output:
         output = _compact_payload({k: v for k, v in value.items() if k != "detail"}, depth=1)
     return output
+
+
+def run_trading_curriculum_job() -> None:
+    def work(db):
+        import psutil
+        from app.services.curriculum_worker import TradingCurriculumWorker
+        if psutil.cpu_percent() >= 95 or psutil.virtual_memory().percent >= 92:
+            return {"status": "deferred", "reason": "resource_pressure"}
+        return TradingCurriculumWorker().run_once(db, max_lanes=2, max_seconds=20)
+    _run_job("trading_curriculum", work)

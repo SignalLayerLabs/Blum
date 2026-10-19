@@ -113,6 +113,8 @@ class Settings(BaseSettings):
     trading_default_timeframe: str = Field(default="daily", alias="TRADING_DEFAULT_TIMEFRAME")
     trading_allow_microscalping: bool = Field(default=False, alias="TRADING_ALLOW_MICROSCALPING")
     trading_require_reproducible_setup: bool = Field(default=True, alias="TRADING_REQUIRE_REPRODUCIBLE_SETUP")
+    trading_curriculum_enabled: bool = True
+    trading_curriculum_minutes: int = Field(default=1, ge=1, le=60)
     trading_ml_enabled: bool = True
     trading_ml_worker_minutes: int = 15
     trading_ml_new_label_threshold: int = 25

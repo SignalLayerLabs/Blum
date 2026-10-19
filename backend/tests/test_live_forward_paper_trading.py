@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 import pytest
@@ -35,6 +35,19 @@ from app.services.paper_forward_opportunity_scanner import (
 @pytest.fixture(autouse=True)
 def use_same_currency_test_account(monkeypatch):
     monkeypatch.setattr("app.services.live_forward_paper_trading.settings.paper_execution_account_currency", "USD")
+
+
+@pytest.fixture(autouse=True)
+def advance_execution_clock_with_fixture_market_days(monkeypatch):
+    execution_bars = LiveForwardPaperTradingService.daily_execution_bars
+
+    def bars_at_fixture_time(self, db, ticker, after, *, now=None):
+        return execution_bars(
+            self, db, ticker, after,
+            now=now if now is not None else db.info.get("fixture_market_time"),
+        )
+
+    monkeypatch.setattr(LiveForwardPaperTradingService, "daily_execution_bars", bars_at_fixture_time)
 
 
 def setup_db() -> Session:
@@ -74,10 +87,11 @@ def seed_asset(db: Session, ticker: str = "NVDA", close: float = 100.0) -> Asset
 
 
 def add_price(db: Session, asset: Asset, day_offset: int, close: float) -> None:
+    market_date = date.today() + timedelta(days=day_offset)
     db.add(
         PriceHistory(
             asset_id=asset.id,
-            date=date.today() + timedelta(days=day_offset),
+            date=market_date,
             open=close - 1,
             high=close + 1,
             low=close - 2,
@@ -87,6 +101,12 @@ def add_price(db: Session, asset: Asset, day_offset: int, close: float) -> None:
         )
     )
     db.commit()
+    # These lifecycle fixtures simulate later sessions, so advance the existing
+    # execution clock injection point with the newly observed completed session.
+    db.info["fixture_market_time"] = max(
+        db.info.get("fixture_market_time", datetime.utcnow()),
+        datetime.combine(market_date, time(hour=22)),
+    )
 
 
 def add_price_history(db: Session, asset: Asset, rows: int = 130, start_close: float = 100.0) -> None:
@@ -1085,6 +1105,77 @@ def test_equity_execution_bars_use_only_post_decision_observations_up_to_now():
 
     assert [bar.close for bar in bars] == [101.0, 102.0]
     assert all(decision_at < bar.timestamp <= runtime_now for bar in bars)
+
+
+@pytest.mark.parametrize(
+    ("market", "runtime_now", "expected_closes", "latest_available_at"),
+    (
+        ("USA", datetime(2024, 1, 3, 12), [101.0], datetime(2024, 1, 2, 21, 1)),
+        ("USA", datetime(2024, 1, 3, 21, 0, 59), [101.0], datetime(2024, 1, 2, 21, 1)),
+        ("USA", datetime(2024, 1, 3, 21, 1), [101.0, 102.0], datetime(2024, 1, 3, 21, 1)),
+        ("USA", datetime(2024, 7, 9, 12), [101.0], datetime(2024, 7, 8, 20, 1)),
+        ("USA", datetime(2024, 7, 9, 20, 0, 59), [101.0], datetime(2024, 7, 8, 20, 1)),
+        ("USA", datetime(2024, 7, 9, 20, 1), [101.0, 102.0], datetime(2024, 7, 9, 20, 1)),
+        ("US", datetime(2024, 1, 3, 12), [101.0], datetime(2024, 1, 2, 21, 1)),
+        ("United States", datetime(2024, 7, 9, 20, 1), [101.0, 102.0], datetime(2024, 7, 9, 20, 1)),
+    ),
+)
+def test_daily_execution_bars_respect_virtual_clock_and_new_york_close(
+    market, runtime_now, expected_closes, latest_available_at
+):
+    with setup_db() as db:
+        asset = seed_asset(db)
+        asset.country = market
+        for offset, close in ((-1, 101.0), (0, 102.0), (1, 110.0)):
+            db.add(
+                PriceHistory(
+                    asset_id=asset.id,
+                    date=runtime_now.date() + timedelta(days=offset),
+                    open=close - 0.5,
+                    high=close + 1,
+                    low=close - 1,
+                    close=close,
+                    volume=500_000,
+                    provider="fixture",
+                )
+            )
+        db.commit()
+        decision_at = datetime.combine(runtime_now.date() - timedelta(days=2), time(hour=22))
+
+        bars = LiveForwardPaperTradingService().daily_execution_bars(
+            db, asset.ticker, decision_at, now=runtime_now
+        )
+
+    assert [bar.close for bar in bars] == expected_closes
+    assert bars[-1].timestamp == latest_available_at
+    assert all(decision_at < bar.timestamp <= runtime_now for bar in bars)
+
+
+def test_daily_execution_bars_can_use_intraday_fallback_before_daily_close():
+    with setup_db() as db:
+        asset = seed_asset(db)
+        db.add(
+            PriceHistory(
+                asset_id=asset.id, date=date(2024, 1, 3),
+                open=100, high=112, low=98, close=110,
+                volume=500_000, provider="fixture",
+            )
+        )
+        db.add(
+            ReplayMarketBar(
+                asset_id=asset.id, source_symbol=asset.ticker, normalized_symbol=asset.ticker,
+                market="USA", timeframe="1h", bar_timestamp=datetime(2024, 1, 3, 12),
+                open=100, high=102, low=99, close=101, volume=100_000,
+                provider="fixture", acquired_at=datetime(2024, 1, 3, 12), data_quality_score=95,
+            )
+        )
+        db.commit()
+
+        bars = LiveForwardPaperTradingService().daily_execution_bars(
+            db, asset.ticker, datetime(2024, 1, 2, 18), now=datetime(2024, 1, 3, 13)
+        )
+
+    assert [(bar.timestamp, bar.close) for bar in bars] == [(datetime(2024, 1, 3, 12), 101.0)]
 
 
 def test_cost_adjusted_edge_gate_rejects_zero_expectancy_setup():

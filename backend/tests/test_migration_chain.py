@@ -89,6 +89,9 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "ascent_experiments",
         "ascent_evidence_use",
         "alpha_call_registrations",
+        "trading_curriculum_states",
+        "trading_curriculum_sources",
+        "trading_curriculum_episodes",
     }
 
     assert required_tables.issubset(tables)
@@ -105,7 +108,7 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "accounting_recomputed_at",
     }.issubset(paper_trade_columns)
     with engine.connect() as connection:
-        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0046_alpha_desk_indexes"
+        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0047_trading_curriculum"
 
     downgrade = subprocess.run(
         [sys.executable, "-m", "alembic", "downgrade", "base"],

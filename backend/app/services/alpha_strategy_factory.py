@@ -137,6 +137,19 @@ class StrategyFamilyRegistry:
                 }
             if market_filter != "all":
                 specification["market_filter"] = market_filter
+            if specification["evidence_binding"] == "hyperbolic_replay_v1":
+                spec = ExecutableStrategySpec.from_payload(
+                    {
+                        **canonical_strategy_spec(setup_type).to_payload(),
+                        "regime_filter": regime_filter,
+                        "market_filter": market_filter,
+                    }
+                )
+                specification.update(
+                    timeframe_stack=list(spec.required_timeframes),
+                    strategy_fingerprint=spec.fingerprint,
+                    executable_strategy=spec.to_payload(),
+                )
             variants.append(specification)
             if len(variants) >= max(1, int(max_variants)):
                 break
