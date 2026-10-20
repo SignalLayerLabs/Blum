@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { CurriculumLane, CurriculumMetrics, CurriculumSnapshot } from "@/lib/curriculum";
+import type { CurriculumLane, CurriculumMetrics, CurriculumSnapshot, CurriculumValuation } from "@/lib/curriculum";
 import { useSnapshots, researchReaders } from "./useSnapshots";
 import {
   Empty,
@@ -44,6 +44,51 @@ function BenchmarkRow({ label, detail, metrics, returnValue }: {
       <td>{number(metrics?.profit_factor, 2)}</td>
     </tr>
   );
+}
+
+function quoteAmount(value: unknown, currency?: string | null) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${number(value, 2)} ${currency ?? "quote units"}`
+    : "WITHHELD";
+}
+
+function ValuationRow({ label, value, currency }: {
+  label: string; value: CurriculumValuation; currency?: string | null;
+}) {
+  const complete = value.status === "COMPLETE";
+  const liquidation = complete && value.net_liquidation_status === "ESTIMATE";
+  return <tr>
+    <td><strong>{label}</strong>
+      {!complete && <span>WITHHELD · {human(value.reason)}</span>}
+      {value.entry_status && <span>{human(value.entry_status)}</span>}
+    </td>
+    <td>{quoteAmount(value.capital_quote_units, currency)}</td>
+    <td>{complete ? quoteAmount(value.nav_quote_units, currency) : "WITHHELD"}
+      {complete && <span>Mark return {percent(value.net_return)}</span>}
+    </td>
+    <td>{complete && value.max_bar_close_drawdown !== null ? percent(value.max_bar_close_drawdown) : "WITHHELD"}</td>
+    <td>{liquidation ? <>
+      {quoteAmount(value.net_liquidation_estimate_quote_units, currency)}
+      <span>ESTIMATE · {percent(value.net_liquidation_return)}</span>
+    </> : <>WITHHELD<span>{human(value.net_liquidation_reason ?? value.reason)}</span></>}</td>
+    <td>{complete && value.sample_exposure_fraction !== null ? percent(value.sample_exposure_fraction) : "WITHHELD"}
+      <span>{number(value.sample_count)} bar samples</span>
+      {complete && typeof value.average_gross_exposure_fraction === "number" && <span>Average gross exposure {percent(value.average_gross_exposure_fraction)}</span>}
+    </td>
+  </tr>;
+}
+
+function ValuationTable({ label, rows, currency }: {
+  label: string; rows: { label: string; value: CurriculumValuation }[]; currency?: string | null;
+}) {
+  return <div className="op-table-wrap">
+    <table className="op-table" aria-label={label}>
+      <thead><tr><th>Reference</th><th>Starting capital</th><th>Mark NAV</th>
+        <th>Bar-close drawdown</th><th>Net liquidation</th><th>Exposure · bar samples</th>
+      </tr></thead>
+      <tbody>{rows.map(row => <ValuationRow key={row.label} {...row} currency={currency} />)}</tbody>
+    </table>
+  </div>;
 }
 
 const forwardLabels: Record<string, string> = {
@@ -111,6 +156,20 @@ function CurriculumLaneCard({ lane }: { lane: CurriculumLane }) {
               </tbody>
             </table>
           </div>
+          {benchmark.valuation && <>
+            <h3>Marked account comparison</h3>
+            <p className="op-footnote">Same capital, same window per lane · {stamp(benchmark.start)} – {stamp(benchmark.end)} · {benchmark.valuation.quote_currency ?? "Unspecified quote"} units. USA and Forex lanes remain separate.</p>
+            <ValuationTable label={`${lane.ticker} curriculum valuation comparison`} currency={benchmark.valuation.quote_currency} rows={[
+              { label: "Selected policy", value: benchmark.valuation.policy },
+              { label: "Fixed expert", value: benchmark.valuation.fixed_expert },
+              { label: "Modeled hold", value: benchmark.valuation.modeled_hold },
+            ]} />
+            <p className="op-footnote">Modeled execution costs and capacity apply to the policy, fixed expert and hold; partial entry keeps remaining cash. Hold has no verified final exit: net liquidation is an estimate, not a verified sell. Price-only hold above remains descriptive.</p>
+            <p className="op-footnote">Drawdown uses all observed bar-close marks, not intrabar lows. Exposure is a bar-sample fraction, not calendar time or an annualized measure.</p>
+            {benchmark.valuation.comparison?.eligible ? (
+              <p className="op-footnote">Estimated net-liquidation excess versus modeled hold: {percent(benchmark.valuation.comparison.net_liquidation_excess_return)} · same quote capital and observation window.</p>
+            ) : <p className="op-footnote">Comparison withheld: complete marked paths and available liquidation estimates are required for both the policy and modeled hold.</p>}
+          </>}
         </>
       ) : (
         <Empty title="No stored benchmark yet">This lane has no completed development comparison to display.</Empty>
@@ -129,6 +188,13 @@ function CurriculumLaneCard({ lane }: { lane: CurriculumLane }) {
         <p className="op-footnote">Last stored outcome: {riskMultiple(forward.last_outcome.net_r)} · {human(forward.last_outcome.reason)}</p>
       )}
       <p className="op-footnote">These observations are separate from native paper orders and filled-order counts. The lane balance is realized cash before any open-position reservation; it is not a consolidated portfolio return.</p>
+      {forward?.valuation && <>
+        <h3>Current episode only · marked research account</h3>
+        <ValuationTable label={`${lane.ticker} current episode valuation`} currency={forward.valuation.quote_currency} rows={[
+          { label: "Current research episode", value: forward.valuation },
+        ]} />
+        <p className="op-footnote">Current episode only; this is not native paper P/L or cumulative lane performance. Evaluated at {stamp(forward.valuation.as_of)}. Net liquidation is an estimate with modeled costs and capacity; exposure is a bar-sample fraction.</p>
+      </>}
       {!!lane.source_history?.length && <details className="op-disclosure">
         <summary>Preserved previous sources</summary>
         <p className="op-footnote">Previous source versions keep their journals and checkpoints. Their results are separate from this source and are not added to its learning count.</p>

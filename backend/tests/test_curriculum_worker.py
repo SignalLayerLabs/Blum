@@ -253,6 +253,15 @@ def test_prospective_journal_freezes_decision_then_learns_only_when_future_close
         assert outcome["entry_at"] > proposal["decision_at"]
         assert outcome["input_hash"] == proposal["input_hash"]
         assert outcome["entry_at"].startswith("2026-10-19T13:30")
+        marked = payload["forward"]["valuation"]
+        assert marked["scope"] == "current_episode_only"
+        assert marked["status"] == "COMPLETE"
+        assert (
+            abs(marked["nav_quote_units"] - payload["forward"]["cash_quote_units"])
+            < 1e-6
+        )
+        assert marked["quote_currency"] == "USD"
+        assert marked["max_bar_close_drawdown"] >= 0
 
 
 def test_inactive_recent_coverage_cannot_hide_active_eligible_history():
@@ -635,3 +644,94 @@ def test_daily_price_history_also_requires_a_post_close_capture():
         )
         assert k.valid_bar(source[0])
         assert source[0]["close"] == 102
+
+
+def test_development_valuation_uses_frozen_fills_without_changing_learning():
+    from copy import deepcopy
+    from app.services import trading_curriculum as k
+
+    with database() as db:
+        service = worker.TradingCurriculumWorker()
+        service.run_once(db, now=datetime(2026, 10, 19), max_lanes=1)
+        payload = deepcopy(db.scalar(select(worker.TradingCurriculumState)).payload)
+        before = deepcopy(payload)
+        pack = db.get(worker.TradingCurriculumSource, payload["source_hash"]).payload[
+            "bars"
+        ]
+        split = k.partition(len(pack))
+        report = k.simulate(
+            pack,
+            market="USA",
+            timeframe="1d",
+            start=split["development_start"],
+            end=split["development_end"],
+            model=k.Selector(payload["model"]),
+        )
+        benchmark = service._benchmark(payload, pack)
+        assert payload == before
+        assert benchmark["policy"]["trade_count"] == report["trade_count"]
+        assert benchmark["policy"]["net_return"] == report["net_return"]
+        valuation = benchmark["valuation"]
+        assert valuation["quote_currency"] == "USD"
+        assert valuation["policy"]["status"] == "COMPLETE"
+        assert (
+            abs(
+                valuation["policy"]["nav_quote_units"]
+                - 10_000 * (1 + report["net_return"])
+            )
+            < 1e-6
+        )
+        assert valuation["policy"]["as_of"] == benchmark["end"]
+        assert valuation["modeled_hold"]["capital_quote_units"] == 10_000
+        assert valuation["comparison"]["eligible"] is True
+        assert benchmark["confirmation_opened"] is False
+
+
+def test_exhausted_pack_refreshes_evaluation_without_relearning_or_changing_checkpoint():
+    from copy import deepcopy
+
+    with database() as db:
+        service = worker.TradingCurriculumWorker()
+        for _ in range(7):
+            service.run_once(db, now=datetime(2026, 10, 19), max_lanes=1)
+        row = db.scalar(select(worker.TradingCurriculumState))
+        payload = deepcopy(row.payload)
+        payload["benchmark"].pop("evaluation_version", None)
+        payload["benchmark"].pop("valuation", None)
+        row.payload = payload
+        db.commit()
+        before = deepcopy(payload)
+        episodes = len(db.scalars(select(worker.TradingCurriculumEpisode)).all())
+        service.run_once(db, now=datetime(2026, 10, 19), max_lanes=1)
+        db.expire_all()
+        after = db.scalar(select(worker.TradingCurriculumState)).payload
+        assert after["benchmark"]["valuation"]["policy"]["status"] == "COMPLETE"
+        for key in (
+            "model",
+            "checkpoint",
+            "training_episodes",
+            "learned_outcomes",
+            "source_hash",
+            "training_status",
+        ):
+            assert after[key] == before[key]
+        assert (
+            len(db.scalars(select(worker.TradingCurriculumEpisode)).all()) == episodes
+        )
+        assert after["benchmark"].get("previous_net_return") == before["benchmark"].get(
+            "previous_net_return"
+        )
+
+
+def test_fx_valuation_labels_pair_quote_instead_of_asset_reporting_currency():
+    from copy import deepcopy
+
+    with database() as db:
+        service = worker.TradingCurriculumWorker()
+        service.run_once(db, now=datetime(2026, 10, 19), max_lanes=1)
+        payload = deepcopy(db.scalar(select(worker.TradingCurriculumState)).payload)
+        payload.update(market="FOREX", ticker="EURGBP=X", quote_currency="EUR")
+        pack = db.get(worker.TradingCurriculumSource, payload["source_hash"]).payload[
+            "bars"
+        ]
+        assert service._benchmark(payload, pack)["valuation"]["quote_currency"] == "GBP"
