@@ -4,9 +4,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 import hashlib
 import re
+import time
 
 import feedparser
-import requests
 from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -47,9 +47,11 @@ EVENT_KEYWORDS = {
 
 
 class NewsIngestor:
-    def __init__(self, ai: AIOrchestrator | None = None):
+    def __init__(self, ai: AIOrchestrator | None = None, *, fetcher=None):
+        from app.services.information.fetch import PublicEvidenceFetcher
         self.ai = ai or AIOrchestrator()
         self.settings = get_settings()
+        self.fetcher = fetcher or PublicEvidenceFetcher()
 
     def update_news(self, db: Session, lookback_hours: int = 72, limit_per_feed: int = 35, tickers: list[str] | None = None) -> dict:
         asset_query = select(Asset).where(Asset.is_active.is_(True))
@@ -76,6 +78,7 @@ class NewsIngestor:
         for diagnostic, items in fetched_items:
             diagnostics.append(diagnostic)
             for item in items:
+                self._persist_source_evidence(db, item, assets)
                 canonical_key = item["canonical_key"]
                 url = item["url"]
                 if canonical_key in seen_keys or url in seen_urls:
@@ -139,12 +142,21 @@ class NewsIngestor:
         return results
 
     def _fetch_source(self, source: dict, cutoff: datetime, limit: int) -> tuple[dict, list[dict]]:
+        from app.services.market_clock import utc_naive
+        cutoff = utc_naive(cutoff)
         try:
-            response = requests.get(source["url"], headers=HEADERS, timeout=8)
-            response.raise_for_status()
-            parsed = feedparser.parse(response.content)
+            import xml.etree.ElementTree as ET
+            response = self.fetcher.fetch(source["url"], deadline=time.monotonic()+8)
+            if response.status != "AVAILABLE":
+                return source_diagnostic(source, response.status.lower(), 0, 0, response.error_code or ""), []
+            if b"<!doctype" in response.body.lower() or b"<!entity" in response.body.lower():
+                return source_diagnostic(source, "error", 0, 0, "BAD_XML"), []
+            root = ET.fromstring(response.body)
+            if root.tag.rsplit("}", 1)[-1] not in {"rss", "feed", "RDF"}:
+                return source_diagnostic(source, "error", 0, 0, "BAD_XML"), []
+            parsed = feedparser.parse(response.body)
         except Exception as exc:
-            return source_diagnostic(source, "error", 0, 0, str(exc)), []
+            return source_diagnostic(source, "error", 0, 0, "FEED_PARSE_FAILED"), []
         rows: list[dict] = []
         for entry in parsed.entries[:limit]:
             title = clean_text(entry.get("title", ""), 260)
@@ -152,6 +164,7 @@ class NewsIngestor:
                 continue
             summary = clean_text(entry.get("summary", ""), 600)
             published = parse_entry_time(entry)
+            published = utc_naive(published) if published else None
             if published and published < cutoff:
                 continue
             url = entry.get("link", "") or stable_url(source["url"], title)
@@ -161,6 +174,7 @@ class NewsIngestor:
                     "source": clean_text(publisher, 160),
                     "source_url": source["url"],
                     "published_at": published,
+                    "created_at": response.observed_at,
                     "title": title,
                     "summary": summary,
                     "body": "",
@@ -178,6 +192,28 @@ class NewsIngestor:
             )
         status = "ok" if rows else "empty"
         return source_diagnostic(source, status, len(parsed.entries), len(rows), ""), rows
+
+    def _persist_source_evidence(self, db, item, assets):
+        from app.services.information.contracts import EvidenceLink, ProviderResult, SourceEvidence
+        from app.services.information.repository import InformationRepository
+        observed = item["created_at"]
+        provider = "news:feed:"+hashlib.sha256(item["source_url"].encode()).hexdigest()[:24]
+        try:
+            evidence = SourceEvidence.create(
+                provider=provider, canonical_url=item["url"], language="und",
+                published_at=item.get("published_at"), observed_at=observed, available_at=observed,
+                payload={"title": item["title"], "text": item["summary"], "publisher": item["source"],
+                         "source_capability": "news", "themes": item.get("theme_tags", {})},
+                extraction_version="public-news-v1",
+            )
+        except ValueError:
+            return {"inserted": 0, "error_code": "INVALID_EVIDENCE_URL"}
+        article = NewsArticle(**item)
+        links = tuple(EvidenceLink(evidence.evidence_id, asset.ticker, "issuer", min(.8, score/10),
+                                   "heuristic asset alias or theme match; not certified exact issuer", "public-news-v1")
+                      for asset, score in self._match_assets(article, assets))
+        return InformationRepository().ingest(db, ProviderResult(provider, "AVAILABLE", (evidence,),
+                                                                observed_at=observed, links=links))
 
     def _match_assets(self, article: NewsArticle, assets: list[Asset]) -> list[tuple[Asset, float]]:
         text = f" {article.title} {article.summary} ".lower()

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import fields
 from datetime import datetime
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import aliased
@@ -94,7 +94,8 @@ class InformationRepository:
             success = result.status in {"AVAILABLE", "EMPTY"}
             state.status = result.status
             state.observed_at = result.observed_at
-            state.source_at = result.source_at
+            if result.source_at is not None:
+                state.source_at = result.source_at
             state.retry_at = result.retry_at
             state.error_code = result.error_code
             state.coverage = thaw(result.coverage)
@@ -131,9 +132,15 @@ class InformationRepository:
                 entities.update((pair[:3], pair[3:]))
 
         def causal(row):
+            state_types = (
+                ("vintage_state",) if historical else ("current_state", "vintage_state")
+            )
             clauses = [
-                row.published_at.is_not(None),
-                row.published_at <= at,
+                or_(
+                    row.published_at <= at,
+                    row.published_at.is_(None)
+                    & row.payload["source_capability"].as_string().in_(state_types),
+                ),
                 row.available_at <= at,
             ]
             if historical:

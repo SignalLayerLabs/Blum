@@ -1,5 +1,5 @@
 from functools import lru_cache
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings
 
 
@@ -44,6 +44,12 @@ class Settings(BaseSettings):
     seed_accuracy_on_startup: bool = Field(default=True, alias="BLUM_SEED_ACCURACY_ON_STARTUP")
     startup_pipeline_limit: int = Field(default=160, alias="BLUM_STARTUP_PIPELINE_LIMIT")
     news_refresh_minutes: int = Field(default=10, alias="BLUM_NEWS_REFRESH_MINUTES")
+    information_enabled: bool = Field(default=True, alias="BLUM_INFORMATION_ENABLED")
+    information_cycle_seconds: int = Field(default=30, ge=10, alias="BLUM_INFORMATION_CYCLE_SECONDS")
+    information_budget_seconds: float = Field(default=8, ge=.5, le=10, alias="BLUM_INFORMATION_BUDGET_SECONDS")
+    information_max_items: int = Field(default=50, ge=1, le=200, alias="BLUM_INFORMATION_MAX_ITEMS")
+    information_fred_api_key: SecretStr = Field(default="", repr=False, alias="BLUM_INFORMATION_FRED_API_KEY")
+    information_fred_vintage_date: str = Field(default="", alias="BLUM_INFORMATION_FRED_VINTAGE_DATE")
     market_refresh_minutes: int = Field(default=45, alias="BLUM_MARKET_REFRESH_MINUTES")
     data_gap_repair_minutes: int = Field(default=180, alias="BLUM_DATA_GAP_REPAIR_MINUTES")
     accuracy_audit_minutes: int = Field(default=240, alias="BLUM_ACCURACY_AUDIT_MINUTES")

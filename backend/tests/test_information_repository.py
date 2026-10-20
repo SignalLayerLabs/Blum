@@ -164,6 +164,9 @@ def test_information_failure_keeps_cursor_success_and_explicit_provider_state(db
     ingest(db, evidence())
     repo = InformationRepository()
     repo.ingest(
+        db, ProviderResult("official", "EMPTY", (), observed_at=NOW, source_at=NOW)
+    )
+    repo.ingest(
         db,
         ProviderResult(
             "official",
@@ -177,6 +180,7 @@ def test_information_failure_keeps_cursor_success_and_explicit_provider_state(db
     state = db.get(InformationProviderState, "official")
     assert state.cursor == "page2" and state.last_success_at == NOW
     assert state.status == "QUOTA_LIMITED" and state.retries == 1
+    assert state.source_at == NOW
     repo.ingest(
         db,
         ProviderResult(

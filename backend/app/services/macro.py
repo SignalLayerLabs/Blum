@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from io import StringIO
+import time
 
 import pandas as pd
-import requests
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
@@ -36,7 +36,8 @@ def update_macro_snapshots(db: Session, limit_per_series: int = 420) -> dict:
                 .where(MacroSnapshot.indicator == indicator, MacroSnapshot.date == row["date"], MacroSnapshot.provider == "fred")
                 .limit(1)
             )
-            details = {"label": meta["label"], "unit": meta["unit"], "source": "FRED public CSV"}
+            details = {"label": meta["label"], "unit": meta["unit"], "source": "FRED public CSV",
+                       "source_capability": "current_state", "historical_availability_verified": False}
             if existing:
                 existing.value = row["value"]
                 existing.details = details
@@ -91,12 +92,16 @@ def macro_overview(db: Session) -> dict:
     }
 
 
-def fetch_fred_series(series_id: str, limit_per_series: int) -> list[dict]:
+def fetch_fred_series(series_id: str, limit_per_series: int, *, fetcher=None) -> list[dict]:
+    from app.services.information.fetch import PublicEvidenceFetcher
+    if series_id not in FRED_SERIES:
+        return []
     url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
     try:
-        response = requests.get(url, timeout=15, headers={"User-Agent": "Blum AI Financial Intelligence research demo"})
-        response.raise_for_status()
-        frame = pd.read_csv(StringIO(response.text))
+        response = (fetcher or PublicEvidenceFetcher()).fetch(url, deadline=time.monotonic()+10)
+        if response.status != "AVAILABLE":
+            return []
+        frame = pd.read_csv(StringIO(response.body.decode("utf-8-sig")))
     except Exception:
         return []
     if frame.empty or "observation_date" not in frame or series_id not in frame:
