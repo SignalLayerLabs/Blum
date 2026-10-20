@@ -552,11 +552,12 @@ class TradingCurriculumWorker:
                 bar["invalid_reason"] = "LOW_SOURCE_QUALITY"
             if canonical:
                 bar["source_policy"] = SOURCE_POLICY
-                if (
-                    source_kind != "price_history"
-                    and row.acquired_at < available
-                    and not bar.get("invalid_reason")
-                ):
+                captured_at = (
+                    row.created_at
+                    if source_kind == "price_history"
+                    else row.acquired_at
+                )
+                if captured_at < available and not bar.get("invalid_reason"):
                     # Aging a captured partial OHLC does not create the final
                     # candle. A closed refetch must confirm it first.
                     bar["invalid_reason"] = "CAPTURED_BEFORE_BAR_FINALIZATION"

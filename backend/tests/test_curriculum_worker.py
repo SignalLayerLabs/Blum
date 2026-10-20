@@ -571,3 +571,67 @@ def test_aging_a_legacy_forming_candle_does_not_finalize_its_captured_ohlc():
         assert len(result) == 1
         assert result[0]["invalid_reason"] == "CAPTURED_BEFORE_BAR_FINALIZATION"
         assert not k.valid_bar(result[0])
+
+
+def test_daily_price_history_also_requires_a_post_close_capture():
+    from app.models import PriceHistory
+    from app.services import trading_curriculum as k
+
+    with database() as db:
+        asset = db.scalar(select(Asset))
+        row = PriceHistory(
+            asset_id=asset.id,
+            date=datetime(2026, 7, 15).date(),
+            open=100,
+            high=101,
+            low=99,
+            close=100.5,
+            volume=1000,
+            provider="yahoo_chart",
+            created_at=datetime(2026, 7, 15, 13, 32),
+        )
+        db.add(row)
+        db.commit()
+        service = worker.TradingCurriculumWorker()
+        source = service._bars(
+            db,
+            asset.id,
+            "1d",
+            "USA",
+            datetime(2026, 7, 15, 21),
+            limit=1,
+            canonical=True,
+            source_kind="price_history",
+        )
+        assert source[0]["invalid_reason"] == "CAPTURED_BEFORE_BAR_FINALIZATION"
+        assert not k.valid_bar(source[0])
+        # MarketDataService replaces rows on a fresh download; its creation
+        # timestamp now reflects the confirmed post-close observation.
+        db.delete(row)
+        db.flush()
+        db.add(
+            PriceHistory(
+                asset_id=asset.id,
+                date=datetime(2026, 7, 15).date(),
+                open=100,
+                high=103,
+                low=98,
+                close=102,
+                volume=4000,
+                provider="yahoo_chart",
+                created_at=datetime(2026, 7, 15, 20, 2),
+            )
+        )
+        db.commit()
+        source = service._bars(
+            db,
+            asset.id,
+            "1d",
+            "USA",
+            datetime(2026, 7, 15, 21),
+            limit=1,
+            canonical=True,
+            source_kind="price_history",
+        )
+        assert k.valid_bar(source[0])
+        assert source[0]["close"] == 102

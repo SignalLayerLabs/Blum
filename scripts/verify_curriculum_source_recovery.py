@@ -118,9 +118,7 @@ def main():
                             provider="yahoo_chart",
                             acquired_at=now,
                             data_quality_score=95,
-                            source_metadata={
-                                "source_sha256": source_sha256
-                            },
+                            source_metadata={"source_sha256": source_sha256},
                             **values,
                         )
                     )

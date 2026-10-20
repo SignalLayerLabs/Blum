@@ -14,7 +14,7 @@ Discovery also depended on a request-range coverage table. Its local-history fas
 
 - Yahoo quote observations outside the declared opening grid are quarantined at acquisition. An on-grid candle must also be closed before the request cutoff; it is never rounded, resampled or manufactured from a quote.
 - A validated closed refetch may replace a legacy partial at equal or better source quality once. Existing frozen curriculum packs and monetary journals are untouched.
-- A legacy record captured before its declared availability remains invalid until that refetch. Simply waiting does not finalize previously captured OHLC.
+- A legacy record (including PriceHistory, whose rows are replaced on refresh) captured before its declared availability remains invalid until that refetch. Simply waiting does not finalize previously captured OHLC.
 - Source policy `declared-open-grid-v2` filters non-candle labels before the bounded source query. USA daily lanes prefer stored PriceHistory; other lanes use ReplayMarketBar. Actual missing intervals and invalid canonical candles remain in the evidence and block affected contexts or execution paths.
 - Readiness counts only the decisions actually sampled by the existing training blocks. An unusable source cannot crowd out another eligible asset. Candidate preferences are fixed before observing performance, and existing lanes retain priority.
 - Replacing the source policy archives the previous payload, model, benchmark, checkpoint, cash state and source references. The source and episode tables retain their original rows. Counters restart for the new corpus and are never added to the old counters. A pending prospective decision retains its original source until terminal. Replacement uses revision compare-and-swap.
