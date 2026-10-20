@@ -1,6 +1,6 @@
 # BLUM — information-driven alpha engine
 
-**Status:** architectural direction approved; this written specification awaits review. No implementation or alpha claim is implied. **Baseline:** main `a555f97b4b032b6e87b51bef25470d79b83f4df3`. **Date:** 20 October 2026, Europe/Rome.
+**Status:** written specification approved by the user on 20 October 2026; implementation planning authorized. Product implementation awaits the implementation-plan review. No alpha claim is implied. **Baseline:** main `a555f97b4b032b6e87b51bef25470d79b83f4df3`. **Date:** 20 October 2026, Europe/Rome.
 
 ## 1. Intended outcome
 
@@ -144,4 +144,4 @@ Deployment activation uses explicit feature versions and staged paper rollout. P
 
 ## 12. Review decisions
 
-The user has approved the architectural direction. This document now requests approval of the concrete architecture, operating/financial criteria and delivery boundary. After review, write the implementation plan with file ownership, dependencies, meaningful red/green tests, reproducible experiments and the chosen execution method. Product implementation starts after that required planning review. No new dependencies, paid jobs, accounts or live-money permissions are implicitly approved by this specification.
+The user has approved both the architectural direction and this written specification. Next, review the implementation plan with file ownership, dependencies, meaningful red/green tests, reproducible experiments and the chosen execution method. Product implementation starts after that required planning review. No new dependencies, paid jobs, accounts or live-money permissions are implicitly approved by this specification.
