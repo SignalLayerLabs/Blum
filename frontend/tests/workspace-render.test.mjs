@@ -247,3 +247,66 @@ test("curriculum exposes unproductive blocks, data blockers and preserved source
   for(const text of ["Source exhausted without learning outcomes","Productive training blocks","Missing context interval","Preserved previous sources","old-source-hash","Invalid source rows"])
     assert.ok(markup.includes(text),text);
 });
+
+const markedValuation = {
+  version: "curriculum-valuation-v1", status: "COMPLETE", reason: null,
+  as_of: "2026-10-19T12:00:00", capital_quote_units: 10000,
+  nav_quote_units: 9799.9, net_return: -0.02001, max_bar_close_drawdown: 0.02001,
+  net_liquidation_status: "ESTIMATE", net_liquidation_estimate_quote_units: 9795,
+  net_liquidation_return: -0.0205, sample_exposure_fraction: 0.75,
+  average_gross_exposure_fraction: 0.08, sample_count: 120, cost_version: "curriculum-limit-collar-v1",
+};
+
+function snapshotWithValuation(override = {}) {
+  const lane = curriculumSnapshot.lanes[0];
+  return { ...curriculumSnapshot, lanes: [{ ...lane, benchmark: { ...lane.benchmark,
+    start: "2026-01-02T21:01:00", end: "2026-10-19T12:00:00",
+    valuation: { quote_currency: "USD", policy: markedValuation,
+      fixed_expert: { ...markedValuation, nav_quote_units: 10010 },
+      modeled_hold: { ...markedValuation, position_status: "OPEN_MARKED", entry_status: "PARTIALLY_FILLED" },
+      comparison: { eligible: true, net_liquidation_excess_return: 0.01 }, ...override } },
+  }] };
+}
+
+test("curriculum shows adverse open mark drawdown separately from positive closed returns", async () => {
+  // Catches substituting the legacy +5% closed-trade result for open-position NAV.
+  const { CurriculumPanel } = await import("../components/workspace/Research.tsx");
+  const markup = renderToStaticMarkup(React.createElement(CurriculumPanel, { snapshot: snapshotWithValuation(), pending: false }));
+  const table = markup.match(/<table[^>]*aria-label="SPY curriculum valuation comparison"[\s\S]*?<\/table>/)?.[0];
+  assert.ok(table, "valuation table is separate from closed-trade statistics");
+  for (const text of ["Starting capital", "Mark NAV", "Bar-close drawdown", "Net liquidation", "Modeled hold", "9,799.9 USD", "2%", "ESTIMATE", "75%"])
+    assert.ok(table.includes(text), text);
+  assert.match(markup, /same capital.*same window/i);
+  assert.match(markup, /bar-sample fraction/i);
+  assert.match(markup, /not intrabar/i);
+  assert.match(markup, /modeled.*costs.*capacity/i);
+  assert.match(markup, /not a verified sell/i);
+  assert.match(markup, /5%/); // Legacy closed outcome remains visible alongside marked account evidence.
+});
+
+test("curriculum keeps withheld valuations unknown rather than showing zero equity or drawdown", async () => {
+  const { CurriculumPanel } = await import("../components/workspace/Research.tsx");
+  const unknown = { ...markedValuation, status: "WITHHELD", reason: "INCOMPLETE_MARK_PATH", nav_quote_units: null,
+    net_return: null, max_bar_close_drawdown: null, net_liquidation_status: "WITHHELD",
+    net_liquidation_estimate_quote_units: null, net_liquidation_return: null, sample_exposure_fraction: null };
+  const markup = renderToStaticMarkup(React.createElement(CurriculumPanel, {
+    snapshot: snapshotWithValuation({ policy: unknown, comparison: { eligible: false, net_liquidation_excess_return: null } }), pending: false,
+  }));
+  const table = markup.match(/<table[^>]*aria-label="SPY curriculum valuation comparison"[\s\S]*?<\/table>/)?.[0];
+  assert.ok(table);
+  const policy = table.match(/<tbody><tr>[\s\S]*?<\/tr>/)?.[0];
+  assert.match(policy, /WITHHELD/);
+  assert.match(policy, /Incomplete mark path/);
+  assert.doesNotMatch(policy, /<td>0(?:%| USD|<)/);
+  assert.match(markup, /Comparison withheld/i);
+});
+
+test("forward valuation names its current episode and quote without upgrading native P&L", async () => {
+  const { CurriculumPanel } = await import("../components/workspace/Research.tsx");
+  const snapshot = structuredClone(curriculumSnapshot);
+  snapshot.lanes[0].forward.valuation = { ...markedValuation, quote_currency: "GBP", scope: "current_episode_only" };
+  const markup = renderToStaticMarkup(React.createElement(CurriculumPanel, { snapshot, pending: false }));
+  assert.match(markup, /Current episode only/i);
+  assert.match(markup, /9,799.9 GBP/);
+  assert.match(markup, /not native paper P\/L/i);
+});

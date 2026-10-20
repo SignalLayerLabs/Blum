@@ -36,6 +36,8 @@ The [outcome-driven trading curriculum](docs/research/trading-curriculum.md) add
 
 The curriculum source correction and its reproducible recovery evidence are documented in [Curriculum source recovery](docs/research/curriculum-source-recovery.md). Attempted blocks and useful outcomes are reported separately; the results do not establish alpha.
 
+[LEAN-inspired valuation](docs/research/lean-inspired-valuation.md) adds open-position NAV, bar-close drawdown and a capital/time/cost-comparable modeled hold. In the recorded development windows, both USA policies underperform hold; FX full-path values remain withheld for invalid source bars. Measurement and learning counts are separate from proven trading skill.
+
 ## Run and operate
 
 Use [getting started](docs/guides/getting-started.md) for the complete Docker runtime, [development](docs/guides/development.md) for component setup and checks, and [deployment and recovery](docs/operations/deployment.md) for trusted operations.

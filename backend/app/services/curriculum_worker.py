@@ -21,6 +21,8 @@ from app.models import (
     TradingCurriculumSource,
 )
 from app.services import trading_curriculum as kernel
+from app.services import curriculum_valuation as valuation
+from app.services.forex_contracts import pair_config
 
 SOURCE_POLICY = "declared-open-grid-v2"
 
@@ -119,6 +121,7 @@ class TradingCurriculumWorker:
                 with db.no_autoflush:
                     if row.lane in training:
                         self._train(db, payload, now)
+                    self._refresh_valuation(db, payload)
                     self._forward(db, payload, now)
                     payload["public"] = self._public(payload)
                     changed = db.execute(
@@ -650,6 +653,27 @@ class TradingCurriculumWorker:
             )
         )
 
+    def _refresh_valuation(self, db: Session, payload: dict):
+        # A report-version migration must not count as another learning episode.
+        old = payload.get("benchmark")
+        if not old or old.get("evaluation_version") == valuation.VERSION:
+            return
+        source = db.get(TradingCurriculumSource, payload["source_hash"])
+        refreshed = self._benchmark(payload, source.payload["bars"])
+        for key in ("previous_net_return", "return_change_from_previous"):
+            if key in old:
+                refreshed[key] = old[key]
+        payload["benchmark"] = refreshed
+
+    @staticmethod
+    def _quote_currency(payload: dict) -> str | None:
+        if payload["market"] == "FOREX":
+            try:
+                return pair_config(payload["ticker"]).quote_currency
+            except KeyError:
+                return None
+        return payload.get("quote_currency", "USD")
+
     def _benchmark(self, payload: dict, pack: list[dict]) -> dict:
         split = kernel.partition(len(pack))
         start, end = split["development_start"], split["development_end"]
@@ -678,6 +702,43 @@ class TradingCurriculumWorker:
             if kernel.valid_bar(pack[end - 1]) and kernel.valid_bar(pack[entry_i])
             else None
         )
+        as_of = datetime.fromisoformat(pack[end - 1]["available"])
+        values = {
+            "policy": valuation.value_frozen_trades(
+                pack, policy["trades"], as_of=as_of, **kwargs
+            ),
+            "fixed_expert": valuation.value_frozen_trades(
+                pack, baseline["trades"], as_of=as_of, **kwargs
+            ),
+            "modeled_hold": valuation.modeled_hold(pack, as_of=as_of, **kwargs),
+        }
+        selected, held = values["policy"], values["modeled_hold"]
+        eligible = all(
+            v["status"] == "COMPLETE" and v["net_liquidation_return"] is not None
+            for v in (selected, held)
+        )
+        values.update(
+            quote_currency=self._quote_currency(payload),
+            evaluation_hash=kernel.digest(
+                [
+                    valuation.VERSION,
+                    payload["checkpoint"],
+                    kernel.digest(pack[start:end]),
+                    kernel.COST_VERSION,
+                ]
+            ),
+            comparison=dict(
+                eligible=eligible,
+                net_liquidation_excess_return=(
+                    (
+                        selected["net_liquidation_return"]
+                        - held["net_liquidation_return"]
+                    )
+                    if eligible
+                    else None
+                ),
+            ),
+        )
         for report in (policy, baseline):
             report.pop("trades", None)
         return dict(
@@ -685,6 +746,8 @@ class TradingCurriculumWorker:
             start=pack[start]["available"],
             end=pack[end - 1]["available"],
             confirmation_opened=False,
+            evaluation_version=valuation.VERSION,
+            valuation=values,
             policy=policy,
             fixed_expert=baseline,
             cash_return=0.0,
@@ -744,7 +807,20 @@ class TradingCurriculumWorker:
             row = db.get(TradingCurriculumEpisode, uid)
             if row is None:
                 raise RuntimeError("missing frozen forward episode")
+            forward["valuation"] = valuation.value_frozen_trades(
+                future,
+                [outcome],
+                market=payload["market"],
+                timeframe=payload["timeframe"],
+                start=0,
+                end=len(future),
+                as_of=now,
+                capital=pending["cash_budget"],
+            )
+            forward["valuation"]["quote_currency"] = self._quote_currency(payload)
+            forward["valuation"]["scope"] = "current_episode_only"
             row.payload = dict(
+                valuation=forward["valuation"],
                 proposal=pending,
                 outcome=outcome,
                 observations=future,
@@ -834,6 +910,7 @@ class TradingCurriculumWorker:
         proposal["checkpoint"] = kernel.digest(
             [payload["checkpoint"], payload.get("live_updates", {})]
         )
+        forward.pop("valuation", None)
         proposal["cash_budget"] = forward["cash_quote_units"]
         forward.update(
             status="PENDING",

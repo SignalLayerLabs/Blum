@@ -8,7 +8,7 @@ Start with the task you want to complete. The [project homepage](../.github/READ
 | --- | --- |
 | Explore the five research workspaces | [Public observatory](https://blum.signallayerlabs.workers.dev) |
 | Understand what qualifies as a prospective call | [Alpha Desk](research/alpha-desk.md) |
-| Assess benchmark and evidence claims | [Research methodology](research/methodology.md) |
+| Assess benchmark and evidence claims | [Research methodology](research/methodology.md) and [LEAN-inspired valuation](research/lean-inspired-valuation.md) |
 | Check which historical sources were accepted or rejected | [Data quality](research/data-quality.md) and [audit ledgers](evidence/README.md) |
 | Understand bounded source experiments | [ASCENT](research/ascent.md) |
 | Inspect persistent learning, throughput and source acceptance | [Learning engine](research/learning-engine.md) |
