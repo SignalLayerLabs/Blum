@@ -4911,3 +4911,53 @@ class ForexOrderFill(Base):
     quantity_lots: Mapped[float] = mapped_column(Float)
     executed_price: Mapped[float] = mapped_column(Float)
     payload: Mapped[dict] = mapped_column(JsonType)
+
+
+class InformationEvidence(Base):
+    __tablename__ = "information_evidence"
+    __table_args__ = (
+        Index("ix_information_family_observed", "family_id", "observed_at"),
+        Index("ix_information_available", "available_at", "observed_at"),
+    )
+    evidence_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    family_id: Mapped[str] = mapped_column(String(64))
+    provider: Mapped[str] = mapped_column(String(80))
+    canonical_url: Mapped[str] = mapped_column(Text)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    language: Mapped[str] = mapped_column(String(24))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime)
+    observed_at: Mapped[datetime] = mapped_column(DateTime)
+    available_at: Mapped[datetime] = mapped_column(DateTime)
+    revision_of: Mapped[str | None] = mapped_column(ForeignKey("information_evidence.evidence_id", ondelete="RESTRICT"))
+    historical_availability_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    extraction_version: Mapped[str] = mapped_column(String(80))
+    payload: Mapped[dict] = mapped_column(JsonType)
+
+
+class InformationLink(Base):
+    __tablename__ = "information_links"
+    __table_args__ = (
+        UniqueConstraint("evidence_id", "entity_key", "kind", "mapping_version", name="uq_information_link"),
+        Index("ix_information_link_entity", "entity_key", "evidence_id"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    evidence_id: Mapped[str] = mapped_column(ForeignKey("information_evidence.evidence_id", ondelete="RESTRICT"))
+    entity_key: Mapped[str] = mapped_column(String(80))
+    kind: Mapped[str] = mapped_column(String(24))
+    confidence: Mapped[float] = mapped_column(Float)
+    reason: Mapped[str] = mapped_column(Text)
+    mapping_version: Mapped[str] = mapped_column(String(80))
+
+
+class InformationProviderState(Base):
+    __tablename__ = "information_provider_states"
+    provider: Mapped[str] = mapped_column(String(80), primary_key=True)
+    cursor: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(32))
+    retries: Mapped[int] = mapped_column(Integer, default=0)
+    observed_at: Mapped[datetime] = mapped_column(DateTime)
+    source_at: Mapped[datetime | None] = mapped_column(DateTime)
+    retry_at: Mapped[datetime | None] = mapped_column(DateTime)
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime)
+    error_code: Mapped[str | None] = mapped_column(String(80))
+    coverage: Mapped[dict] = mapped_column(JsonType, default=dict)
