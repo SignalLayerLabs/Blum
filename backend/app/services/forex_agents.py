@@ -88,21 +88,22 @@ class BlumForexMacroAgent:
                     0,
                     settings.forex_news_block_before_minutes,
                 )
-        observed = {
-            key: float(value)
-            for key in ("rate_differential_change", "inflation_surprise", "employment_surprise", "dxy_change", "yield_differential_change", "risk_appetite_change")
-            if (value := market.macro_payload.get(key)) is not None
-        }
-        score = sum(observed.values())
+        information = market.information_context
+        if information and (information.asset_key != market.pair or information.decision_at != market.as_of):
+            raise ValueError("Forex information context must match the exact pair and decision clock")
+        features = information.features if information else {}
+        delta = features.get("policy_differential_change_bps")
+        score = float(delta) if delta is not None else 0.0
         macro_bias = ForexDirection.LONG if score > 0 else ForexDirection.SHORT if score < 0 else ForexDirection.WATCH
-        cross_confirmation = market.macro_payload.get("cross_asset_confirmation")
+        calendar = information.calendar_state if information else "UNKNOWN"
+        blocked = blocked or calendar == "KNOWN_EVENT_WINDOW"
         return MacroOutput(
             macro_bias=macro_bias,
             event_risk=market.macro_event_impact,
-            news_window_status="BLOCKED" if blocked else "CLEAR",
-            cross_asset_confirmation=str(cross_confirmation or "UNAVAILABLE"),
-            cross_asset_divergence=market.macro_payload.get("cross_asset_divergence"),
-            confidence=min(1.0, len(observed) / 6.0) if observed else 0.0,
+            news_window_status="BLOCKED" if blocked else "CLEAR" if calendar == "KNOWN_CLEAR" else "UNKNOWN",
+            cross_asset_confirmation="UNAVAILABLE",
+            cross_asset_divergence=None,
+            confidence=.5 if delta is not None else 0.0,
             veto_reason="NEWS_WINDOW_BLOCKED" if blocked else None,
         )
 

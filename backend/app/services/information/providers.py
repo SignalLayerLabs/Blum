@@ -16,7 +16,7 @@ import feedparser
 from sqlalchemy import select
 
 from app.ingestion.news_ingestor import clean_text, parse_entry_time
-from app.models import Asset, NewsArticle, NewsAssetLink
+from app.models import Asset, NewsArticle, NewsAssetLink, SentimentAnalysis
 from app.services.market_clock import utc_naive
 from .contracts import EvidenceLink, ProviderResult, SourceEvidence
 from .fetch import PublicEvidenceFetcher
@@ -478,6 +478,26 @@ class ExistingNewsProvider:
         ).all()
         items, links, invalid = [], [], 0
         for article in rows:
+            analysis = self.db.scalar(
+                select(SentimentAnalysis)
+                .where(
+                    SentimentAnalysis.article_id == article.id,
+                    SentimentAnalysis.created_at <= as_of,
+                )
+                .order_by(
+                    SentimentAnalysis.created_at.desc(), SentimentAnalysis.id.desc()
+                )
+                .limit(1)
+            )
+            sentiment = (
+                {
+                    "sentiment_score": analysis.score,
+                    "sentiment_model": analysis.model_name,
+                    "sentiment_available_at": analysis.created_at.isoformat(),
+                }
+                if analysis
+                else {}
+            )
             try:
                 item = SourceEvidence.create(
                     provider=self.provider,
@@ -492,6 +512,7 @@ class ExistingNewsProvider:
                         "publisher": article.source,
                         "source_capability": "news",
                         "legacy_created_at": article.created_at.isoformat(),
+                        **sentiment,
                     },
                     extraction_version="legacy-news-v1",
                 )

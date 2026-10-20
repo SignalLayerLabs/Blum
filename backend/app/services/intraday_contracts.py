@@ -53,6 +53,7 @@ class IntradayDataBundle:
     quality_scores: dict[str, float]
     blockers: tuple[str, ...] = ()
     provider_attempts: tuple[dict[str, Any], ...] = ()
+    information_context: Any | None = None
 
     @property
     def ready(self) -> bool:

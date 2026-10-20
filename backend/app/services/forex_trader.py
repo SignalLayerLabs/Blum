@@ -739,6 +739,7 @@ class BlumForexTraderCore:
             "liquidity_score": market.liquidity_score,
             "volatility_score": market.volatility_score,
             "macro_payload": _jsonable(market.macro_payload),
+            "information_context": market.information_context.to_payload() if market.information_context else None,
             "quote": _jsonable(asdict(market.quote)), "data_hash": market.data_hash(),
             "timeframes": {key: {"market_timestamp": value.market_timestamp.isoformat(), "acquired_at": value.acquired_at.isoformat(), "provider": value.provider, "quality_score": value.quality_score, "missing_intervals": list(value.missing_intervals), "adjustment_status": value.adjustment_status, "opens": list(value.opens), "highs": list(value.highs), "lows": list(value.lows), "closes": list(value.closes)} for key, value in market.frames.items()},
         }
@@ -951,6 +952,7 @@ class ForexMarketInputRepository:
         session = forex_session(now)
         for asset in assets:
             frames = {}
+            price_refs = []
             for timeframe in ("1h", "15m", "5m", "1m"):
                 rows = db.scalars(
                     select(ReplayMarketBar)
@@ -962,6 +964,8 @@ class ForexMarketInputRepository:
                 if not rows:
                     continue
                 rows = list(reversed(rows))
+                from app.services.information.context import price_reference
+                price_refs.append(price_reference(rows[-1], rows))
                 from app.services.forex_contracts import MarketFrame
                 frames[timeframe] = MarketFrame(
                     timeframe=timeframe, market_timestamp=rows[-1].bar_timestamp,
@@ -992,6 +996,9 @@ class ForexMarketInputRepository:
                 bid, ask, source = mid - spread / 2, mid + spread / 2, "ESTIMATED:broker_profile"
             else:
                 source = str(metadata.get("quote_provider") or rows[-1].provider)
+            from app.services.information.context import OpportunityContextBuilder
+            information = OpportunityContextBuilder().build(db, market_family="forex", asset_key=asset.ticker,
+                                                          decision_at=now, price_refs=tuple(price_refs))
             output.append(AgentMarketInput(
                 pair=asset.ticker, as_of=now, frames=frames,
                 quote=ForexQuote(bid=bid, ask=ask, timestamp=frames["1m"].market_timestamp, source=source),
@@ -999,20 +1006,8 @@ class ForexMarketInputRepository:
                 macro_event_timestamp=_datetime_value(metadata.get("macro_event_timestamp")),
                 liquidity_score=float(metadata.get("liquidity_score") or 0.75),
                 volatility_score=float(metadata.get("volatility_score") or 0.5),
-                macro_payload={
-                    key: metadata[key]
-                    for key in (
-                        "rate_differential_change",
-                        "inflation_surprise",
-                        "employment_surprise",
-                        "dxy_change",
-                        "yield_differential_change",
-                        "risk_appetite_change",
-                        "cross_asset_confirmation",
-                        "cross_asset_divergence",
-                    )
-                    if key in metadata
-                },
+                information_context=information,
+                macro_payload={},
             ))
         return output, blockers
 

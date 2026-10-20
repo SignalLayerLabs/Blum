@@ -88,6 +88,13 @@ class StrictIntradayDataGateway:
                 blockers.append(f"INVALID_{timeframe.upper()}_PRICE")
 
         deduped = tuple(dict.fromkeys(blockers))
+        context = None
+        if not deduped:
+            from app.services.information.context import OpportunityContextBuilder, price_reference
+            context = OpportunityContextBuilder().build(
+                db, market_family="equity", asset_key=asset.ticker, decision_at=now,
+                price_refs=tuple(price_reference(rows[-1], rows) for rows in bars.values() if rows),
+            )
         return IntradayDataBundle(
             status=INTRADAY_DATA_BLOCKED if deduped else "READY",
             ticker=asset.ticker,
@@ -99,4 +106,5 @@ class StrictIntradayDataGateway:
             quality_scores=quality,
             blockers=deduped,
             provider_attempts=tuple(attempts),
+            information_context=context,
         )

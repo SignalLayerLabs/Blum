@@ -7,6 +7,7 @@ from hashlib import sha256
 import json
 from math import isfinite
 from typing import ClassVar
+from app.services.information.contracts import OpportunityContext
 
 
 class ForexDirection(str, Enum):
@@ -131,6 +132,7 @@ class AgentMarketInput:
     liquidity_score: float = 0.0
     volatility_score: float = 0.0
     macro_payload: dict = field(default_factory=dict)
+    information_context: OpportunityContext | None = None
 
     REQUIRED: ClassVar[tuple[str, ...]] = ("1h", "15m", "5m", "1m")
 
@@ -167,6 +169,7 @@ class AgentMarketInput:
             "liquidity_score": self.liquidity_score,
             "volatility_score": self.volatility_score,
             "macro_payload": self.macro_payload,
+            "information_context_hash": self.information_context.hash if self.information_context else None,
             "frames": {key: {"timestamp": value.market_timestamp.isoformat(), "closes": value.closes} for key, value in self.frames.items()},
         }
         return sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()

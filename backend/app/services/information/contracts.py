@@ -193,3 +193,65 @@ class ProviderResult:
         for name in ("observed_at", "source_at", "retry_at"):
             if getattr(self, name) is not None:
                 object.__setattr__(self, name, utc_naive(getattr(self, name)))
+
+
+@dataclass(frozen=True)
+class OpportunityContext:
+    context_uid: str
+    market_family: MarketFamily
+    asset_key: str
+    decision_at: datetime
+    price_refs: tuple[Mapping, ...]
+    evidence_ids: tuple[str, ...]
+    links: tuple[EvidenceLink, ...]
+    calendar_state: str
+    features: Mapping
+    coverage: Mapping
+    schema_version: str
+    max_available_at: datetime
+    hash: str
+
+    def __post_init__(self):
+        for name in ("price_refs", "features", "coverage"):
+            object.__setattr__(self, name, freeze(getattr(self, name)))
+        for name in ("decision_at", "max_available_at"):
+            object.__setattr__(self, name, utc_naive(getattr(self, name)))
+        object.__setattr__(self, "links", tuple(self.links))
+        object.__setattr__(self, "evidence_ids", tuple(self.evidence_ids))
+        if self.max_available_at > self.decision_at:
+            raise ValueError("Context contains future information")
+        payload = self.to_payload()
+        payload.pop("context_uid")
+        payload.pop("hash")
+        if self.hash != digest(payload) or self.context_uid != "ctx:" + self.hash:
+            raise ValueError("Context hash mismatch")
+
+    def to_payload(self):
+        return {
+            "context_uid": self.context_uid,
+            "market_family": self.market_family,
+            "asset_key": self.asset_key,
+            "decision_at": self.decision_at.isoformat(),
+            "price_refs": thaw(self.price_refs),
+            "evidence_ids": list(self.evidence_ids),
+            "links": [
+                {
+                    f: getattr(link, f)
+                    for f in (
+                        "evidence_id",
+                        "entity_key",
+                        "kind",
+                        "confidence",
+                        "reason",
+                        "mapping_version",
+                    )
+                }
+                for link in self.links
+            ],
+            "calendar_state": self.calendar_state,
+            "features": thaw(self.features),
+            "coverage": thaw(self.coverage),
+            "schema_version": self.schema_version,
+            "max_available_at": self.max_available_at.isoformat(),
+            "hash": self.hash,
+        }
