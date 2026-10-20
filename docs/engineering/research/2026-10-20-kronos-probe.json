@@ -1,0 +1,82 @@
+{
+  "protocol": {
+    "purpose": "CPU feasibility and exploratory price forecast diagnostics only",
+    "context_bars": 64,
+    "horizon_bars": 5,
+    "seeds": [
+      20261020,
+      20261021,
+      20261022,
+      20261023
+    ],
+    "device": "cpu",
+    "threads": 2,
+    "sample_count_per_call": 1,
+    "origins_per_asset_max": 8,
+    "origin_min_spacing_bars": 10,
+    "earliest_origin": "2025-09-10",
+    "limitations": [
+      "Current-vintage prices; original publication/acquisition clocks unverified",
+      "No native order simulation or execution costs; not profit or win-rate evidence",
+      "Published paper cutoff June 2024 is not independently verified for mini weights",
+      "Cached HF AAPL raw OHLCV only; derived dataset features deliberately unused",
+      "FX volume unavailable; zero is a model sentinel, not observed market volume",
+      "Source labels/session gaps not certified for prospective execution"
+    ],
+    "source_revision": "67b630e67f6a18c9e9be918d9b4337c960db1e9a",
+    "model_revision": "f4e68697d9d5aed55cef5c96aabc3376bcad9f81",
+    "tokenizer_revision": "26966d0035065a0cae0ebad7af8ece35bc1fb51c",
+    "input_sha256": {
+      "equity_parquet": "f1e9887b4fbd40f2938657988cbfb0d29f3c7c5111745fdbfd46a05ed446bc84",
+      "fx_csv": "bf251e7ffc1ad1dfc23abe4c2ead1f5188aab296d53fb0b50559ea6ce404a46d"
+    },
+    "origins": {
+      "equity:AAPL": [
+        "2026-06-29 04:00:00",
+        "2026-07-14 04:00:00",
+        "2026-07-28 04:00:00",
+        "2026-08-11 04:00:00",
+        "2026-08-25 04:00:00",
+        "2026-09-09 04:00:00",
+        "2026-09-23 04:00:00",
+        "2026-10-07 04:00:00"
+      ],
+      "forex:EURUSD": [
+        "2025-09-15 00:00:00",
+        "2025-09-29 00:00:00"
+      ]
+    },
+    "invalid_ohlc_rows": {
+      "equity:AAPL": 0,
+      "forex:EURUSD": 67
+    }
+  },
+  "load_seconds": 0.1414954170031706,
+  "torch_version": "2.13.0",
+  "peak_rss_bytes_macos": 379977728,
+  "total_seconds": 0.8058498750033323,
+  "weights_sha256": {
+    "mini": "a7d5f37e2e9fbd9891f7d7d4f72574512dd1f704fee14223e0a8cd0fbf54197c",
+    "tokenizer": "b97ec46b3b72160509e289183eaf7bdf5f0dac5bb9b49522f6d46638a99a8717"
+  },
+  "metrics": {
+    "equity:AAPL": {
+      "origins": 8,
+      "mean_mae_bps": 371.8057152084739,
+      "naive_mean_mae_bps": 363.47814029931396,
+      "correct_terminal_directions": 3,
+      "generated_paths": 32,
+      "valid_ohlc_paths": 26,
+      "median_path_seconds": 0.015536749499005964
+    },
+    "forex:EURUSD": {
+      "origins": 2,
+      "mean_mae_bps": 26.5611207979036,
+      "naive_mean_mae_bps": 26.806319600384477,
+      "correct_terminal_directions": 0,
+      "generated_paths": 8,
+      "valid_ohlc_paths": 4,
+      "median_path_seconds": 0.015405145501063089
+    }
+  }
+}
