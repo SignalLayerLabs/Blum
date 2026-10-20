@@ -178,7 +178,28 @@ class YahooReplayDataProvider:
             },
             index=pd.to_datetime(timestamps, unit="s", utc=True).tz_convert(None),
         )
-        return ProviderBars(self.name, normalize_replay_frame(frame), self.source_metadata, [])
+        normalized = normalize_replay_frame(frame)
+        metadata = dict(self.source_metadata)
+        # Yahoo can append regularMarketTime as an extra live quote row. It is
+        # not a candle opening; repeated polls otherwise create phantom bars.
+        from app.services.market_bar_clock import canonical_open, available_at
+        from app.services.executable_strategy import normalize_market
+
+        market = normalize_market(request.market)
+        if market in {"USA", "FOREX"}:
+            keep = [
+                canonical_open(t.to_pydatetime(), request.timeframe, market)
+                for t in normalized.index
+            ]
+            metadata["rejected_off_grid_rows"] = len(keep) - sum(keep)
+            metadata["candle_clock_policy"] = "declared-open-grid-v2"
+            normalized = normalized.loc[keep]
+            cutoff = min(datetime.now(timezone.utc).replace(tzinfo=None), _naive_utc(request.end))
+            closed = [available_at(t.to_pydatetime(), request.timeframe, market) <= cutoff for t in normalized.index]
+            metadata["rejected_unclosed_rows"] = len(closed) - sum(closed)
+            metadata["closed_candles_only"] = True
+            normalized = normalized.loc[closed]
+        return ProviderBars(self.name, normalized, metadata, [])
 
 
 class YFinanceReplayDataProvider:

@@ -204,7 +204,13 @@ class MultiProviderReplayDataService:
         for timestamp, (_, row) in zip(timestamps, frame.iterrows()):
             persisted = existing.get(timestamp)
             if persisted is not None:
-                if quality > float(persisted.data_quality_score or 0.0):
+                old_quality = float(persisted.data_quality_score or 0.0)
+                finalized_legacy = (
+                    quality >= old_quality
+                    and metadata.get("closed_candles_only") is True
+                    and (persisted.source_metadata or {}).get("closed_candles_only") is not True
+                )
+                if quality > old_quality or finalized_legacy:
                     persisted.open = _number(row.get("Open"))
                     persisted.high = _number(row.get("High"))
                     persisted.low = _number(row.get("Low"))

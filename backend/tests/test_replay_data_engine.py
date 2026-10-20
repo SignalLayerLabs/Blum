@@ -463,3 +463,89 @@ def test_daily_replay_imports_existing_price_history_before_provider_fetch():
     assert len(rows) == 4
     assert rows[-1].close == 104.0
     assert rows[-1].source_metadata["source_table"] == "price_history"
+
+
+def test_yahoo_daily_live_quote_tail_is_quarantined_instead_of_added_as_a_candle(
+    monkeypatch,
+):
+    from zoneinfo import ZoneInfo
+
+    regular = datetime(2026, 10, 15, tzinfo=ZoneInfo("Europe/London")).timestamp()
+    live = datetime(2026, 10, 19, 10, 21, 50, tzinfo=timezone.utc).timestamp()
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "chart": {
+                    "result": [
+                        {
+                            "meta": {
+                                "regularMarketTime": int(live),
+                                "exchangeTimezoneName": "Europe/London",
+                            },
+                            "timestamp": [int(regular), int(live)],
+                            "indicators": {
+                                "quote": [
+                                    {
+                                        "open": [1.1, 1.2],
+                                        "high": [1.2, 1.3],
+                                        "low": [1, 1.1],
+                                        "close": [1.15, 1.25],
+                                        "volume": [0, 0],
+                                    }
+                                ]
+                            },
+                        }
+                    ]
+                }
+            }
+
+    monkeypatch.setattr(
+        "app.providers.replay_data_provider.requests.get", lambda *a, **k: Response()
+    )
+    result = YahooReplayDataProvider().fetch(
+        ReplayDataRequest(
+            "EURUSD=X",
+            "EURUSD=X",
+            "Forex",
+            "1d",
+            datetime(2026, 1, 1),
+            datetime(2026, 10, 19, 12),
+        )
+    )
+    assert len(result.frame) == 1
+    assert result.frame.index[0] == pd.Timestamp(regular, unit="s")
+    assert result.source_metadata["rejected_off_grid_rows"] == 1
+
+
+def test_yahoo_forming_candle_is_excluded_even_when_its_open_is_on_grid(monkeypatch):
+    start=datetime(2026,7,15,13,30)
+    class Response:
+        def raise_for_status(self):pass
+        def json(self):
+            return {'chart':{'result':[{'timestamp':[int(start.replace(tzinfo=timezone.utc).timestamp())],
+                'indicators':{'quote':[{'open':[100],'high':[101],'low':[99],'close':[100.5],'volume':[1000]}]}}]}}
+    monkeypatch.setattr('app.providers.replay_data_provider.requests.get',lambda *a,**k:Response())
+    result=YahooReplayDataProvider().fetch(ReplayDataRequest('NVDA','NVDA','USA','5m',start-timedelta(days=1),start+timedelta(minutes=2)))
+    assert result.frame.empty
+    assert result.source_metadata['rejected_unclosed_rows'] == 1
+
+
+def test_closed_candle_can_replace_a_legacy_partial_once_at_equal_quality():
+    with setup_db() as db:
+        asset=seed_asset(db)
+        values=replay_bar_values(asset.id)
+        values.update(data_quality_score=100,close=160,high=161)
+        db.add(ReplayMarketBar(**values))
+        db.flush()
+        timestamp=values['bar_timestamp']
+        source=frame(timestamp,1,'min')
+        MultiProviderReplayDataService._persist_bars(db,asset,'1m','yahoo_chart',source,
+            {'data_quality_score':100,'closed_candles_only':True})
+        db.flush()
+        row=db.scalar(select(ReplayMarketBar))
+        assert row.close == 100.5
+        assert row.source_metadata['closed_candles_only'] is True

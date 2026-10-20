@@ -8,20 +8,26 @@ import threading
 import math
 import time
 
-from sqlalchemy import select, update, or_, func
+from sqlalchemy import select, update, or_, func, extract, case
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from app.services.executable_strategy import normalize_market
 
 from app.models import (
     Asset,
-    ReplayDataCoverage,
+    PriceHistory,
     ReplayMarketBar,
     TradingCurriculumState,
     TradingCurriculumEpisode,
     TradingCurriculumSource,
 )
 from app.services import trading_curriculum as kernel
+
+SOURCE_POLICY = "declared-open-grid-v2"
+
+
+class CheckpointChanged(RuntimeError):
+    pass
+
 
 _LOCK = threading.Lock()
 LIMITATIONS = [
@@ -69,11 +75,22 @@ class TradingCurriculumWorker:
         try:
             now = now or datetime.utcnow()
             started = time.monotonic()
-            self._discover(db, now)
+            discovery = self._discover(db, now, deadline=started + max_seconds)
             states = db.scalars(
                 select(TradingCurriculumState)
                 .order_by(
-                    TradingCurriculumState.updated_at, TradingCurriculumState.lane
+                    case(
+                        (
+                            TradingCurriculumState.payload[
+                                "training_status"
+                            ].as_string()
+                            == "DATA_BLOCKED",
+                            1,
+                        ),
+                        else_=0,
+                    ),
+                    TradingCurriculumState.updated_at,
+                    TradingCurriculumState.lane,
                 )
                 .limit(8)
             ).all()
@@ -83,7 +100,12 @@ class TradingCurriculumWorker:
                     (
                         r
                         for r in states
-                        if r.payload["training_status"] != "PACK_EXHAUSTED"
+                        if r.payload["training_status"]
+                        not in (
+                            "PACK_EXHAUSTED",
+                            "PACK_EXHAUSTED_NO_OUTCOMES",
+                            "DATA_BLOCKED",
+                        )
                     ),
                     key=lambda r: (r.payload["training_episodes"], r.lane),
                 )[: max(1, min(8, max_lanes))]
@@ -117,8 +139,14 @@ class TradingCurriculumWorker:
                 processed.append(row.lane)
             db.expire_all()
             return dict(
-                status="ok", lanes=processed, elapsed_seconds=time.monotonic() - started
+                status="ok",
+                lanes=processed,
+                discovery=discovery,
+                elapsed_seconds=time.monotonic() - started,
             )
+        except CheckpointChanged:
+            db.rollback()
+            return dict(status="deferred", reason="checkpoint_changed")
         finally:
             _LOCK.release()
 
@@ -137,8 +165,29 @@ class TradingCurriculumWorker:
                 "source_hash",
                 "source_rows",
                 "benchmark",
+                "source_kind",
+                "source_policy",
+                "source_audit",
+                "source_readiness",
+                "training_diagnostics",
+                "productive_episodes",
             )
         }
+        result["source_history"] = [
+            {
+                k: old.get(k)
+                for k in (
+                    "source_hash",
+                    "checkpoint",
+                    "training_episodes",
+                    "learned_outcomes",
+                    "training_status",
+                    "archived_at",
+                    "reason",
+                )
+            }
+            for old in payload.get("source_history", [])
+        ]
         result["forward"] = {
             k: deepcopy(v)
             for k, v in payload["forward"].items()
@@ -146,115 +195,260 @@ class TradingCurriculumWorker:
         }
         return result
 
-    def _discover(self, db: Session, now: datetime):
-        existing = set(db.scalars(select(TradingCurriculumState.lane)).all())
-        coverage = []
+    def _discover(self, db: Session, now: datetime, *, deadline: float = float("inf")):
+        """Find actual stored prices; request-range coverage is not a data catalogue."""
+        states = {r.lane: r for r in db.scalars(select(TradingCurriculumState)).all()}
+        diagnostics = []
         for timeframe in ("1d", "5m"):
-            for forex in (True, False):
-                market_filter = (
+            for market in ("FOREX", "USA"):
+                eligible = (
                     or_(
-                        func.upper(ReplayDataCoverage.market) == "FOREX",
+                        func.upper(Asset.country) == "FOREX",
                         Asset.ticker.endswith("=X"),
                     )
-                    if forex
-                    else func.upper(ReplayDataCoverage.market).in_(
+                    if market == "FOREX"
+                    else func.upper(Asset.country).in_(
                         ("USA", "US", "UNITED STATES", "NASDAQ", "NYSE")
                     )
                 )
-                coverage.extend(
-                    db.scalars(
-                        select(ReplayDataCoverage)
-                        .join(Asset, Asset.id == ReplayDataCoverage.asset_id)
-                        .where(
-                            ReplayDataCoverage.timeframe == timeframe,
-                            Asset.is_active.is_(True),
-                            ReplayDataCoverage.rows_available >= 600,
-                            ReplayDataCoverage.data_quality_score >= 80,
-                            market_filter,
+                # Fixed, ex-ante preferences, independent of returns. The fallback
+                # remains bounded and never needs network acquisition on this worker.
+                retained = [
+                    r.payload["ticker"]
+                    for r in states.values()
+                    if r.payload["market"] == market
+                    and r.payload["timeframe"] == timeframe
+                ]
+                candidates = db.scalars(
+                    select(Asset)
+                    .where(Asset.is_active.is_(True), eligible)
+                    .order_by(
+                        case((Asset.ticker.in_(retained), -1), else_=1),
+                        case(
+                            (
+                                Asset.ticker.in_(
+                                    ("SPY", "QQQ", "EURUSD=X", "GBPUSD=X")
+                                ),
+                                0,
+                            ),
+                            else_=1,
+                        ),
+                        Asset.ticker,
+                    )
+                    .limit(12)
+                ).all()
+                ready = 0
+                for asset in candidates:
+                    if time.monotonic() >= deadline or ready >= 2:
+                        break
+                    lane = f"{market}:{timeframe}:{asset.ticker}"
+                    old = states.get(lane)
+                    if old and old.payload.get("source_policy") == SOURCE_POLICY:
+                        ready += 1
+                        continue
+                    # A frozen pending decision keeps its original observations
+                    # and clock until terminal; changing its source would be hindsight.
+                    if old and old.payload["forward"].get("proposal"):
+                        ready += 1
+                        diagnostics.append(
+                            dict(lane=lane, status="LEGACY_PENDING_SOURCE_RETAINED")
                         )
-                        .order_by(
-                            ReplayDataCoverage.available_end.desc(),
-                            ReplayDataCoverage.asset_id,
+                        continue
+                    kind = "replay"
+                    if market == "USA" and timeframe == "1d":
+                        count = (
+                            db.scalar(
+                                select(func.count(PriceHistory.id)).where(
+                                    PriceHistory.asset_id == asset.id,
+                                    PriceHistory.date <= now.date(),
+                                )
+                            )
+                            or 0
                         )
-                        .limit(12)
-                    ).all()
-                )
-        counts = {}
-        for lane in existing:
-            group = tuple(lane.split(":")[:2])
-            counts[group] = counts.get(group, 0) + 1
-        for row in coverage:
-            asset = db.get(Asset, row.asset_id)
-            if not asset or not asset.is_active:
-                continue
-            market = (
-                "FOREX"
-                if row.market.upper() == "FOREX" or "=X" in asset.ticker
-                else "USA" if normalize_market(row.market) == "USA" else None
-            )
-            if market is None:
-                continue
-            lane = f"{market}:{row.timeframe}:{asset.ticker}"
-            group = (market, row.timeframe)
-            if lane in existing:
-                continue
-            if counts.get(group, 0) >= 2:
-                continue
-            pack = self._bars(db, asset.id, row.timeframe, market, now, limit=5000)
-            if len(pack) < 600 or any(not kernel.valid_bar(b) for b in pack):
-                continue
-            windows = kernel.training_windows(len(pack), seed=17)
-            payload = dict(
-                lane=lane,
-                market=market,
-                timeframe=row.timeframe,
-                ticker=asset.ticker,
-                asset_id=asset.id,
-                quote_currency=asset.currency,
-                source_hash=kernel.digest(pack),
-                source_rows=len(pack),
-                source_provider=row.provider,
-                catalogue_hash=kernel.digest(
-                    [s.to_payload() for s in kernel.catalogue(row.timeframe, market)]
-                ),
-                windows=windows,
-                model={},
-                training_episodes=0,
-                learned_outcomes=0,
-                training_status="TRAINING",
-                checkpoint=kernel.digest({}),
-                forward=dict(
-                    status="WAITING_SIGNAL",
-                    closed_count=0,
-                    cash_quote_units=kernel.CAPITAL,
-                ),
-            )
-            payload["public"] = self._public(payload)
-            try:
-                with db.begin_nested():
-                    if db.get(TradingCurriculumSource, payload["source_hash"]) is None:
-                        db.add(
-                            TradingCurriculumSource(
-                                uid=payload["source_hash"],
-                                payload={"bars": pack},
-                                created_at=now,
+                        if count >= 600:
+                            kind = "price_history"
+                    pack = self._bars(
+                        db,
+                        asset.id,
+                        timeframe,
+                        market,
+                        now,
+                        limit=5000,
+                        canonical=True,
+                        source_kind=kind,
+                    )
+                    if len(pack) < 600:
+                        diagnostics.append(
+                            dict(
+                                lane=lane,
+                                status="INSUFFICIENT_CLOSED_GRID_BARS",
+                                rows=len(pack),
                             )
                         )
-                    db.add(
-                        TradingCurriculumState(
+                        if old:
+                            replacement = deepcopy(old.payload)
+                            replacement["training_status"] = "DATA_BLOCKED"
+                            replacement["source_readiness"] = dict(
+                                reason="INSUFFICIENT_CLOSED_GRID_BARS", rows=len(pack)
+                            )
+                            replacement["public"] = self._public(replacement)
+                            self._replace_state(db, old, replacement, now)
+                        continue
+                    audit = self._audit(pack, market, timeframe)
+                    if not audit["usable_training_decisions"]:
+                        diagnostics.append(
+                            dict(
+                                lane=lane,
+                                status="NO_CONTIGUOUS_TRAINING_CONTEXT",
+                                audit=audit,
+                            )
+                        )
+                        if old:
+                            replacement = deepcopy(old.payload)
+                            replacement["training_status"] = "DATA_BLOCKED"
+                            replacement["source_readiness"] = dict(
+                                reason="NO_CONTIGUOUS_TRAINING_CONTEXT", audit=audit
+                            )
+                            replacement["public"] = self._public(replacement)
+                            self._replace_state(db, old, replacement, now)
+                        continue
+                    payload = dict(
+                        lane=lane,
+                        market=market,
+                        timeframe=timeframe,
+                        ticker=asset.ticker,
+                        asset_id=asset.id,
+                        quote_currency=asset.currency,
+                        source_hash=kernel.digest(pack),
+                        source_rows=len(pack),
+                        source_kind=kind,
+                        source_policy=SOURCE_POLICY,
+                        source_audit=audit,
+                        catalogue_hash=kernel.digest(
+                            [
+                                x.to_payload()
+                                for x in kernel.catalogue(timeframe, market)
+                            ]
+                        ),
+                        windows=kernel.training_windows(len(pack), seed=17),
+                        model={},
+                        training_episodes=0,
+                        learned_outcomes=0,
+                        productive_episodes=0,
+                        training_diagnostics={},
+                        training_status=(
+                            "TRAINING"
+                            if audit["usable_training_decisions"]
+                            else "DATA_BLOCKED"
+                        ),
+                        checkpoint=kernel.digest({}),
+                        forward=dict(
+                            status="WAITING_SIGNAL",
+                            closed_count=0,
+                            cash_quote_units=kernel.CAPITAL,
+                        ),
+                    )
+                    if old:
+                        archived = deepcopy(old.payload)
+                        history = archived.pop("source_history", [])
+                        archived.pop("public", None)
+                        archived.update(
+                            archived_at=now.isoformat(),
+                            reason="SOURCE_CLOCK_POLICY_REPLACED",
+                        )
+                        payload["source_history"] = history + [archived]
+                    payload["public"] = self._public(payload)
+                    try:
+                        with db.begin_nested():
+                            if (
+                                db.get(TradingCurriculumSource, payload["source_hash"])
+                                is None
+                            ):
+                                db.add(
+                                    TradingCurriculumSource(
+                                        uid=payload["source_hash"],
+                                        payload={"bars": pack},
+                                        created_at=now,
+                                    )
+                                )
+                            if old:
+                                self._replace_state(
+                                    db, old, payload, datetime(1970, 1, 1)
+                                )
+                            else:
+                                row = TradingCurriculumState(
+                                    lane=lane,
+                                    revision=0,
+                                    payload=payload,
+                                    updated_at=datetime(1970, 1, 1),
+                                )
+                                db.add(row)
+                                states[lane] = row
+                            db.flush()
+                    except IntegrityError:
+                        if db.get(TradingCurriculumState, lane) is None:
+                            raise
+                    diagnostics.append(
+                        dict(
                             lane=lane,
-                            revision=0,
-                            payload=payload,
-                            updated_at=datetime(1970, 1, 1),
+                            status=payload["training_status"],
+                            rows=len(pack),
+                            source_kind=kind,
+                            audit=audit,
                         )
                     )
-                    db.flush()
-            except IntegrityError:
-                if db.get(TradingCurriculumState, lane) is None:
-                    raise
-            existing.add(lane)
-            counts[group] = counts.get(group, 0) + 1
+                    ready += 1
         db.commit()
+        return diagnostics
+
+    @staticmethod
+    def _replace_state(db, row, payload, now):
+        with db.no_autoflush:
+            changed = db.execute(
+                update(TradingCurriculumState)
+                .where(
+                    TradingCurriculumState.lane == row.lane,
+                    TradingCurriculumState.revision == row.revision,
+                )
+                .values(payload=payload, revision=row.revision + 1, updated_at=now)
+                .execution_options(synchronize_session=False)
+            )
+            if changed.rowcount != 1:
+                raise CheckpointChanged()
+        db.expire(row)
+
+    @staticmethod
+    def _audit(pack, market, timeframe):
+        gaps = [
+            i
+            for i in range(1, len(pack))
+            if not kernel.consecutive(
+                datetime.fromisoformat(pack[i - 1]["start"]),
+                datetime.fromisoformat(pack[i]["start"]),
+                timeframe,
+                market,
+            )
+        ]
+        invalid = {i for i, b in enumerate(pack) if not kernel.valid_bar(b)}
+        gap_set = set(gaps)
+        attempts = (
+            i
+            for start, end in kernel.training_windows(len(pack), seed=17)
+            for i in range(start, end - 2)
+        )
+        usable = sum(
+            not invalid.intersection(range(i - kernel.WARMUP + 1, i + 1))
+            and not gap_set.intersection(range(i - kernel.WARMUP + 2, i + 1))
+            for i in attempts
+        )
+        return dict(
+            policy=SOURCE_POLICY,
+            invalid_rows=len(invalid),
+            missing_interval_boundaries=len(gaps),
+            usable_training_decisions=usable,
+            start=pack[0]["start"],
+            end=pack[-1]["available"],
+        )
 
     def _bars(
         self,
@@ -266,41 +460,72 @@ class TradingCurriculumWorker:
         *,
         limit: int,
         after: datetime | None = None,
+        canonical: bool = False,
+        source_kind: str = "replay",
     ) -> list[dict]:
-        query = select(ReplayMarketBar).where(
-            ReplayMarketBar.asset_id == asset_id,
-            ReplayMarketBar.timeframe == timeframe,
-            ReplayMarketBar.bar_timestamp <= now,
-            ReplayMarketBar.acquired_at <= now,
-        )
-        if after:
-            query = query.where(
-                ReplayMarketBar.bar_timestamp
-                > (after - timedelta(days=1) if timeframe == "1d" else after)
+        if source_kind == "price_history":
+            query = select(PriceHistory).where(
+                PriceHistory.asset_id == asset_id, PriceHistory.date <= now.date()
             )
-        if after:
-            rows = db.scalars(
-                query.order_by(ReplayMarketBar.bar_timestamp).limit(
-                    limit + 3 if timeframe == "1d" else limit
-                )
-            ).all()
+            if after:
+                query = query.where(PriceHistory.date >= after.date())
+            clock = PriceHistory.date
         else:
-            rows = list(
-                reversed(
-                    db.scalars(
-                        query.order_by(ReplayMarketBar.bar_timestamp.desc()).limit(
-                            limit
-                        )
-                    ).all()
-                )
+            query = select(ReplayMarketBar).where(
+                ReplayMarketBar.asset_id == asset_id,
+                ReplayMarketBar.timeframe == timeframe,
+                ReplayMarketBar.bar_timestamp <= now,
+                ReplayMarketBar.acquired_at <= now,
             )
+            clock = ReplayMarketBar.bar_timestamp
+            if after:
+                query = query.where(
+                    clock > (after - timedelta(days=1) if timeframe == "1d" else after)
+                )
+            if canonical:
+                # Filter before LIMIT: quote polling can bury years of daily bars.
+                query = query.where(extract("second", clock) == 0)
+                if timeframe == "1d":
+                    query = (
+                        query.where(
+                            extract("minute", clock) == 0,
+                            extract("hour", clock).in_((0, 23)),
+                        )
+                        if market == "FOREX"
+                        else query.where(
+                            or_(
+                                (extract("hour", clock) == 0)
+                                & (extract("minute", clock) == 0),
+                                (extract("hour", clock).in_((13, 14)))
+                                & (extract("minute", clock) == 30),
+                            )
+                        )
+                    )
+                else:
+                    query = query.where(extract("minute", clock) % 5 == 0)
+        # A small daily lookahead allows normalized NY opening labels after `after`.
+        rows = db.scalars(
+            query.order_by(clock if after else clock.desc()).limit(
+                limit + (3 if after and timeframe == "1d" else 0)
+            )
+        ).all()
+        if not after:
+            rows = list(reversed(rows))
         pack = []
         for row in rows:
-            available = kernel.available_at(row.bar_timestamp, timeframe, market)
+            timestamp = (
+                datetime.combine(row.date, datetime.min.time())
+                if source_kind == "price_history"
+                else row.bar_timestamp
+            )
+            if canonical:
+                from app.services.market_bar_clock import canonical_open
+
+                if not canonical_open(timestamp, timeframe, market):
+                    continue
+            available = kernel.available_at(timestamp, timeframe, market)
             bar = dict(
-                start=kernel.session_start(
-                    row.bar_timestamp, timeframe, market
-                ).isoformat(),
+                start=kernel.session_start(timestamp, timeframe, market).isoformat(),
                 available=available.isoformat(),
                 open=row.open,
                 high=row.high,
@@ -319,8 +544,23 @@ class TradingCurriculumWorker:
                     bar[key] = None
                 bar["invalid_reason"] = "NON_FINITE_MARKET_DATA"
                 bar["invalid_fields"] = invalid_fields
-            if row.data_quality_score < 80 and not bar.get("invalid_reason"):
+            if (
+                source_kind != "price_history"
+                and row.data_quality_score < 80
+                and not bar.get("invalid_reason")
+            ):
                 bar["invalid_reason"] = "LOW_SOURCE_QUALITY"
+            if canonical:
+                bar["source_policy"] = SOURCE_POLICY
+                captured_at = (
+                    row.created_at
+                    if source_kind == "price_history"
+                    else row.acquired_at
+                )
+                if captured_at < available and not bar.get("invalid_reason"):
+                    # Aging a captured partial OHLC does not create the final
+                    # candle. A closed refetch must confirm it first.
+                    bar["invalid_reason"] = "CAPTURED_BEFORE_BAR_FINALIZATION"
             if available <= now and (after is None or bar["start"] > after.isoformat()):
                 pack.append(bar)
         return pack[:limit] if after else pack
@@ -328,7 +568,11 @@ class TradingCurriculumWorker:
     def _train(self, db: Session, payload: dict, now: datetime):
         cursor = payload["training_episodes"]
         if cursor >= len(payload["windows"]):
-            payload["training_status"] = "PACK_EXHAUSTED"
+            payload["training_status"] = (
+                "PACK_EXHAUSTED"
+                if payload["learned_outcomes"]
+                else "PACK_EXHAUSTED_NO_OUTCOMES"
+            )
             return
         start, end = payload["windows"][cursor]
         uid = kernel.digest(
@@ -349,6 +593,7 @@ class TradingCurriculumWorker:
         pack = db.get(TradingCurriculumSource, payload["source_hash"]).payload["bars"]
         model = kernel.Selector(payload["model"])
         outcomes = []
+        diagnostics = payload.setdefault("training_diagnostics", {})
         for spec in kernel.catalogue(payload["timeframe"], payload["market"]):
             report = kernel.simulate(
                 pack,
@@ -358,10 +603,18 @@ class TradingCurriculumWorker:
                 end=end,
                 expert=spec,
             )
+            for reason, count in report["decision_diagnostics"].items():
+                diagnostics[reason] = diagnostics.get(reason, 0) + count
             for trade in report["trades"]:
+                reason = "EXECUTION_" + trade["status"]
+                diagnostics[reason] = diagnostics.get(reason, 0) + 1
                 if trade["status"] == "CLOSED":
                     model.learn(spec.fingerprint, trade["context"], trade["net_r"])
                     outcomes.append(trade)
+        payload["productive_episodes"] = payload.get("productive_episodes", 0) + bool(
+            outcomes
+        )
+        payload["training_status"] = "TRAINING" if outcomes else "TRAINING_NO_OUTCOMES"
         payload["model"] = model.payload()
         payload["training_episodes"] += 1
         payload["learned_outcomes"] += len(outcomes)
@@ -420,7 +673,11 @@ class TradingCurriculumWorker:
             for i in range(start + 1, end)
             if pack[i]["start"] > pack[start]["available"]
         )
-        hold = pack[end - 1]["close"] / pack[entry_i]["open"] - 1
+        hold = (
+            pack[end - 1]["close"] / pack[entry_i]["open"] - 1
+            if kernel.valid_bar(pack[end - 1]) and kernel.valid_bar(pack[entry_i])
+            else None
+        )
         for report in (policy, baseline):
             report.pop("trades", None)
         return dict(
@@ -438,6 +695,13 @@ class TradingCurriculumWorker:
     def _forward(self, db: Session, payload: dict, now: datetime):
         forward = payload["forward"]
         pending = forward.get("proposal")
+        if not pending and payload.get("source_readiness"):
+            forward.update(
+                status="WAITING_CONTEXT",
+                reason=payload["source_readiness"]["reason"],
+                updated_at=now.isoformat(),
+            )
+            return
         if pending:
             future = forward.setdefault("observed", [])
             after = datetime.fromisoformat(
@@ -452,6 +716,8 @@ class TradingCurriculumWorker:
                     now,
                     limit=kernel.HOLD - len(future),
                     after=after,
+                    canonical=payload.get("source_policy") == SOURCE_POLICY,
+                    source_kind=payload.get("source_kind", "replay"),
                 )
                 if len(future) < kernel.HOLD
                 else []
@@ -521,6 +787,8 @@ class TradingCurriculumWorker:
             payload["market"],
             now,
             limit=kernel.WARMUP + 2,
+            canonical=payload.get("source_policy") == SOURCE_POLICY,
+            source_kind=payload.get("source_kind", "replay"),
         )
         freshness = (
             timedelta(days=4) if payload["timeframe"] == "1d" else timedelta(minutes=20)
@@ -540,6 +808,7 @@ class TradingCurriculumWorker:
             return
         if forward.get("last_feature") == history[-1]["available"]:
             return
+        decision_diagnostics = {}
         proposal = kernel.propose(
             history,
             market=payload["market"],
@@ -548,9 +817,19 @@ class TradingCurriculumWorker:
                 kernel.merge_models(payload["model"], payload.get("live_updates", {}))
             ),
             decision_at=now,
+            diagnostics=decision_diagnostics,
         )
         if proposal is None:
-            forward.update(status="WAITING_SIGNAL", updated_at=now.isoformat())
+            forward.update(
+                status=(
+                    "WAITING_CONTEXT"
+                    if "MISSING_CONTEXT_INTERVAL" in decision_diagnostics
+                    or "INSUFFICIENT_CLOSED_CONTEXT" in decision_diagnostics
+                    else "WAITING_SIGNAL"
+                ),
+                reason=next(iter(decision_diagnostics), "NO_EXPERT_TRIGGER"),
+                updated_at=now.isoformat(),
+            )
             return
         proposal["checkpoint"] = kernel.digest(
             [payload["checkpoint"], payload.get("live_updates", {})]
@@ -559,6 +838,7 @@ class TradingCurriculumWorker:
         forward.update(
             status="PENDING",
             proposal=proposal,
+            reason=None,
             decision_at=now.isoformat(),
             updated_at=now.isoformat(),
         )

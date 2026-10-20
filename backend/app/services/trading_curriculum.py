@@ -174,13 +174,22 @@ def propose(
     model: Selector,
     decision_at: datetime,
     expert=None,
+    diagnostics: dict | None = None,
 ) -> dict | None:
+    def count(reason):
+        if diagnostics is not None:
+            diagnostics[reason] = diagnostics.get(reason, 0) + 1
+
     closed = [
         b
         for b in history
         if valid_bar(b) and datetime.fromisoformat(b["available"]) <= decision_at
     ]
-    if any(not valid_bar(b) for b in history) or len(closed) < WARMUP:
+    if any(not valid_bar(b) for b in history):
+        count("INVALID_CONTEXT_BAR")
+        return None
+    if len(closed) < WARMUP:
+        count("INSUFFICIENT_CLOSED_CONTEXT")
         return None
     if any(
         not consecutive(
@@ -191,6 +200,7 @@ def propose(
         )
         for a, b in zip(closed, closed[1:])
     ):
+        count("MISSING_CONTEXT_INTERVAL")
         return None
     context = features(closed)
     rows = [
@@ -208,12 +218,15 @@ def propose(
         spec, {timeframe: rows}, as_of=decision_at, market=market
     )
     if evaluation.status != "triggered":
+        count("NO_EXPERT_TRIGGER")
         return None
     geometry = evaluator.geometry(
         spec, entry_price=closed[-1]["close"], execution_history=rows
     )
     if geometry.stop_price <= 0:
+        count("INVALID_TRADE_GEOMETRY")
         return None
+    count("PROPOSAL_CREATED")
     return dict(
         version=VERSION,
         cost_version=COST_VERSION,
@@ -466,6 +479,7 @@ def simulate(
 ) -> dict:
     model = model or Selector({})
     trades, cash, i = [], CAPITAL, start
+    diagnostics = {}
     while i < min(end, len(bars)) - 2:
         proposal = propose(
             bars[max(0, i - WARMUP + 1) : i + 1],
@@ -474,6 +488,7 @@ def simulate(
             model=model,
             decision_at=datetime.fromisoformat(bars[i]["available"]),
             expert=expert,
+            diagnostics=diagnostics,
         )
         if not proposal or cash <= 0:
             i += 1
@@ -502,4 +517,6 @@ def simulate(
             break
         else:
             i += 2
-    return metrics(trades)
+    result = metrics(trades)
+    result["decision_diagnostics"] = diagnostics
+    return result

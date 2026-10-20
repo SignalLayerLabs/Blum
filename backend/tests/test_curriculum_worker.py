@@ -239,7 +239,7 @@ def test_prospective_journal_freezes_decision_then_learns_only_when_future_close
                     volume=1e6,
                     provider="fixture",
                     data_quality_score=95,
-                    acquired_at=now + timedelta(days=i),
+                    acquired_at=k.available_at(day, "1d", "USA") + timedelta(minutes=1),
                 )
             )
         db.commit()
@@ -332,3 +332,306 @@ def test_rejected_nonfinite_market_values_are_json_safe_for_durable_blocked_path
         assert result[0]["invalid_reason"] == "NON_FINITE_MARKET_DATA"
         assert not k.valid_bar(result[0])
         assert k.digest(result)
+
+
+def test_discovery_uses_local_daily_history_without_a_replay_coverage_catalogue():
+    from app.models import PriceHistory
+
+    with database() as db:
+        asset = db.scalar(select(Asset))
+        rows = db.scalars(select(ReplayMarketBar)).all()
+        for row in rows:
+            db.add(
+                PriceHistory(
+                    asset_id=asset.id,
+                    date=row.bar_timestamp.date(),
+                    open=row.open,
+                    high=row.high,
+                    low=row.low,
+                    close=row.close,
+                    volume=row.volume,
+                    provider="fixture",
+                )
+            )
+            db.delete(row)
+        for row in db.scalars(select(ReplayDataCoverage)).all():
+            db.delete(row)
+        db.commit()
+        service = worker.TradingCurriculumWorker()
+        service.run_once(db, now=datetime(2026, 10, 19))
+        lane = service.snapshot(db)["lanes"][0]
+        assert lane["learned_outcomes"] > 0
+        assert lane["source_kind"] == "price_history"
+
+
+def test_one_bad_bar_cannot_hide_all_other_usable_training_blocks():
+    with database() as db:
+        rows = db.scalars(
+            select(ReplayMarketBar).order_by(ReplayMarketBar.bar_timestamp)
+        ).all()
+        rows[700].high = (
+            1  # reserved confirmation: preserve evidence, never evaluate it
+        )
+        db.commit()
+        service = worker.TradingCurriculumWorker()
+        service.run_once(db, now=datetime(2026, 10, 19))
+        lane = service.snapshot(db)["lanes"][0]
+        assert lane["learned_outcomes"] > 0
+        assert lane["source_audit"]["invalid_rows"] == 1
+        source = db.get(worker.TradingCurriculumSource, lane["source_hash"]).payload[
+            "bars"
+        ]
+        assert source[700]["high"] == 1
+
+
+def test_off_grid_forex_quote_updates_do_not_replace_daily_candles_or_hide_them():
+    from app.services import trading_curriculum as k
+    from zoneinfo import ZoneInfo
+    from datetime import timezone
+
+    with database() as db:
+        asset = db.scalar(select(Asset))
+        asset.ticker = "AUDUSD=X"
+        asset.country = "Forex"
+        coverage = db.scalar(select(ReplayDataCoverage))
+        coverage.market = "Forex"
+        rows = db.scalars(
+            select(ReplayMarketBar).order_by(ReplayMarketBar.bar_timestamp)
+        ).all()
+        for row in rows:
+            day = row.bar_timestamp.date()
+            row.bar_timestamp = (
+                datetime.combine(day, datetime.min.time(), ZoneInfo("Europe/London"))
+                .astimezone(timezone.utc)
+                .replace(tzinfo=None)
+            )
+            row.market = "Forex"
+            row.volume = 0
+        # A polled last-trade quote is not an additional daily candle. It must
+        # not be rounded, merged, or supplied as a path through an unknown gap.
+        for i in range(800):
+            last = rows[-1]
+            db.add(
+                ReplayMarketBar(
+                    asset_id=asset.id,
+                    source_symbol=asset.ticker,
+                    normalized_symbol=asset.ticker,
+                    market="Forex",
+                    timeframe="1d",
+                    bar_timestamp=last.bar_timestamp
+                    + timedelta(minutes=i + 1, seconds=17),
+                    open=last.open,
+                    high=last.high,
+                    low=last.low,
+                    close=last.close,
+                    volume=0,
+                    provider="fixture",
+                    data_quality_score=95,
+                    acquired_at=datetime(2024, 1, 1),
+                )
+            )
+        db.commit()
+        service = worker.TradingCurriculumWorker()
+        source = service._bars(
+            db,
+            asset.id,
+            "1d",
+            "FOREX",
+            datetime(2026, 10, 19),
+            limit=5000,
+            canonical=True,
+        )
+        assert len(source) == 800
+        assert all(datetime.fromisoformat(b["start"]).second == 0 for b in source)
+        assert all(b["source_policy"] == worker.SOURCE_POLICY for b in source)
+        # NYSE fixture dates have some FX holidays missing: retain those gaps.
+        assert any(
+            not k.consecutive(
+                datetime.fromisoformat(a["start"]),
+                datetime.fromisoformat(b["start"]),
+                "1d",
+                "FOREX",
+            )
+            for a, b in zip(source, source[1:])
+        )
+
+
+def test_structurally_invalid_legacy_pack_is_archived_then_replaced_once():
+    from copy import deepcopy
+
+    with database() as db:
+        service = worker.TradingCurriculumWorker()
+        service.run_once(db, now=datetime(2026, 10, 19))
+        state = db.scalar(select(worker.TradingCurriculumState))
+        for episode in db.scalars(select(worker.TradingCurriculumEpisode)).all():
+            db.delete(episode)
+        old = deepcopy(state.payload)
+        old.pop("source_policy", None)
+        old["training_episodes"] = 30
+        old["learned_outcomes"] = 0
+        old["model"] = {}
+        old["training_status"] = "PACK_EXHAUSTED"
+        old["source_hash"] = "legacy-diagnostic-source"
+        db.add(
+            worker.TradingCurriculumSource(
+                uid=old["source_hash"],
+                payload={"bars": []},
+                created_at=datetime(2026, 10, 18),
+            )
+        )
+        state.payload = old
+        db.commit()
+        service.run_once(db, now=datetime(2026, 10, 19))
+        db.expire_all()
+        state = db.scalar(select(worker.TradingCurriculumState))
+        assert state.payload["source_policy"] == worker.SOURCE_POLICY
+        assert (
+            state.payload["source_history"][-1]["source_hash"]
+            == "legacy-diagnostic-source"
+        )
+        assert state.payload["source_history"][-1]["training_episodes"] == 30
+        assert (
+            db.get(worker.TradingCurriculumSource, "legacy-diagnostic-source").payload[
+                "bars"
+            ]
+            == []
+        )
+        service.run_once(db, now=datetime(2026, 10, 19))
+        db.expire_all()
+        state = db.scalar(select(worker.TradingCurriculumState))
+        assert len(state.payload["source_history"]) == 1
+
+
+def test_source_replacement_cannot_overwrite_a_newer_checkpoint():
+    from copy import deepcopy
+    from sqlalchemy import update
+    import pytest
+
+    with database() as db:
+        service = worker.TradingCurriculumWorker()
+        service.run_once(db, now=datetime(2026, 10, 19))
+        row = db.scalar(select(worker.TradingCurriculumState))
+        replacement = deepcopy(row.payload)
+        current_revision = row.revision
+        db.execute(
+            update(worker.TradingCurriculumState)
+            .where(worker.TradingCurriculumState.lane == row.lane)
+            .values(revision=current_revision + 1)
+            .execution_options(synchronize_session=False)
+        )
+        with pytest.raises(worker.CheckpointChanged):
+            service._replace_state(db, row, replacement, datetime(2026, 10, 19))
+
+
+def test_readiness_counts_only_decisions_that_a_training_block_will_attempt():
+    from app.services import trading_curriculum as k
+    from test_trading_curriculum import bars
+
+    source = bars(600)
+    for bar in source[60:]:
+        bar["invalid_reason"] = "BAD_PROVIDER_DATA"
+    audit = worker.TradingCurriculumWorker._audit(source, "USA", "1d")
+    assert audit["usable_training_decisions"] == 0
+
+
+def test_aging_a_legacy_forming_candle_does_not_finalize_its_captured_ohlc():
+    from app.services import trading_curriculum as k
+
+    with database() as db:
+        asset = db.scalar(select(Asset))
+        db.add(
+            ReplayMarketBar(
+                asset_id=asset.id,
+                source_symbol=asset.ticker,
+                normalized_symbol=asset.ticker,
+                market="USA",
+                timeframe="5m",
+                bar_timestamp=datetime(2026, 7, 15, 13, 30),
+                open=100,
+                high=101,
+                low=99,
+                close=100.5,
+                volume=1000,
+                provider="legacy",
+                data_quality_score=95,
+                acquired_at=datetime(2026, 7, 15, 13, 32),
+                source_metadata={},
+            )
+        )
+        db.commit()
+        result = worker.TradingCurriculumWorker()._bars(
+            db,
+            asset.id,
+            "5m",
+            "USA",
+            datetime(2026, 7, 15, 14),
+            limit=10,
+            canonical=True,
+        )
+        assert len(result) == 1
+        assert result[0]["invalid_reason"] == "CAPTURED_BEFORE_BAR_FINALIZATION"
+        assert not k.valid_bar(result[0])
+
+
+def test_daily_price_history_also_requires_a_post_close_capture():
+    from app.models import PriceHistory
+    from app.services import trading_curriculum as k
+
+    with database() as db:
+        asset = db.scalar(select(Asset))
+        row = PriceHistory(
+            asset_id=asset.id,
+            date=datetime(2026, 7, 15).date(),
+            open=100,
+            high=101,
+            low=99,
+            close=100.5,
+            volume=1000,
+            provider="yahoo_chart",
+            created_at=datetime(2026, 7, 15, 13, 32),
+        )
+        db.add(row)
+        db.commit()
+        service = worker.TradingCurriculumWorker()
+        source = service._bars(
+            db,
+            asset.id,
+            "1d",
+            "USA",
+            datetime(2026, 7, 15, 21),
+            limit=1,
+            canonical=True,
+            source_kind="price_history",
+        )
+        assert source[0]["invalid_reason"] == "CAPTURED_BEFORE_BAR_FINALIZATION"
+        assert not k.valid_bar(source[0])
+        # MarketDataService replaces rows on a fresh download; its creation
+        # timestamp now reflects the confirmed post-close observation.
+        db.delete(row)
+        db.flush()
+        db.add(
+            PriceHistory(
+                asset_id=asset.id,
+                date=datetime(2026, 7, 15).date(),
+                open=100,
+                high=103,
+                low=98,
+                close=102,
+                volume=4000,
+                provider="yahoo_chart",
+                created_at=datetime(2026, 7, 15, 20, 2),
+            )
+        )
+        db.commit()
+        source = service._bars(
+            db,
+            asset.id,
+            "1d",
+            "USA",
+            datetime(2026, 7, 15, 21),
+            limit=1,
+            canonical=True,
+            source_kind="price_history",
+        )
+        assert k.valid_bar(source[0])
+        assert source[0]["close"] == 102
