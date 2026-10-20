@@ -101,6 +101,8 @@ class PaperOrderLifecycleService:
         *,
         now: datetime | None = None,
     ) -> dict:
+        db.flush()
+        order = db.scalar(select(PaperExecutionOrder).where(PaperExecutionOrder.id == order.id).with_for_update().execution_options(populate_existing=True))
         if order.status in {
             "FILLED",
             "PARTIALLY_FILLED_EXPIRED",
@@ -367,7 +369,7 @@ class PaperOrderLifecycleService:
         trade.position_size = round(total_quantity, 8)
         trade.opened_at = min(fill.market_timestamp for fill in fills)
         trade.entry_date = trade.opened_at.date()
-        trade.status = "OPEN" if order.status in {"FILLED", "PARTIALLY_FILLED_EXPIRED"} else "PARTIALLY_FILLED"
+        trade.status = "OPEN"
         trade.spread_cost = round(total_spread, 8)
         trade.slippage_cost = round(total_slippage, 8)
         trade.commission_cost = round(total_commission, 8)

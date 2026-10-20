@@ -64,6 +64,8 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "forex_trader_cycles",
         "forex_decisions",
         "forex_positions",
+        "forex_pending_orders",
+        "forex_order_fills",
         "forex_learning_evidence",
         "forex_strategy_readiness",
         "forex_trader_runtime_state",
@@ -108,7 +110,7 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "accounting_recomputed_at",
     }.issubset(paper_trade_columns)
     with engine.connect() as connection:
-        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0047_trading_curriculum"
+        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0048_forex_order_accounting"
 
     downgrade = subprocess.run(
         [sys.executable, "-m", "alembic", "downgrade", "base"],

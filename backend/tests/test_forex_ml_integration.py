@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.models import LiveForwardPaperGame, ForexPendingOrder
+
 from app.services.forex_trader import BlumForexTraderCore
 from app.services.trading_ml.contracts import TradingMLAdvice
 from app.services.trading_ml.finrlx import QuantPolicyProposal
@@ -71,6 +73,8 @@ def test_validated_negative_forex_model_adds_veto(db):
 
 
 def test_positive_model_is_a_bounded_advisor_not_a_risk_bypass(db):
+    db.add(LiveForwardPaperGame(game_id="funded-advisor-test", starting_capital=1000, current_capital=1000, cash=1000))
+    db.flush()
     core = BlumForexTraderCore()
     core.supervised_advisor = FakeAdvisor(positive=True)
     result = core.run_cycle(
@@ -80,13 +84,17 @@ def test_positive_model_is_a_bounded_advisor_not_a_risk_bypass(db):
         now=NOW,
         cycle_key="positive-supervised",
     )
-    assert result["trades_opened"] == 1
+    assert result["trades_opened"] == 0
+    assert result['candidates_approved'] == 1
+    assert db.query(ForexPendingOrder).count() == 1
     decision = db.query(__import__("app.models", fromlist=["ForexDecision"]).ForexDecision).one()
     assert decision.proposal_json["supervised_model"]["model_uid"] == "forex-test-champion"
     assert decision.proposal_json["knowledge_context"]["supervised_model"]["combined_contextual_adjustment_points"] <= 10.0
 
 
 def test_finrlx_challenger_is_recorded_without_execution_authority(db):
+    db.add(LiveForwardPaperGame(game_id="funded-advisor-test", starting_capital=1000, current_capital=1000, cash=1000))
+    db.flush()
     core = BlumForexTraderCore()
     core.supervised_advisor = FakeAdvisor(positive=True)
     quant = FakeQuantAdvisor()
@@ -101,7 +109,9 @@ def test_finrlx_challenger_is_recorded_without_execution_authority(db):
     )
 
     decision = db.query(__import__("app.models", fromlist=["ForexDecision"]).ForexDecision).one()
-    assert result["trades_opened"] == 1
+    assert result["trades_opened"] == 0
+    assert result['candidates_approved'] == 1
+    assert db.query(ForexPendingOrder).count() == 1
     assert decision.proposal_json["finrlx_quant"]["status"] == "SHADOW"
     assert decision.proposal_json["finrlx_quant"]["action"] == "LONG"
     assert decision.proposal_json["finrlx_quant"]["paper_only"] is True

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from math import floor
+from math import floor, isfinite
 
 from app.services.forex_broker import ForexBrokerProfile
 from app.services.forex_contracts import ForexDirection, ForexOrderRequest, ForexQuote, pair_config
@@ -20,11 +20,11 @@ class ForexExecutionResult:
     slippage_pips: float
     spread_pips: float
     spread_source: str
-    spread_cost: float
-    slippage_cost: float
+    spread_cost: float | None
+    slippage_cost: float | None
     commission: float
     swap: float
-    total_cost: float
+    total_cost: float | None
     margin_required: float
     execution_model_version: str
     rejection_reason: str | None = None
@@ -37,13 +37,22 @@ class ForexExecutionResult:
 
 class BlumForexExecutionSimulator:
     def submit(self, order: ForexOrderRequest, quote: ForexQuote, broker: ForexBrokerProfile, *, now: datetime) -> ForexExecutionResult:
-        return self._execute(order, quote, broker, closing=False)
+        return self._execute(order, quote, broker, closing=False, now=now)
 
     def close(self, order: ForexOrderRequest, quote: ForexQuote, broker: ForexBrokerProfile, *, reason: str, now: datetime) -> ForexExecutionResult:
-        return self._execute(order, quote, broker, closing=True, reason=reason)
+        return self._execute(order, quote, broker, closing=True, reason=reason, now=now)
 
-    def _execute(self, order: ForexOrderRequest, quote: ForexQuote, broker: ForexBrokerProfile, *, closing: bool, reason: str = "") -> ForexExecutionResult:
+    def _execute(self, order: ForexOrderRequest, quote: ForexQuote, broker: ForexBrokerProfile, *, closing: bool, now: datetime, reason: str = "") -> ForexExecutionResult:
         config = pair_config(order.pair)
+        if quote.timestamp > now:
+            return self._rejected(order, quote, broker, "FUTURE_QUOTE")
+        if (now-quote.timestamp).total_seconds() > 180:
+            return self._rejected(order, quote, broker, "STALE_QUOTE")
+        if order.side not in {ForexDirection.LONG,ForexDirection.SHORT} or any(
+            isinstance(value,bool) or not isinstance(value,(int,float)) or not isfinite(value) or value<=0
+            for value in (order.quantity_lots,order.theoretical_price)
+        ):
+            return self._rejected(order, quote, broker, "INVALID_ORDER")
         if order.order_type not in broker.supported_order_types:
             return self._rejected(order, quote, broker, "UNSUPPORTED_ORDER_TYPE")
         quantity = floor(order.quantity_lots / broker.lot_step + 1e-9) * broker.lot_step
@@ -62,22 +71,30 @@ class BlumForexExecutionSimulator:
         slippage_direction = 1 if is_long_fill else -1
         slippage = self._slippage_pips(order, broker)
         fill = market_side + slippage_direction * slippage * config.pip_size
+        if not closing and order.order_type in {"LIMIT", "STOP_LIMIT"} and order.limit_price is not None:
+            if (is_long_fill and fill > order.limit_price) or (not is_long_fill and fill < order.limit_price):
+                return self._pending(order, quote, broker)
         if closing and reason == "STOP_HIT" and order.stop_price is not None:
             fill = min(fill, order.stop_price) if order.side == ForexDirection.LONG else max(fill, order.stop_price)
         spread_pips = (quote.ask - quote.bid) / config.pip_size
         filled_quantity = min(quantity, broker.maximum_immediate_fill_lots) if broker.supports_partial_fills else quantity
         mid = (quote.bid + quote.ask) / 2
-        if config.quote_currency == broker.account_currency:
+        if order.account_conversion:
+            fx_rate = float(order.account_conversion['rate'])
+            fx_source = 'OBSERVED_CONVERSION'
+        elif config.quote_currency == broker.account_currency:
             fx_rate, fx_source = 1.0, "IDENTITY"
         elif config.base_currency == broker.account_currency:
-            fx_rate, fx_source = 1.0 / mid, "PAIR_DERIVED"
+            fx_rate, fx_source = 1.0 / quote.bid, "PAIR_DERIVED"
         else:
-            fx_rate, fx_source = 1.0, "CONFIGURED_ACCOUNT_PIP_VALUE"
-        pip_value = config.pip_value_per_standard_lot * filled_quantity * fx_rate
-        spread_cost = spread_pips * pip_value / 2
-        slippage_cost = slippage * pip_value
+            if not closing:
+                return self._rejected(order, quote, broker, 'ACCOUNT_CONVERSION_UNAVAILABLE')
+            fx_rate, fx_source = None, 'ACCOUNT_CONVERSION_UNAVAILABLE'
+        pip_value = config.pip_size * 100_000 * filled_quantity * fx_rate if fx_rate is not None else None
+        spread_cost = spread_pips * pip_value / 2 if pip_value is not None else None
+        slippage_cost = slippage * pip_value if pip_value is not None else None
         commission = max(broker.minimum_commission, broker.commission_per_lot_round_trip * filled_quantity / 2)
-        notional = abs(fill * filled_quantity * 100_000)
+        notional = filled_quantity * 100_000 if config.base_currency == broker.account_currency else abs(fill * filled_quantity * 100_000) * fx_rate if fx_rate is not None else None
         status = "PARTIALLY_FILLED" if filled_quantity < quantity else "FILLED"
         history = ("CREATED", "SUBMITTED", "ACKNOWLEDGED", status)
         return ForexExecutionResult(
@@ -85,13 +102,15 @@ class BlumForexExecutionSimulator:
             requested_price=order.limit_price or order.stop_price or order.theoretical_price, fill_price=fill,
             filled_quantity_lots=filled_quantity, slippage_pips=slippage, spread_pips=spread_pips,
             spread_source="ESTIMATED" if quote.source.startswith("ESTIMATED") else "QUOTED", spread_cost=spread_cost, slippage_cost=slippage_cost,
-            commission=commission, swap=0.0, total_cost=spread_cost + slippage_cost + commission,
-            margin_required=notional * broker.margin_requirement, execution_model_version=broker.model_version,
+            commission=commission, swap=0.0, total_cost=spread_cost + slippage_cost + commission if spread_cost is not None else None,
+            margin_required=notional * broker.margin_requirement if notional is not None else 0.0, execution_model_version=broker.model_version,
             state_history=history,
             execution_latency_ms=broker.execution_latency_ms,
             account_fx_rate=fx_rate,
             fx_rate_source=fx_source,
             execution_assumptions={
+                "cost_currency": broker.account_currency if fx_rate is not None else None,
+                "account_cost_status": "CONVERTED" if fx_rate is not None else "CONVERSION_PENDING",
                 "session": order.session,
                 "liquidity_score": order.liquidity_score,
                 "volatility_score": order.volatility_score,

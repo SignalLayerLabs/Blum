@@ -77,8 +77,33 @@ class BlumForexPositionManagerAgent:
 
     def manage(self, db: Session, quotes: dict[str, ForexQuote], *, now: datetime) -> dict:
         updated, closed = 0, []
-        positions = db.scalars(select(ForexPosition).where(ForexPosition.status == "OPEN").order_by(ForexPosition.id).limit(20)).all()
+        positions = db.scalars(select(ForexPosition).where(ForexPosition.status.in_(["OPEN", "SETTLEMENT_PENDING"])).order_by(ForexPosition.id).limit(20)).all()
         for position in positions:
+            if (position.contract_json or {}).get("accounting_version") == "forex-cashflow-v2":
+                from app.services.forex_cash_accounting import ForexCashAccounting
+                if position.contract_json.get('account_id'):
+                    margin_state = ForexCashAccounting().margin_state(db, account_id=position.contract_json['account_id'], quotes=quotes, broker=self.brokers.get(), now=now)
+                    from copy import deepcopy
+                    contract = deepcopy(position.contract_json)
+                    contract['margin_state'] = margin_state
+                    if margin_state['breached']:
+                        contract['accounting']['exit_reason'] = 'MARGIN_STOP_OUT'
+                    position.contract_json = contract
+                result = ForexCashAccounting().manage(position, quotes, self.brokers.get(), self.execution, now=now)
+                game = db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.game_id == position.contract_json['account_id']).with_for_update()) if position.contract_json.get('account_id') else db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active").order_by(desc(LiveForwardPaperGame.started_at)).limit(1).with_for_update())
+                if game and (game.configuration or {}).get("account_currency", "EUR") == position.contract_json.get("account_currency"):
+                    game.current_capital += result["cash_delta"]
+                    game.cash += result["cash_delta"] + (result["margin_released"] if (position.contract_json.get('accounting') or {}).get('entry_cash_posted') else 0)
+                    game.realized_pl += result["cash_delta"]
+                    game.exposure = max(0.0, game.exposure-result["margin_released"])
+                    if result["exited_now"]:
+                        game.open_positions = max(0, game.open_positions-1)
+                    game.updated_at = now
+                if result["completed"]:
+                    self._record_closed_outcome(db, position, position.contract_json, position.closed_at, position.exit_price)
+                    closed.append(position.position_uid)
+                updated += 1
+                continue
             quote = quotes.get(position.pair)
             if quote is None or quote.timestamp > now or (now - quote.timestamp).total_seconds() > 180:
                 continue
@@ -149,6 +174,11 @@ class BlumForexPositionManagerAgent:
                 reason = "TIME_STOP"
             if reason:
                 fill = self.execution.close(request, quote, broker, reason=reason, now=now)
+                if fill.status not in {"FILLED", "PARTIALLY_FILLED"} or fill.fill_price is None or fill.filled_quantity_lots <= 0:
+                    contract["last_exit_attempt"] = {"at":now.isoformat(), **_jsonable(asdict(fill))}
+                    position.contract_json = contract
+                    updated += 1
+                    continue
                 position.status = "CLOSED"
                 position.closed_at = now
                 position.exit_price = fill.fill_price
@@ -164,53 +194,7 @@ class BlumForexPositionManagerAgent:
                 position.net_pnl = position.gross_pnl - position.spread_cost - position.slippage_cost - position.commission + position.swap_accrued
                 risk = abs(position.entry_price - position.stop_price) / config.pip_size * config.pip_value_per_standard_lot * position.quantity_lots
                 position.realized_r = position.net_pnl / risk if risk else None
-                outcome = "WIN" if position.net_pnl > 0 else "LOSS" if position.net_pnl < 0 else "BREAKEVEN"
-                benchmark_excess = self._benchmark_excess(db, position, now, current)
-                evidence = self.learning.record_outcome(db, decision_id=position.decision_id, outcome=outcome, payload={
-                    "position_id": position.id, "strategy_id": position.strategy_id, "pair": position.pair,
-                    "direction": position.direction, "expected_result": contract.get("expected_r"),
-                    "realized_result": position.realized_r, "benchmark_excess": benchmark_excess,
-                    "likely_cause": reason, "evidence_strength": 0.8,
-                    "session": contract.get("session"), "regime": contract.get("regime"),
-                    "setup_family": contract.get("setup_family"),
-                    "timeframe_stack": ["1h", "15m", "5m", "1m"],
-                    "news_state": contract.get("event_impact"),
-                    "spread_model": "quoted_or_broker_dynamic_v1",
-                    "slippage_model": "broker_base_x_liquidity_x_volatility_x_event_v1",
-                    "holding_model": "strategy_contract_time_stop_v1",
-                    "risk_gate_accuracy": "TO_BE_EVALUATED",
-                    "evidence_lane": contract.get("evidence_lane"),
-                    "certified_for_copy_readiness": bool(contract.get("certified_for_copy_readiness", False)),
-                })
-                if evidence is not None:
-                    policy_update = self.reinforcement.observe(db, evidence)
-                    reward = (evidence.payload_json or {}).get("reinforcement_reward_r")
-                    model_evaluation = (
-                        self.model_council.evaluate_outcome(
-                            db,
-                            decision_id=position.decision_id,
-                            reward_r=float(reward),
-                        )
-                        if reward is not None
-                        else {"votes_evaluated": 0}
-                    )
-                    contract["learning_update"] = {
-                        "evidence_id": evidence.id,
-                        "policy": policy_update,
-                        "model_council": model_evaluation,
-                    }
-                    position.contract_json = contract
-                    self.learning.refresh_readiness(
-                        db,
-                        ForexStrategyEvidence(
-                            strategy_id=position.strategy_id,
-                            readiness=ForexReadiness.PAPER_TRADE_ELIGIBLE,
-                            sample_size=int(contract.get("strategy_sample_size") or 0),
-                            net_expectancy_r=float(contract.get("expected_r") or 0.0),
-                            replay_forward_decay=_number(contract.get("replay_forward_decay")),
-                            currency_concentration=_number(contract.get("currency_concentration")),
-                        ),
-                    )
+                self._record_closed_outcome(db, position, contract, now, current)
                 game = db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active").order_by(desc(LiveForwardPaperGame.started_at)).limit(1))
                 if game:
                     game.current_capital += position.net_pnl
@@ -223,6 +207,57 @@ class BlumForexPositionManagerAgent:
             updated += 1
         db.flush()
         return {"positions_updated": updated, "trades_closed": len(closed), "closed_position_ids": closed}
+
+
+    def _record_closed_outcome(self, db, position, contract, now, current):
+        contract = dict(contract)
+        outcome = "WIN" if position.net_pnl > 0 else "LOSS" if position.net_pnl < 0 else "BREAKEVEN"
+        benchmark_excess = self._benchmark_excess(db, position, now, current)
+        evidence = self.learning.record_outcome(db, decision_id=position.decision_id, outcome=outcome, payload={
+            "position_id": position.id, "strategy_id": position.strategy_id, "pair": position.pair,
+            "direction": position.direction, "expected_result": contract.get("expected_r"),
+            "realized_result": position.realized_r, "benchmark_excess": benchmark_excess,
+            "likely_cause": position.exit_reason, "evidence_strength": 0.8,
+            "session": contract.get("session"), "regime": contract.get("regime"),
+            "setup_family": contract.get("setup_family"),
+            "timeframe_stack": ["1h", "15m", "5m", "1m"],
+            "news_state": contract.get("event_impact"),
+            "spread_model": "quoted_or_broker_dynamic_v1",
+            "slippage_model": "broker_base_x_liquidity_x_volatility_x_event_v1",
+            "holding_model": "strategy_contract_time_stop_v1",
+            "risk_gate_accuracy": "TO_BE_EVALUATED",
+            "evidence_lane": contract.get("evidence_lane"),
+            "certified_for_copy_readiness": bool(contract.get("certified_for_copy_readiness", False)),
+        })
+        if evidence is not None:
+            policy_update = self.reinforcement.observe(db, evidence)
+            reward = (evidence.payload_json or {}).get("reinforcement_reward_r")
+            model_evaluation = (
+                self.model_council.evaluate_outcome(
+                    db,
+                    decision_id=position.decision_id,
+                    reward_r=float(reward),
+                )
+                if reward is not None
+                else {"votes_evaluated": 0}
+            )
+            contract["learning_update"] = {
+                "evidence_id": evidence.id,
+                "policy": policy_update,
+                "model_council": model_evaluation,
+            }
+            position.contract_json = contract
+            self.learning.refresh_readiness(
+                db,
+                ForexStrategyEvidence(
+                    strategy_id=position.strategy_id,
+                    readiness=ForexReadiness.PAPER_TRADE_ELIGIBLE,
+                    sample_size=int(contract.get("strategy_sample_size") or 0),
+                    net_expectancy_r=float(contract.get("expected_r") or 0.0),
+                    replay_forward_decay=_number(contract.get("replay_forward_decay")),
+                    currency_concentration=_number(contract.get("currency_concentration")),
+                ),
+            )
 
     @staticmethod
     def _benchmark_excess(db: Session, position: ForexPosition, now: datetime, current_price: float) -> float | None:
@@ -342,7 +377,10 @@ class BlumForexTraderCore:
         db.flush()
         quotes = {item.pair: item.quote for item in inputs}
         managed = self.manager.manage(db, quotes, now=now)
+        from app.services.forex_order_lifecycle import ForexOrderLifecycle
+        advanced = ForexOrderLifecycle(brokers=self.brokers, execution=self.execution).process_batch(db, quotes=quotes, as_of=now)
         approved, rejected, orders, fills, learning_events, blockers = [], [], [], [], [], []
+        fills.extend({"order_uid": item["order_uid"], "new_fills": item["new_fills"]} for item in advanced if item["new_fills"])
         agent_outputs = {}
         for market in inputs:
             strategy = strategies.get(market.pair)
@@ -529,7 +567,7 @@ class BlumForexTraderCore:
                 blockers.extend(evaluation.blockers)
                 continue
             state = self._portfolio_state(db, candidate_pair=market.pair)
-            risk = self.risk.evaluate(evaluation.proposal, state, self.brokers.get())
+            risk = self.risk.evaluate(evaluation.proposal, state, self.brokers.get(), quotes=quotes, now=now)
             decision.risk_json = _jsonable(asdict(risk))
             if not risk.decision.startswith("APPROVE"):
                 decision.status = "REJECTED"
@@ -549,64 +587,24 @@ class BlumForexTraderCore:
                     learning_events.append(evidence.outcome)
                 continue
             from app.services.alpha_desk import AlphaCallRegistry
+            decision.proposal_json = {**decision.proposal_json, 'strategy_readiness': strategy.readiness.value,
+                'strategy_sample_size': strategy.sample_size, 'evidence_lane': strategy.evidence_lane,
+                'certified_for_copy_readiness': strategy.certified_for_copy_readiness,
+                'replay_forward_decay': strategy.replay_forward_decay, 'currency_concentration': strategy.currency_concentration}
             AlphaCallRegistry().register(db, decision)
             request = ForexOrderRequest.from_proposal(
                 evaluation.proposal,
                 quantity_lots=risk.quantity_lots,
                 market=market,
             )
-            execution = self.execution.submit(request, market.quote, self.brokers.get(), now=now)
-            decision.execution_json = _jsonable(asdict(execution))
-            orders.append({"decision_uid": decision_uid, "status": execution.status})
-            if execution.status not in {"FILLED", "PARTIALLY_FILLED"} or execution.fill_price is None:
-                decision.status = "REJECTED"
-                self.learning.record_outcome(db, decision_id=decision.id, outcome="ORDER_NOT_FILLED", payload={
-                    "strategy_id": strategy.strategy_id,
-                    "pair": market.pair,
-                    "session": market.session,
-                    "regime": evaluation.agent_outputs.get("context", {}).get("regime"),
-                    "setup_family": evaluation.proposal.setup_family,
-                    "likely_cause": execution.rejection_reason,
-                    "spread_model": execution.spread_source,
-                    "slippage_model": execution.execution_assumptions.get("slippage_model"),
-                })
-                continue
-            position = ForexPosition(
-                position_uid=f"fx-position-{decision.id}", decision_id=decision.id, pair=market.pair,
-                strategy_id=strategy.strategy_id, direction=evaluation.proposal.direction.value,
-                quantity_lots=execution.filled_quantity_lots, entry_price=execution.fill_price,
-                stop_price=evaluation.proposal.stop, target_price=evaluation.proposal.target,
-                current_price=execution.fill_price, opened_at=now, spread_cost=execution.spread_cost,
-                slippage_cost=execution.slippage_cost, commission=execution.commission,
-                margin_used=execution.margin_required, last_managed_at=now,
-                contract_json={
-                    **_jsonable(asdict(evaluation.proposal)),
-                    "broker_profile": "paper_eu_30x",
-                    "account_currency": self.brokers.get().account_currency,
-                    "account_fx_rate": execution.account_fx_rate,
-                    "fx_rate_source": execution.fx_rate_source,
-                    "session": market.session,
-                    "regime": evaluation.agent_outputs.get("context", {}).get("regime"),
-                    "liquidity_score": market.liquidity_score,
-                    "volatility_score": market.volatility_score,
-                    "event_impact": market.macro_event_impact,
-                    "strategy_readiness": strategy.readiness.value,
-                    "strategy_sample_size": strategy.sample_size,
-                    "evidence_lane": strategy.evidence_lane,
-                    "certified_for_copy_readiness": strategy.certified_for_copy_readiness,
-                    "replay_forward_decay": strategy.replay_forward_decay,
-                    "currency_concentration": strategy.currency_concentration,
-                },
-            )
-            db.add(position)
-            game = db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active").order_by(desc(LiveForwardPaperGame.started_at)).limit(1))
-            if game:
-                game.exposure += execution.margin_required
-                game.open_positions += 1
-                game.updated_at = now
-            decision.status = "OPENED"
-            approved.append({"pair": market.pair, "position_uid": position.position_uid})
-            fills.append({"pair": market.pair, "fill_price": execution.fill_price, "side": evaluation.proposal.direction.value})
+            from app.services.forex_order_lifecycle import ForexOrderLifecycle
+            pending_order = ForexOrderLifecycle(brokers=self.brokers, execution=self.execution).submit(
+                db, decision_id=decision.id, order=request,
+                expires_at=now + timedelta(minutes=max(1, min(5, evaluation.proposal.expected_holding_minutes))))
+            decision.status = "SUBMITTED"
+            decision.execution_json = {"order_uid": pending_order.order_uid, "status": "SUBMITTED", "filled_quantity_lots": 0.0}
+            approved.append({"pair": market.pair, "decision_uid": decision_uid})
+            orders.append({"decision_uid": decision_uid, "status": "SUBMITTED"})
         cycle.status = "COMPLETED"
         cycle.completed_at = datetime.utcnow()
         cycle.duration_ms = (time.perf_counter() - started) * 1000
@@ -629,12 +627,23 @@ class BlumForexTraderCore:
     @staticmethod
     def _portfolio_state(db: Session, *, candidate_pair: str | None = None) -> ForexPortfolioState:
         rows = db.scalars(select(ForexPosition).where(ForexPosition.status == "OPEN").limit(5)).all()
-        payload = tuple({"pair": row.pair, "direction": row.direction, "notional": row.current_price * row.quantity_lots * 100_000} for row in rows)
+        payload = tuple({"pair": row.pair, "direction": row.direction,
+            "notional": float((row.contract_json.get('accounting') or {}).get('entry_notional_account') or row.current_price * row.quantity_lots * 100_000)
+                * float((row.contract_json.get('accounting') or {}).get('remaining_quantity_lots', row.quantity_lots)) / row.quantity_lots}
+            for row in rows if row.quantity_lots > 0)
         today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         daily = db.scalar(select(func.coalesce(func.sum(ForexPosition.net_pnl), 0.0)).where(ForexPosition.status == "CLOSED", ForexPosition.closed_at >= today)) or 0.0
         margin = sum(row.margin_used for row in rows)
         game = db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active").order_by(desc(LiveForwardPaperGame.started_at)).limit(1))
-        equity = float(game.current_capital) if game else 100.0
+        from app.models import ForexPendingOrder
+        pending = []
+        if game:
+            for order in db.scalars(select(ForexPendingOrder).where(ForexPendingOrder.account_id == game.game_id, ForexPendingOrder.status.in_(['SUBMITTED', 'PARTIALLY_FILLED']))):
+                decision = db.get(ForexDecision, order.decision_id)
+                reservation = float(decision.risk_json.get('margin_required') or 0) * order.remaining_lots / order.requested_lots
+                margin += reservation
+                pending.append({'pair': order.pair, 'direction': order.payload['side'], 'notional': reservation * 30})
+        equity = float(game.current_capital) if game else 0.0
         drawdown = (
             max(0.0, (float(game.starting_capital) - equity) / float(game.starting_capital) * 100.0)
             if game and game.starting_capital > 0
@@ -648,6 +657,7 @@ class BlumForexTraderCore:
             used_margin=margin,
             drawdown_percent=drawdown,
             pair_correlations=correlations,
+            pending_orders=tuple(pending),
         )
 
     @staticmethod
@@ -1249,6 +1259,8 @@ class BlumForexTradingScheduler:
                     {item.pair: item.quote for item in inputs},
                     now=now,
                 )
+                from app.services.forex_order_lifecycle import ForexOrderLifecycle
+                pending_results = ForexOrderLifecycle(brokers=self.core.brokers, execution=self.core.execution).process_batch(db, quotes={item.pair: item.quote for item in inputs}, as_of=now)
                 state = self._state(db)
                 state.scheduler_status = "MARKET_SESSION_MONITOR_ONLY"
                 state.current_cycle_key = None

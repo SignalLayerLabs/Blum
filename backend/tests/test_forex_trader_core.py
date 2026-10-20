@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base
 from app.models import (
+    LiveForwardPaperGame,
     Asset,
     FinancialModelVote,
     ForexDecision,
@@ -514,12 +515,12 @@ def test_risk_netting_daily_loss_and_max_positions():
             {"pair": "USDCHF=X", "direction": "SHORT", "notional": 20_000},
         ),
     )
-    reduced = engine.evaluate(proposal, concentrated, BlumForexBrokerProfileService().get("paper_eu_30x"))
+    reduced = engine.evaluate(proposal, concentrated, replace(BlumForexBrokerProfileService().get("paper_eu_30x"), account_currency="USD"))
     assert reduced.decision in {"APPROVE_REDUCED_SIZE", "REJECT_CURRENCY_EXPOSURE"}
 
-    assert engine.evaluate(proposal, ForexPortfolioState(equity=10_000, daily_realized_pnl=-200), BlumForexBrokerProfileService().get("paper_eu_30x")).decision == "REJECT_DAILY_LOSS"
+    assert engine.evaluate(proposal, ForexPortfolioState(equity=10_000, daily_realized_pnl=-200), replace(BlumForexBrokerProfileService().get("paper_eu_30x"), account_currency="USD")).decision == "REJECT_DAILY_LOSS"
     maxed = ForexPortfolioState(equity=10_000, open_positions=tuple({"pair": f"P{i}", "direction": "LONG", "notional": 1000} for i in range(4)))
-    assert engine.evaluate(proposal, maxed, BlumForexBrokerProfileService().get("paper_eu_30x")).decision == "REJECT_MAX_POSITIONS"
+    assert engine.evaluate(proposal, maxed, replace(BlumForexBrokerProfileService().get("paper_eu_30x"), account_currency="USD")).decision == "REJECT_MAX_POSITIONS"
 
 
 def test_stop_gap_through_and_swap_are_realistic():
@@ -792,7 +793,7 @@ def test_alpha_readiness_rejects_replay_decay_concentration_and_active_blockers(
 def test_risk_sizing_reduces_for_drawdown_weak_evidence_and_pair_correlation():
     engine = BlumForexPortfolioRiskEngine()
     proposal = BlumForexTraderCore().evaluate_input(market_input(), strategy=strategy()).proposal
-    broker = BlumForexBrokerProfileService().get("paper_eu_30x")
+    broker = replace(BlumForexBrokerProfileService().get("paper_eu_30x"), account_currency="USD")
     clean = engine.evaluate(proposal, ForexPortfolioState(equity=10_000), broker)
     stressed = engine.evaluate(
         proposal,
@@ -805,12 +806,16 @@ def test_risk_sizing_reduces_for_drawdown_weak_evidence_and_pair_correlation():
 
 
 def test_core_cycle_is_idempotent_and_recovers_incomplete_cycle(db):
+    db.add(LiveForwardPaperGame(game_id="native-funded-fixture", starting_capital=1000, current_capital=1000, cash=1000, configuration={"account_currency":"EUR"}))
+    db.flush()
     core = BlumForexTraderCore()
     first = core.run_cycle(db, inputs=[market_input()], strategies={"EURUSD=X": strategy()}, now=NOW, cycle_key="fixed")
     second = core.run_cycle(db, inputs=[market_input()], strategies={"EURUSD=X": strategy()}, now=NOW, cycle_key="fixed")
     assert first["cycle_id"] == second["cycle_id"]
     assert db.query(ForexTraderCycle).count() == 1
-    assert db.query(ForexPosition).count() == 1
+    from app.models import ForexPendingOrder
+    assert db.query(ForexPendingOrder).count() == 1
+    assert db.query(ForexPosition).count() == 0
 
     interrupted = ForexTraderCycle(
         cycle_uid="interrupted", cycle_key="interrupted", status="RUNNING",
@@ -826,9 +831,15 @@ def test_core_cycle_is_idempotent_and_recovers_incomplete_cycle(db):
 
 @pytest.mark.parametrize("direction", ["LONG", "SHORT"])
 def test_complete_trade_lifecycle_persists_net_outcome(direction, db):
+    db.add(LiveForwardPaperGame(game_id="native-funded-fixture", starting_capital=1000, current_capital=1000, cash=1000, configuration={"account_currency":"EUR"}))
+    db.flush()
     core = BlumForexTraderCore()
     opened = core.run_cycle(db, inputs=[market_input(direction=direction)], strategies={"EURUSD=X": strategy()}, now=NOW, cycle_key=f"life-{direction}")
-    assert opened["trades_opened"] == 1
+    assert opened["trades_opened"] == 0
+    original = market_input(direction=direction)
+    fill_time = NOW + timedelta(seconds=1)
+    advanced = core.run_cycle(db, inputs=[replace(original, as_of=fill_time, quote=replace(original.quote, timestamp=fill_time))], strategies={}, now=fill_time, cycle_key=f"fill-{direction}")
+    assert advanced["trades_opened"] == 1
     vote = db.scalar(select(FinancialModelVote))
     assert vote is not None
     assert vote.advisor_key == "finrobot"

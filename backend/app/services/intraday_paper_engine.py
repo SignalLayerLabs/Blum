@@ -136,8 +136,10 @@ class BlumIntradayPaperEngine:
         decisions: list[dict] = []
         try:
             game = self.paper.active_or_create_live_game(db)
+            existing_lifecycle = self._manage_open_trades(db, game=game, now=now)
             order_lifecycle = self._manage_pending_orders(db, game=game, now=now)
             trade_lifecycle = self._manage_open_trades(db, game=game, now=now)
+            trade_lifecycle = {key: existing_lifecycle[key] + trade_lifecycle[key] for key in trade_lifecycle}
             no_trade_lifecycle = self.no_trade_learning.evaluate_due(db, now=now)
             lifecycle = {"orders": order_lifecycle, "positions": trade_lifecycle, "no_trade": no_trade_lifecycle}
             run.trades_opened = order_lifecycle["trades_opened"]
@@ -250,8 +252,10 @@ class BlumIntradayPaperEngine:
             return {"status": "DISABLED", "trigger": trigger, "evidence_type": PAPER_FORWARD_INTRADAY}
         game = self.paper.active_or_create_live_game(db)
         now = self.now_provider()
+        existing_positions = self._manage_open_trades(db, game=game, now=now)
         orders = self._manage_pending_orders(db, game=game, now=now)
         positions = self._manage_open_trades(db, game=game, now=now)
+        positions = {key: existing_positions[key] + positions[key] for key in positions}
         no_trade = self.no_trade_learning.evaluate_due(db, now=now)
         self.paper.refresh_live_game_counts(db, game)
         db.commit()
@@ -720,9 +724,10 @@ class BlumIntradayPaperEngine:
             result = self.execution.process_order(db, order, bars, now=now)
             processed += 1
             new_fills += int(result.get("new_fills") or 0)
-            if result["status"] in {"FILLED", "PARTIALLY_FILLED_EXPIRED"} and not bool((trade.intraday_metadata or {}).get("execution_accounted")):
+            accounted = float((trade.intraday_metadata or {}).get("accounted_quantity") or 0.0)
+            if float(order.filled_quantity or 0.0) > accounted:
                 self._account_filled_order(db, game=game, trade=trade, order=order)
-                opened += 1
+                opened += int(accounted == 0.0)
             elif result["status"] in {"EXPIRED", "REJECTED"}:
                 unfilled_outcome = classify_unfilled_order(
                     theoretical_price=float(order.theoretical_price or 0.0),
@@ -742,7 +747,14 @@ class BlumIntradayPaperEngine:
 
     def _account_filled_order(self, db: Session, *, game: LiveForwardPaperGame, trade: LiveForwardPaperTrade, order: PaperExecutionOrder) -> None:
         metadata = dict(trade.intraday_metadata or {})
+        previous_quantity = float(metadata.get("accounted_quantity") or 0.0)
+        previous_reservation = float(metadata.get("reserved_capital_eur") or 0.0)
+        previous_fees = float(metadata.get("entry_fees_posted") or 0.0)
+        entry_fees = sum(float(value or 0.0) for value in (trade.execution_costs.get("commission_cost"), trade.execution_costs.get("fx_cost"), trade.execution_costs.get("borrow_cost")))
+        fee_delta = entry_fees - previous_fees
+        metadata["entry_fees_posted"] = entry_fees
         metadata["execution_accounted"] = True
+        metadata["accounted_quantity"] = float(order.filled_quantity)
         metadata["execution_order_id"] = order.id
         metadata["theoretical_entry_price"] = order.theoretical_price
         metadata["executed_entry_price"] = order.average_fill_price
@@ -759,18 +771,29 @@ class BlumIntradayPaperEngine:
         trade.risk_amount = quote_risk / account_fx_rate if is_forex else quote_risk
         trade.expected_risk = trade.risk_amount
         reserved_capital = (
-            float(metadata.get("margin_reserved_eur") or 0.0)
+            float(metadata.get("margin_reserved_eur") or 0.0) * float(order.filled_quantity) / float(order.requested_quantity)
             if is_forex
             else float(trade.notional_value or 0.0)
         )
         metadata["reserved_capital_eur"] = reserved_capital
         trade.intraday_metadata = metadata
-        trade.last_managed_bar_at = trade.opened_at
-        self._create_ledger_trade(db, game, trade)
+        if previous_quantity == 0:
+            trade.last_managed_bar_at = trade.opened_at
+            self._create_ledger_trade(db, game, trade)
+        else:
+            ledger = db.get(TradingGameTrade, trade.ledger_trade_id)
+            if ledger:
+                ledger.position_size = trade.position_size
+                ledger.entry_price = trade.entry_price
+                ledger.notional_value = trade.notional_value
+                ledger.risk_amount = trade.risk_amount
         self.paper.append_event(db, trade.id, "INTRADAY_TRADE_OPENED", "Paper position opened only after a later executable fill.", {"order_id": order.id, "quantity": trade.position_size, "theoretical_price": order.theoretical_price, "executed_price": order.average_fill_price}, trade.entry_price)
-        game.cash = max(0.0, float(game.cash or 0.0) - reserved_capital)
-        game.exposure = float(game.exposure or 0.0) + reserved_capital
-        game.open_positions = int(game.open_positions or 0) + 1
+        reservation_delta = reserved_capital - previous_reservation
+        game.cash = float(game.cash or 0.0) - reservation_delta - fee_delta
+        game.current_capital = float(game.current_capital or 0.0) - fee_delta
+        game.realized_pl = float(game.realized_pl or 0.0) - fee_delta
+        game.exposure = float(game.exposure or 0.0) + reservation_delta
+        game.open_positions = int(game.open_positions or 0) + int(previous_quantity == 0)
         game.updated_at = trade.opened_at or datetime.utcnow()
 
     def _create_ledger_trade(self, db: Session, game: LiveForwardPaperGame, trade: LiveForwardPaperTrade) -> None:
@@ -938,7 +961,9 @@ class BlumIntradayPaperEngine:
 
     def _close_trade(self, db: Session, *, game: LiveForwardPaperGame, trade: LiveForwardPaperTrade, bar: ReplayMarketBar, raw_exit: float, reason: str) -> None:
         costs = trade.execution_costs or {}
-        one_way_bps = float(costs.get("one_way_bps") or 0.0)
+        one_way_bps = (float(costs.get("spread_bps") or 0.0) / 2
+                       + float(costs.get("slippage_bps") or 0.0)
+                       + float(costs.get("liquidity_penalty_bps") or 0.0))
         side = normalize_side(trade.side) or LONG
         exit_fill = float(raw_exit) * (
             1 + one_way_bps / 10_000 if side == SHORT else 1 - one_way_bps / 10_000
@@ -965,8 +990,15 @@ class BlumIntradayPaperEngine:
         else:
             gross = signed_price_change(side, observed_entry, float(raw_exit)) * quantity
             net = signed_price_change(side, float(trade.entry_price or 0.0), exit_fill) * quantity
+        conversion = account_fx_rate if is_forex else 1.0
+        entry_fees = float((trade.intraday_metadata or {}).get("entry_fees_posted") or 0.0)
+        exit_commission = abs(exit_fill * quantity) * float(costs.get("commission_bps") or 0.0) / 10_000 / conversion
+        net -= entry_fees + exit_commission
         total_cost = max(0.0, gross - net)
         initial_risk = max(0.0001, float(trade.expected_risk or trade.risk_amount or 0.0001))
+        for pending in db.scalars(select(PaperExecutionOrder).where(PaperExecutionOrder.paper_trade_id == trade.id, PaperExecutionOrder.status.in_(["SUBMITTED", "PARTIALLY_FILLED"]))):
+            pending.status = "CANCELLED"
+            pending.rejection_reason = "POSITION_EXIT_CANCELLED_REMAINDER"
         trade.status = "CLOSED"
         trade.close_reason = reason
         trade.exit_price = exit_fill
@@ -985,7 +1017,7 @@ class BlumIntradayPaperEngine:
         conversion = account_fx_rate if is_forex else 1.0
         trade.spread_cost = round(float(costs.get("spread_bps") or 0.0) / 10_000 * observed_entry * quantity / conversion, 6)
         trade.slippage_cost = round(float(costs.get("slippage_bps") or 0.0) * 2 / 10_000 * observed_entry * quantity / conversion, 6)
-        trade.commission_cost = round(float(costs.get("commission_bps") or 0.0) * 2 / 10_000 * observed_entry * quantity / conversion, 6)
+        trade.commission_cost = round(float(costs.get("commission_cost") or 0.0) + exit_commission, 6)
         trade.stop_hit = reason == "STOP_HIT"
         trade.invalidation_hit = reason == "INVALIDATION_HIT"
         trade.target_1_hit = reason == "TARGET_HIT"
@@ -999,13 +1031,9 @@ class BlumIntradayPaperEngine:
             or trade.notional_value
             or 0.0
         )
-        if is_forex:
-            game.cash = float(game.cash or 0.0) + reserved_capital + net
-            game.exposure = max(0.0, float(game.exposure or 0.0) - reserved_capital)
-        else:
-            game.cash = float(game.cash or 0.0) + exit_fill * quantity
-            game.exposure = max(0.0, float(game.exposure or 0.0) - float(trade.notional_value or 0.0))
-        game.realized_pl = float(game.realized_pl or 0.0) + net
+        game.cash = float(game.cash or 0.0) + reserved_capital + net + entry_fees
+        game.exposure = max(0.0, float(game.exposure or 0.0) - reserved_capital)
+        game.realized_pl = float(game.realized_pl or 0.0) + net + entry_fees
         game.current_capital = float(game.cash or 0.0) + float(game.exposure or 0.0)
         game.open_positions = max(0, int(game.open_positions or 0) - 1)
         game.updated_at = bar.bar_timestamp

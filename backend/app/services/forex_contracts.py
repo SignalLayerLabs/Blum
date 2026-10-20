@@ -5,6 +5,7 @@ from datetime import datetime
 from enum import Enum
 from hashlib import sha256
 import json
+from math import isfinite
 from typing import ClassVar
 
 
@@ -114,7 +115,7 @@ class ForexQuote:
     source: str
 
     def __post_init__(self) -> None:
-        if self.bid <= 0 or self.ask <= self.bid:
+        if any(isinstance(value,bool) or not isinstance(value,(int,float)) or not isfinite(value) for value in (self.bid,self.ask)) or self.bid <= 0 or self.ask <= self.bid:
             raise ValueError("Forex quote requires positive bid and ask > bid")
 
 
@@ -278,6 +279,7 @@ class ForexOrderRequest:
     liquidity_score: float = 0.5
     volatility_score: float = 0.5
     event_impact: str = "LOW_IMPACT"
+    account_conversion: dict = field(default_factory=dict)
 
     @classmethod
     def from_proposal(

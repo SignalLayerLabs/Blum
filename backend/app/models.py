@@ -4880,3 +4880,34 @@ class TradingCurriculumSource(Base):
     uid: Mapped[str] = mapped_column(String(64), primary_key=True)
     payload: Mapped[dict] = mapped_column(JsonType, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class ForexPendingOrder(Base):
+    __tablename__ = 'forex_pending_orders'
+    account_id: Mapped[str | None] = mapped_column(ForeignKey('live_forward_paper_games.game_id', ondelete='RESTRICT'))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    order_uid: Mapped[str] = mapped_column(String(220), unique=True)
+    decision_id: Mapped[int] = mapped_column(ForeignKey('forex_decisions.id', ondelete='RESTRICT'), unique=True)
+    pair: Mapped[str] = mapped_column(String(32), index=True)
+    status: Mapped[str] = mapped_column(String(40), default='SUBMITTED', index=True)
+    decision_at: Mapped[datetime] = mapped_column(DateTime)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    requested_lots: Mapped[float] = mapped_column(Float)
+    filled_lots: Mapped[float] = mapped_column(Float, default=0.0)
+    remaining_lots: Mapped[float] = mapped_column(Float)
+    stop_activated_at: Mapped[datetime | None] = mapped_column(DateTime)
+    last_observation_at: Mapped[datetime | None] = mapped_column(DateTime)
+    payload: Mapped[dict] = mapped_column(JsonType)
+
+
+class ForexOrderFill(Base):
+    __tablename__ = 'forex_order_fills'
+    __table_args__ = (UniqueConstraint('order_uid', 'observation_uid', name='uq_forex_order_observation'),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    fill_uid: Mapped[str] = mapped_column(String(64), unique=True)
+    order_uid: Mapped[str] = mapped_column(ForeignKey('forex_pending_orders.order_uid', ondelete='RESTRICT'), index=True)
+    observation_uid: Mapped[str] = mapped_column(String(64))
+    market_timestamp: Mapped[datetime] = mapped_column(DateTime)
+    quantity_lots: Mapped[float] = mapped_column(Float)
+    executed_price: Mapped[float] = mapped_column(Float)
+    payload: Mapped[dict] = mapped_column(JsonType)
