@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.services.market_clock import bar_available_at, eligible_bar
+
 from collections import Counter, defaultdict
 from dataclasses import replace
 from datetime import date, datetime, timedelta
@@ -841,6 +843,8 @@ class BlumIntradayPaperEngine:
                 .limit(500)
             ).all()
             for bar in bars:
+                if not eligible_bar(bar, decision_at=trade.opened_at or trade.decision_timestamp, as_of=now, mode='execution'):
+                    continue
                 updated += 1
                 trade.last_managed_bar_at = bar.bar_timestamp
                 trade.current_price = float(bar.close)
@@ -1402,6 +1406,7 @@ def execution_bar_from_replay(row: ReplayMarketBar, *, spread_bps: float, fallba
         volatility_bps=abs(high - low) / max(close, 0.0001) * 10_000,
         session=session,
         is_halted=halted,
+        available_at=bar_available_at(row),
     )
 
 

@@ -141,7 +141,8 @@ class BlumIntradayOpportunityEngine:
         if liquidity_score < self.min_liquidity_score:
             return IntradayDecision(INTRADAY_BLOCKED, "LIQUIDITY_TOO_LOW", "Observed one-minute liquidity is below the configured threshold.", liquidity_score=liquidity_score, volatility_bps=volatility_bps, regime=regime, **base)
 
-        session = session_name(data.market, data.as_of.hour)
+        from app.services.market_clock import MarketClock
+        session = MarketClock().session(data.market, data.as_of)
         if session != "regular":
             return IntradayDecision(INTRADAY_BLOCKED, "SESSION_NOT_ALLOWED", "The current timestamp is outside the permitted regular session.", liquidity_score=liquidity_score, volatility_bps=volatility_bps, regime=regime, session=session, **base)
 

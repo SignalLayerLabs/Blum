@@ -14,6 +14,7 @@ from app.models import (
     PaperExecutionOrder,
     StrategyCandidateVariant,
 )
+from app.services.market_clock import utc_naive
 from app.services.realistic_execution import (
     ExecutionMarketBar,
     ExecutionOrderRequest,
@@ -100,14 +101,25 @@ class PaperOrderLifecycleService:
         *,
         now: datetime | None = None,
     ) -> dict:
-        if order.status in {"FILLED", "PARTIALLY_FILLED_EXPIRED", "REJECTED", "EXPIRED", "CANCELLED"}:
+        if order.status in {
+            "FILLED",
+            "PARTIALLY_FILLED_EXPIRED",
+            "REJECTED",
+            "EXPIRED",
+            "CANCELLED",
+        }:
             return self._summary(order, new_fills=0)
         existing_fills = db.scalars(
             select(PaperExecutionFill)
             .where(PaperExecutionFill.order_id == order.id)
             .order_by(PaperExecutionFill.market_timestamp, PaperExecutionFill.id)
         ).all()
-        last_fill_at = existing_fills[-1].market_timestamp if existing_fills else order.decision_timestamp
+        current_time = utc_naive(now or datetime.utcnow())
+        last_fill_at = (
+            existing_fills[-1].market_timestamp
+            if existing_fills
+            else order.decision_timestamp
+        )
         payload = dict(order.order_payload or {})
         request = ExecutionOrderRequest(
             order_key=order.duplicate_key,
@@ -122,12 +134,34 @@ class PaperOrderLifecycleService:
             target_price=order.target_price,
             max_participation_rate=float(payload.get("max_participation_rate") or 0.05),
             commission_bps=float(payload.get("commission_bps") or 0.0),
-            latency_bars=int(payload.get("latency_bars") or 0) if not existing_fills else 0,
+            latency_bars=(
+                int(
+                    payload.get(
+                        "latency_bars_remaining", payload.get("latency_bars") or 0
+                    )
+                )
+                if not existing_fills
+                else 0
+            ),
+            stop_activated_at=(
+                datetime.fromisoformat(payload["stop_activated_at"])
+                if payload.get("stop_activated_at")
+                else None
+            ),
+            last_observation_at=(
+                datetime.fromisoformat(payload["last_observation_at"])
+                if payload.get("last_observation_at")
+                else None
+            ),
             currency=order.currency,
             account_currency=order.account_currency,
             fx_rate=order.fx_rate,
             fx_spread_bps=float(payload.get("fx_spread_bps") or 0.0),
-            liquidity_score=float(payload.get("liquidity_score") if payload.get("liquidity_score") is not None else 100.0),
+            liquidity_score=float(
+                payload.get("liquidity_score")
+                if payload.get("liquidity_score") is not None
+                else 100.0
+            ),
             liquidity_basis=str(payload.get("liquidity_basis") or "reported_volume"),
             quote_capacity_units=(
                 float(payload["quote_capacity_units"])
@@ -135,19 +169,70 @@ class PaperOrderLifecycleService:
                 else None
             ),
             allowed_sessions=tuple(payload.get("allowed_sessions") or ["regular"]),
-            borrow_rate_bps=float(payload["borrow_rate_bps"]) if payload.get("borrow_rate_bps") is not None else None,
+            borrow_rate_bps=(
+                float(payload["borrow_rate_bps"])
+                if payload.get("borrow_rate_bps") is not None
+                else None
+            ),
             expected_holding_days=float(payload.get("expected_holding_days") or 0.0),
         )
-        decision = self.engine.evaluate(request, bars)
+        from app.services.market_clock import eligible_bar, bar_available_at
+
+        eligible = [
+            bar
+            for bar in bars
+            if eligible_bar(
+                bar,
+                decision_at=order.decision_timestamp,
+                as_of=current_time,
+                mode="execution",
+            )
+            and (order.expires_at is None or bar_available_at(bar) < order.expires_at)
+        ]
+        decision = self.engine.evaluate(request, eligible)
+        order.order_payload = {
+            **payload,
+            "stop_activated_at": (
+                decision.stop_activated_at.isoformat()
+                if decision.stop_activated_at
+                else None
+            ),
+            "last_observation_at": (
+                decision.last_observation_at.isoformat()
+                if decision.last_observation_at
+                else None
+            ),
+            "latency_bars_remaining": decision.latency_bars_remaining,
+        }
+
         new_fills = 0
         for fill in decision.fills:
-            fill_uid = self._fill_uid(order.id, fill.timestamp, fill.quantity, fill.executed_price)
-            if db.scalar(select(PaperExecutionFill.id).where(PaperExecutionFill.fill_uid == fill_uid)) is not None:
+            fill_uid = self._fill_uid(
+                order.id, fill.timestamp, fill.quantity, fill.executed_price
+            )
+            if (
+                db.scalar(
+                    select(PaperExecutionFill.id).where(
+                        PaperExecutionFill.fill_uid == fill_uid
+                    )
+                )
+                is not None
+            ):
                 continue
-            notional = abs(fill.reference_price * fill.quantity) / float(order.fx_rate or 1.0)
-            fx_cost = notional * request.fx_spread_bps / 10_000.0 if order.currency != order.account_currency else 0.0
+            notional = abs(fill.reference_price * fill.quantity) / float(
+                order.fx_rate or 1.0
+            )
+            fx_cost = (
+                notional * request.fx_spread_bps / 10_000.0
+                if order.currency != order.account_currency
+                else 0.0
+            )
             borrow_cost = (
-                notional * float(request.borrow_rate_bps or 0.0) / 10_000.0 * request.expected_holding_days / 365.0
+                notional
+                * float(request.borrow_rate_bps or 0.0)
+                / 10_000.0
+                * request.expected_holding_days
+                / 365.0
                 if order.side in {"SHORT", "SELL_SHORT"}
                 else 0.0
             )
@@ -177,7 +262,14 @@ class PaperOrderLifecycleService:
                         "liquidity_score": request.liquidity_score,
                         "liquidity_basis": request.liquidity_basis,
                         "quote_capacity_units": request.quote_capacity_units,
-                        "session": next((bar.session for bar in bars if bar.timestamp == fill.timestamp), None),
+                        "session": next(
+                            (
+                                bar.session
+                                for bar in bars
+                                if bar.timestamp == fill.timestamp
+                            ),
+                            None,
+                        ),
                     },
                 )
             )
@@ -190,19 +282,29 @@ class PaperOrderLifecycleService:
         ).all()
         filled_quantity = sum(float(fill.quantity) for fill in all_fills)
         order.filled_quantity = round(filled_quantity, 8)
-        order.remaining_quantity = round(max(0.0, float(order.requested_quantity) - filled_quantity), 8)
+        order.remaining_quantity = round(
+            max(0.0, float(order.requested_quantity) - filled_quantity), 8
+        )
         order.average_fill_price = (
-            round(sum(float(fill.executed_price) * float(fill.quantity) for fill in all_fills) / filled_quantity, 8)
+            round(
+                sum(
+                    float(fill.executed_price) * float(fill.quantity)
+                    for fill in all_fills
+                )
+                / filled_quantity,
+                8,
+            )
             if filled_quantity > 0
             else None
         )
-        current_time = now or max((bar.timestamp for bar in bars), default=datetime.utcnow())
         expired = bool(order.expires_at and current_time >= order.expires_at)
         if order.remaining_quantity <= 1e-9:
             order.status = "FILLED"
         elif filled_quantity > 0:
             order.status = "PARTIALLY_FILLED_EXPIRED" if expired else "PARTIALLY_FILLED"
-            order.rejection_reason = "PARTIAL_FILL_REMAINDER_CANCELLED" if expired else None
+            order.rejection_reason = (
+                "PARTIAL_FILL_REMAINDER_CANCELLED" if expired else None
+            )
         elif decision.status == "REJECTED":
             order.status = "REJECTED"
             order.rejection_reason = decision.reason
@@ -211,7 +313,12 @@ class PaperOrderLifecycleService:
             order.rejection_reason = "ORDER_NOT_FILLED"
         else:
             order.status = "SUBMITTED"
-            order.rejection_reason = decision.reason if decision.reason not in {"NO_LATER_EXECUTABLE_BAR", "ORDER_NOT_FILLED"} else None
+            order.rejection_reason = (
+                decision.reason
+                if decision.reason
+                not in {"NO_LATER_EXECUTABLE_BAR", "ORDER_NOT_FILLED"}
+                else None
+            )
         order.updated_at = datetime.utcnow()
         if order.paper_trade_id is not None and new_fills:
             self._project_trade(db, order, all_fills)

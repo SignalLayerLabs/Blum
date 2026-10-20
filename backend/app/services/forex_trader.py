@@ -947,6 +947,8 @@ class ForexMarketInputRepository:
                     .where(ReplayMarketBar.asset_id == asset.id, ReplayMarketBar.timeframe == timeframe, ReplayMarketBar.bar_timestamp <= now)
                     .order_by(desc(ReplayMarketBar.bar_timestamp)).limit(40)
                 ).all()
+                from app.services.market_clock import eligible_bar
+                rows = [row for row in rows if eligible_bar(row, decision_at=None, as_of=now, mode='context')]
                 if not rows:
                     continue
                 rows = list(reversed(rows))
@@ -1350,16 +1352,8 @@ class BlumForexTradingScheduler:
 
 
 def forex_session(now: datetime) -> str:
-    hour = now.hour
-    if 12 <= hour < 16:
-        return "LONDON_NEW_YORK_OVERLAP"
-    if 7 <= hour < 12:
-        return "LONDON"
-    if 16 <= hour < 21:
-        return "NEW_YORK"
-    if 21 <= hour or hour < 1:
-        return "ROLLOVER"
-    return "ASIA"
+    from app.services.market_clock import MarketClock
+    return MarketClock().forex_session(now)
 
 
 def _hash(value) -> str:

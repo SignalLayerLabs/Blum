@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from math import sqrt
 from typing import Sequence
+
+from app.services.market_clock import utc_naive
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,8 @@ class ExecutionOrderRequest:
     allowed_sessions: tuple[str, ...] = ("regular",)
     borrow_rate_bps: float | None = None
     expected_holding_days: float = 0.0
+    stop_activated_at: datetime | None = None
+    last_observation_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -45,6 +49,7 @@ class ExecutionMarketBar:
     volatility_bps: float
     session: str = "regular"
     is_halted: bool = False
+    available_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -83,37 +88,108 @@ class ExecutionDecision:
     remaining_quantity: float
     fills: tuple[ExecutionFill, ...]
     costs: ExecutionCostBreakdown
+    stop_activated_at: datetime | None = None
+    last_observation_at: datetime | None = None
+    latency_bars_remaining: int = 0
 
 
 class RealisticExecutionEngine:
-    def evaluate(self, request: ExecutionOrderRequest, bars: Sequence[ExecutionMarketBar]) -> ExecutionDecision:
+    def evaluate(
+        self, request: ExecutionOrderRequest, bars: Sequence[ExecutionMarketBar]
+    ) -> ExecutionDecision:
+        request = replace(
+            request,
+            decision_timestamp=utc_naive(request.decision_timestamp),
+            last_observation_at=(
+                utc_naive(request.last_observation_at)
+                if request.last_observation_at
+                else None
+            ),
+            stop_activated_at=(
+                utc_naive(request.stop_activated_at)
+                if request.stop_activated_at
+                else None
+            ),
+        )
+        bars = [replace(bar, timestamp=utc_naive(bar.timestamp)) for bar in bars]
         if request.quantity <= 0 or request.theoretical_price <= 0:
             return self._empty(request, "REJECTED", "INVALID_ORDER")
-        if request.currency != request.account_currency and (request.fx_rate is None or request.fx_rate <= 0):
+        if request.currency != request.account_currency and (
+            request.fx_rate is None or request.fx_rate <= 0
+        ):
             return self._empty(request, "REJECTED", "FX_RATE_UNAVAILABLE")
-        if request.side.upper() in {"SHORT", "SELL_SHORT"} and request.borrow_rate_bps is None:
+        if (
+            request.side.upper() in {"SHORT", "SELL_SHORT"}
+            and request.borrow_rate_bps is None
+        ):
             return self._empty(request, "REJECTED", "BORROW_RATE_UNAVAILABLE")
-        later = [bar for bar in sorted(bars, key=lambda item: item.timestamp) if bar.timestamp > request.decision_timestamp]
-        if later and all(bar.is_halted for bar in later):
-            return self._empty(request, "SUBMITTED", "MARKET_HALTED")
-        non_halted = [bar for bar in later if not bar.is_halted]
-        allowed_sessions = {str(session).lower() for session in request.allowed_sessions}
-        if non_halted and not any(str(bar.session).lower() in allowed_sessions for bar in non_halted):
-            return self._empty(request, "SUBMITTED", "NO_ALLOWED_SESSION_BAR")
-        eligible = [bar for bar in non_halted if str(bar.session).lower() in allowed_sessions]
+        later = [
+            bar
+            for bar in sorted(bars, key=lambda item: item.timestamp)
+            if bar.timestamp
+            > max(
+                request.decision_timestamp,
+                request.last_observation_at or request.decision_timestamp,
+            )
+        ]
         latency = max(0, int(request.latency_bars))
-        eligible = eligible[latency:]
+        activation = request.stop_activated_at
+        last_observation = request.last_observation_at
+        allowed_sessions = {
+            str(session).lower() for session in request.allowed_sessions
+        }
+        eligible = [
+            bar
+            for bar in later
+            if not bar.is_halted and str(bar.session).lower() in allowed_sessions
+        ]
         if not eligible:
-            return self._empty(request, "SUBMITTED", "NO_LATER_EXECUTABLE_BAR")
+            reason = (
+                "MARKET_HALTED"
+                if later and all(bar.is_halted for bar in later)
+                else "NO_ALLOWED_SESSION_BAR" if later else "NO_LATER_EXECUTABLE_BAR"
+            )
+            return replace(
+                self._empty(request, "SUBMITTED", reason),
+                stop_activated_at=activation,
+                last_observation_at=max(
+                    (bar.timestamp for bar in later), default=last_observation
+                ),
+                latency_bars_remaining=latency,
+            )
 
         remaining = float(request.quantity)
         fills: list[ExecutionFill] = []
         for market_bar in eligible:
             if remaining <= 1e-9:
                 break
-            if not self._is_triggered(request, market_bar):
+            last_observation = market_bar.timestamp
+            if latency:
+                latency -= 1
                 continue
-            liquidity_capacity = max(0.05, min(1.0, float(request.liquidity_score) / 100.0))
+            if request.order_type.upper() == "STOP_LIMIT":
+                if activation is None:
+                    if not self._is_triggered(request, market_bar):
+                        continue
+                    activation = market_bar.timestamp
+                    # OHLC cannot establish whether the limit crossed after activation.
+                    # Only an already-triggered open establishes ordering on this bar.
+                    opens_triggered = (
+                        market_bar.open >= float(request.stop_price)
+                        if request.side.upper() == "BUY"
+                        else market_bar.open <= float(request.stop_price)
+                    )
+                    if not opens_triggered:
+                        continue
+                if request.limit_price is None or not self._is_triggered(
+                    replace(request, order_type="LIMIT"), market_bar
+                ):
+                    continue
+            elif not self._is_triggered(request, market_bar):
+                continue
+            liquidity_capacity = max(
+                0.05, min(1.0, float(request.liquidity_score) / 100.0)
+            )
             reported_volume = max(0.0, float(market_bar.volume))
             capacity_base = reported_volume
             if (
@@ -122,18 +198,31 @@ class RealisticExecutionEngine:
                 and float(request.quote_capacity_units or 0.0) > 0
             ):
                 capacity_base = float(request.quote_capacity_units or 0.0)
-            capacity = capacity_base * max(0.0, min(0.25, float(request.max_participation_rate))) * liquidity_capacity
+            capacity = (
+                capacity_base
+                * max(0.0, min(0.25, float(request.max_participation_rate)))
+                * liquidity_capacity
+            )
             quantity = min(remaining, capacity)
             if quantity <= 0:
                 continue
             participation = quantity / max(1.0, capacity_base)
-            slippage_bps = self.dynamic_slippage_bps(market_bar.volatility_bps, participation, request.liquidity_score)
+            slippage_bps = self.dynamic_slippage_bps(
+                market_bar.volatility_bps, participation, request.liquidity_score
+            )
             reference = self._reference_price(request, market_bar)
             adverse_bps = max(0.0, float(market_bar.spread_bps)) / 2.0 + slippage_bps
             direction = 1.0 if request.side.upper() == "BUY" else -1.0
             executed = reference * (1.0 + direction * adverse_bps / 10_000.0)
-            if request.order_type.upper() == "LIMIT" and request.limit_price is not None:
-                executed = min(executed, request.limit_price) if direction > 0 else max(executed, request.limit_price)
+            if (
+                request.order_type.upper() in {"LIMIT", "STOP_LIMIT"}
+                and request.limit_price is not None
+            ):
+                executed = (
+                    min(executed, request.limit_price)
+                    if direction > 0
+                    else max(executed, request.limit_price)
+                )
             fills.append(
                 ExecutionFill(
                     timestamp=market_bar.timestamp,
@@ -149,12 +238,29 @@ class RealisticExecutionEngine:
             remaining -= quantity
 
         if not fills:
-            return self._empty(request, "SUBMITTED", "ORDER_NOT_FILLED")
+            return replace(
+                self._empty(request, "SUBMITTED", "ORDER_NOT_FILLED"),
+                stop_activated_at=activation,
+                last_observation_at=last_observation,
+                latency_bars_remaining=latency,
+            )
         filled = sum(fill.quantity for fill in fills)
         average = sum(fill.executed_price * fill.quantity for fill in fills) / filled
         costs = self._costs(fills, request)
         status = "FILLED" if remaining <= 1e-9 else "PARTIALLY_FILLED"
-        return ExecutionDecision(status, status, request.theoretical_price, round(average, 8), round(filled, 8), round(max(0.0, remaining), 8), tuple(fills), costs)
+        return ExecutionDecision(
+            status,
+            status,
+            request.theoretical_price,
+            round(average, 8),
+            round(filled, 8),
+            round(max(0.0, remaining), 8),
+            tuple(fills),
+            costs,
+            activation,
+            last_observation,
+            latency,
+        )
 
     def evaluate_exit(
         self,
@@ -231,15 +337,23 @@ class RealisticExecutionEngine:
         return False
 
     @staticmethod
-    def _reference_price(request: ExecutionOrderRequest, market_bar: ExecutionMarketBar) -> float:
+    def _reference_price(
+        request: ExecutionOrderRequest, market_bar: ExecutionMarketBar
+    ) -> float:
         order_type = request.order_type.upper()
         if order_type == "MARKET":
             return float(market_bar.open)
-        if order_type == "LIMIT" and request.limit_price is not None:
+        if order_type in {"LIMIT", "STOP_LIMIT"} and request.limit_price is not None:
             if request.side.upper() == "BUY":
                 return min(float(request.limit_price), float(market_bar.open))
             return max(float(request.limit_price), float(market_bar.open))
-        return float(request.stop_price or market_bar.open)
+        if order_type == "STOP" and request.stop_price is not None:
+            return (
+                max(float(request.stop_price), float(market_bar.open))
+                if request.side.upper() == "BUY"
+                else min(float(request.stop_price), float(market_bar.open))
+            )
+        return float(market_bar.open)
 
     @staticmethod
     def _costs(fills: Sequence[ExecutionFill], request: ExecutionOrderRequest) -> ExecutionCostBreakdown:

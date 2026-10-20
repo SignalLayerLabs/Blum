@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.models import Asset, ReplayMarketBar
 from app.services.intraday_contracts import IntradayDataBundle, INTRADAY_DATA_BLOCKED, REQUIRED_INTRADAY_TIMEFRAMES
 from app.services.replay_data import MultiProviderReplayDataService
+from app.services.market_clock import eligible_bar
 
 
 class StrictIntradayDataGateway:
@@ -70,6 +71,7 @@ class StrictIntradayDataGateway:
                     ).all()
                 )
             )
+            rows = tuple(row for row in rows if eligible_bar(row, decision_at=None, as_of=now, mode="context"))
             bars[timeframe] = rows
             latest_row = rows[-1] if rows else None
             latest[timeframe] = latest_row.bar_timestamp if latest_row else None

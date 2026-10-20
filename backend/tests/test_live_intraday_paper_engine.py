@@ -608,7 +608,7 @@ def test_run_opens_only_promoted_triggered_candidate_with_adverse_fill():
         seed_complete_stack(db, asset)
         observed_price = db.scalar(
             select(ReplayMarketBar.close)
-            .where(ReplayMarketBar.asset_id == asset.id, ReplayMarketBar.timeframe == "1m")
+            .where(ReplayMarketBar.asset_id == asset.id, ReplayMarketBar.timeframe == "1m", ReplayMarketBar.bar_timestamp <= NOW - timedelta(minutes=2))
             .order_by(ReplayMarketBar.bar_timestamp.desc())
             .limit(1)
         )
@@ -639,7 +639,7 @@ def test_run_opens_only_promoted_triggered_candidate_with_adverse_fill():
                 )
             )
         db.commit()
-        clock["now"] = NOW + timedelta(minutes=2)
+        clock["now"] = NOW + timedelta(minutes=4)
         filled = engine.run_once(db, trigger="test", assets=[asset])
         trade = db.scalar(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.evidence_type == PAPER_FORWARD_INTRADAY))
         execution_order = db.scalar(select(PaperExecutionOrder).where(PaperExecutionOrder.paper_trade_id == trade.id))
@@ -701,9 +701,8 @@ def test_lifecycle_uses_only_later_one_minute_bar_and_closes_stop():
                 )
             )
         db.commit()
-        clock["now"] = NOW + timedelta(minutes=2)
+        clock["now"] = NOW + timedelta(minutes=4)
         filled = engine.run_once(db, trigger="test", assets=[asset])
-        clock["now"] = NOW + timedelta(minutes=3)
         db.add(
             ReplayMarketBar(
                 asset_id=asset.id,
@@ -711,7 +710,7 @@ def test_lifecycle_uses_only_later_one_minute_bar_and_closes_stop():
                 normalized_symbol=asset.ticker,
                 market=asset.country,
                 timeframe="1m",
-                bar_timestamp=clock["now"],
+                bar_timestamp=NOW + timedelta(minutes=3),
                 open=stop + 0.2,
                 high=stop + 0.3,
                 low=stop - 0.2,
@@ -724,6 +723,9 @@ def test_lifecycle_uses_only_later_one_minute_bar_and_closes_stop():
             )
         )
         db.commit()
+        incomplete = engine.run_once(db, trigger="test", assets=[asset])
+        assert incomplete["trades_closed"] == 0
+        clock["now"] = NOW + timedelta(minutes=5)
         closed = engine.run_once(db, trigger="test", assets=[asset])
         db.refresh(trade)
 
