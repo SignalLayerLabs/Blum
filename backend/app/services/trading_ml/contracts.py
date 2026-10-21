@@ -50,11 +50,15 @@ class TradingMLAdvice:
 class FeatureSchema:
     version: str
     feature_names: tuple[str, ...]
+    source_schema_hash: str | None = None
 
     @property
     def hash(self) -> str:
+        identity = {"feature_names": self.feature_names, "version": self.version}
+        if self.source_schema_hash is not None:
+            identity["source_schema_hash"] = self.source_schema_hash
         payload = json.dumps(
-            {"feature_names": self.feature_names, "version": self.version},
+            identity,
             sort_keys=True,
             separators=(",", ":"),
         )
@@ -63,6 +67,16 @@ class FeatureSchema:
     @classmethod
     def current(cls) -> "FeatureSchema":
         return cls(version="trading-ml-features-v1", feature_names=FEATURE_NAMES)
+
+    @classmethod
+    def information(cls) -> "FeatureSchema":
+        from app.services.information.context import FEATURE_SCHEMA_HASH, FEATURE_UNITS
+
+        return cls(
+            "trading-ml-information-v2",
+            FEATURE_NAMES + ("strategy_fingerprint",) + tuple(FEATURE_UNITS),
+            FEATURE_SCHEMA_HASH,
+        )
 
 
 NUMERIC_FEATURES = (

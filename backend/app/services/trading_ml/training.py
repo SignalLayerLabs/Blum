@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 import hashlib
 import pickle
 from pathlib import Path
@@ -43,12 +43,15 @@ class TradingModelBundle:
     classifier: object
     regressor: object | None
     algorithm: str
+    metadata: dict = field(default_factory=dict)
 
     def predict(
         self, examples: Iterable[TradingMLExample]
     ) -> tuple[np.ndarray, np.ndarray | None]:
         rows = tuple(examples)
-        matrix = self.preprocessor.transform(_feature_frame(rows))
+        matrix = self.preprocessor.transform(
+            _feature_frame(rows, feature_names=self.feature_names)
+        )
         probability = self.classifier.predict_proba(matrix)[:, 1]
         predicted_r = (
             self.regressor.predict(matrix) if self.regressor is not None else None
@@ -277,7 +280,9 @@ class BoundedOptunaChallengerSearch:
         )
 
 
-def _preprocessor() -> ColumnTransformer:
+def _preprocessor(schema: FeatureSchema | None = None) -> ColumnTransformer:
+    names = (schema or FeatureSchema.current()).feature_names
+    categorical_names = (*CATEGORICAL_FEATURES, "strategy_fingerprint")
     numeric = Pipeline(
         [("imputer", SimpleImputer(strategy="median")), ("scale", StandardScaler())]
     )
@@ -289,20 +294,36 @@ def _preprocessor() -> ColumnTransformer:
     )
     return ColumnTransformer(
         [
-            ("numeric", numeric, list(NUMERIC_FEATURES)),
-            ("categorical", categorical, list(CATEGORICAL_FEATURES)),
+            (
+                "numeric",
+                numeric,
+                [name for name in names if name not in categorical_names],
+            ),
+            (
+                "categorical",
+                categorical,
+                [name for name in names if name in categorical_names],
+            ),
         ],
         sparse_threshold=0.0,
     )
 
 
 def _fit_bundle(
-    rows: tuple[TradingMLExample, ...], parameters: Mapping[str, object], seed: int
+    rows: tuple[TradingMLExample, ...],
+    parameters: Mapping[str, object],
+    seed: int,
+    *,
+    schema: FeatureSchema | None = None,
+    clip_net_labels: bool = True,
 ) -> TradingModelBundle:
     if not rows:
         raise ValueError("Stable training requires labeled examples")
-    preprocessor = _preprocessor()
-    matrix = preprocessor.fit_transform(_feature_frame(rows))
+    schema = schema or FeatureSchema.current()
+    preprocessor = _preprocessor(schema)
+    matrix = preprocessor.fit_transform(
+        _feature_frame(rows, feature_names=schema.feature_names)
+    )
     labels = np.asarray([row.label_positive_r for row in rows])
     if len(np.unique(labels)) < 2:
         raise ValueError(
@@ -315,12 +336,16 @@ def _fit_bundle(
     classifier.fit(matrix, labels, sample_weight=weights)
     regressor.fit(
         matrix,
-        np.clip([row.realized_net_r for row in rows], -3.0, 5.0),
+        (
+            np.clip([row.realized_net_r for row in rows], -3.0, 5.0)
+            if clip_net_labels
+            else [row.realized_net_r for row in rows]
+        ),
         sample_weight=weights,
     )
     return TradingModelBundle(
-        schema_hash=FeatureSchema.current().hash,
-        feature_names=FeatureSchema.current().feature_names,
+        schema_hash=schema.hash,
+        feature_names=schema.feature_names,
         preprocessor=preprocessor,
         classifier=classifier,
         regressor=regressor,
@@ -328,16 +353,13 @@ def _fit_bundle(
     )
 
 
-def _feature_frame(rows: Iterable[TradingMLExample]) -> pd.DataFrame:
+def _feature_frame(
+    rows: Iterable[TradingMLExample], *, feature_names=None
+) -> pd.DataFrame:
+    names = feature_names or FeatureSchema.current().feature_names
     return pd.DataFrame(
-        [
-            {
-                name: row.features.get(name)
-                for name in FeatureSchema.current().feature_names
-            }
-            for row in rows
-        ],
-        columns=list(FeatureSchema.current().feature_names),
+        [{name: row.features.get(name) for name in names} for row in rows],
+        columns=list(names),
     )
 
 

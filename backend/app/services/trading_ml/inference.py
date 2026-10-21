@@ -38,8 +38,10 @@ class TradingMLInferenceService:
         setup_type: str = "unknown",
         regime: str = "unknown",
     ) -> TradingMLAdvice:
-        loaded = self.registry.load_active(db, market_family)
-        if loaded.status != "ACTIVE" or loaded.row is None or loaded.model is None:
+        loaded = (self.registry.load_as_of(db, market_family, as_of=decision_timestamp,
+                                          schema_hash=FeatureSchema.current().hash)
+                  if decision_timestamp is not None else self.registry.load_active(db, market_family))
+        if loaded.status not in {"ACTIVE", "ACTIVE_AS_OF"} or loaded.row is None or loaded.model is None:
             return TradingMLAdvice(
                 status=loaded.status,
                 model_uid=loaded.row.model_uid if loaded.row else None,

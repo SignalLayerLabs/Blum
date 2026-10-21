@@ -55,7 +55,9 @@ class TradingMLModelRegistry:
         explanation: str = "",
     ) -> TradingMLModelVersion:
         self.root.mkdir(parents=True, exist_ok=True)
-        model_uid = f"{market_family}-{datetime.utcnow():%Y%m%d%H%M%S}-{uuid4().hex[:10]}"
+        model_uid = (
+            f"{market_family}-{datetime.utcnow():%Y%m%d%H%M%S}-{uuid4().hex[:10]}"
+        )
         target = (self.root / market_family / f"{model_uid}.pkl").resolve()
         self._assert_beneath_root(target)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -74,8 +76,29 @@ class TradingMLModelRegistry:
             market_family=market_family,
             algorithm=result.model_bundle.algorithm,
             status="CHALLENGER",
-            feature_schema_version=FeatureSchema.current().version,
-            feature_schema_hash=FeatureSchema.current().hash,
+            feature_schema_version=(
+                FeatureSchema.information().version
+                if result.model_bundle.schema_hash == FeatureSchema.information().hash
+                else FeatureSchema.current().version
+            ),
+            feature_schema_hash=result.model_bundle.schema_hash,
+            training_window_json={
+                key: value
+                for key, value in getattr(result.model_bundle, "metadata", {}).items()
+                if key
+                in {
+                    "available_at",
+                    "outcome_cutoff",
+                    "training_outcome_cutoff",
+                    "calibration_start",
+                    "calibration_outcome_cutoff",
+                    "evaluation_start",
+                    "embargo_seconds",
+                    "information_feature_schema_hash",
+                    "market_family",
+                    "label_units",
+                }
+            },
             dataset_hash=result.dataset_hash,
             evidence_lane_counts_json=dict(evidence_lane_counts or {}),
             sample_count=result.sample_count,
@@ -87,7 +110,8 @@ class TradingMLModelRegistry:
             artifact_path=str(target),
             artifact_sha256=digest,
             artifact_size_bytes=target.stat().st_size,
-            explanation=explanation or "Stored challenger; no decision authority until every promotion gate passes.",
+            explanation=explanation
+            or "Stored challenger; no decision authority until every promotion gate passes.",
         )
         db.add(row)
         db.commit()
@@ -121,6 +145,116 @@ class TradingMLModelRegistry:
         except Exception as exc:
             return LoadedModel("DEGRADED", row, None, (str(exc),))
 
+    def load_as_of(
+        self,
+        db: Session,
+        market_family: str,
+        *,
+        as_of: datetime,
+        schema_hash: str,
+        model_uid: str | None = None,
+    ) -> LoadedModel:
+        """A current champion is not automatically a historical checkpoint.
+
+        Explicit candidate UIDs may be scored for research. Implicit selection
+        requires actual activation at that clock and never adopts a challenger.
+        Rollback/degradation clocks govern historical authority, not current status.
+        """
+        from app.services.market_clock import utc_naive
+        import math
+
+        stamp = utc_naive(as_of)
+        query = select(TradingMLModelVersion).where(
+            TradingMLModelVersion.market_family == market_family,
+            TradingMLModelVersion.created_at <= stamp,
+        )
+        if model_uid is not None:
+            query = query.where(TradingMLModelVersion.model_uid == model_uid)
+        else:
+            query = query.where(TradingMLModelVersion.activated_at <= stamp)
+        rows = db.scalars(
+            query.order_by(
+                desc(TradingMLModelVersion.activated_at), desc(TradingMLModelVersion.id)
+            ).limit(20)
+        ).all()
+        for row in rows:
+            ended = any(
+                value is not None and utc_naive(value) <= stamp
+                for value in (row.degraded_at, row.rolled_back_at)
+            )
+            active = (
+                row.activated_at is not None
+                and utc_naive(row.activated_at) <= stamp
+                and not ended
+            )
+            if ended or (not active and model_uid is None):
+                continue
+            if row.feature_schema_hash != schema_hash:
+                return LoadedModel("SCHEMA_MISMATCH", row, None, ("SCHEMA_MISMATCH",))
+            try:
+                path = Path(row.artifact_path).resolve()
+                self._assert_beneath_root(path)
+                content = path.read_bytes()
+                if hashlib.sha256(content).hexdigest() != row.artifact_sha256:
+                    raise ValueError("ARTIFACT_HASH_MISMATCH")
+                model = pickle.loads(content)
+                if (
+                    not isinstance(model, TradingModelBundle)
+                    or model.schema_hash != schema_hash
+                ):
+                    raise ValueError("SCHEMA_MISMATCH")
+                metadata = getattr(model, "metadata", {})
+                names = (
+                    "available_at",
+                    "outcome_cutoff",
+                    "training_outcome_cutoff",
+                    "calibration_start",
+                    "calibration_outcome_cutoff",
+                    "evaluation_start",
+                )
+                clocks = {
+                    name: utc_naive(datetime.fromisoformat(metadata[name]))
+                    for name in names
+                }
+                if metadata.get("market_family") != market_family or any(
+                    row.training_window_json.get(name) != metadata.get(name)
+                    for name in names
+                ):
+                    raise ValueError("CHECKPOINT_METADATA_MISMATCH")
+                embargo = float(metadata["embargo_seconds"])
+                if not math.isfinite(embargo) or embargo <= 0:
+                    raise ValueError("INVALID_CALIBRATION_EMBARGO")
+                if clocks["available_at"] > stamp or clocks["outcome_cutoff"] > stamp:
+                    return LoadedModel(
+                        "NO_MODEL_AS_OF", row, None, ("FUTURE_MODEL_OR_OUTCOME",)
+                    )
+                if (
+                    clocks["available_at"] < clocks["outcome_cutoff"]
+                    or (
+                        clocks["calibration_start"] - clocks["training_outcome_cutoff"]
+                    ).total_seconds()
+                    <= embargo
+                    or (
+                        clocks["evaluation_start"]
+                        - clocks["calibration_outcome_cutoff"]
+                    ).total_seconds()
+                    <= embargo
+                ):
+                    raise ValueError("INVALID_CHECKPOINT_CHRONOLOGY")
+                return LoadedModel(
+                    "ACTIVE_AS_OF" if active else "CHALLENGER_AS_OF", row, model
+                )
+            except (
+                KeyError,
+                TypeError,
+                ValueError,
+                OSError,
+                pickle.UnpicklingError,
+                EOFError,
+            ):
+                return LoadedModel("DEGRADED", row, None, ("UNVERIFIABLE_CHECKPOINT",))
+        return LoadedModel("NO_MODEL_AS_OF", None, None)
+
     def verify(self, row: TradingMLModelVersion) -> bool:
         try:
             path = Path(row.artifact_path).resolve()
@@ -128,7 +262,8 @@ class TradingMLModelRegistry:
             return (
                 path.is_file()
                 and hashlib.sha256(path.read_bytes()).hexdigest() == row.artifact_sha256
-                and row.feature_schema_hash == FeatureSchema.current().hash
+                and row.feature_schema_hash
+                in {FeatureSchema.current().hash, FeatureSchema.information().hash}
             )
         except OSError:
             return False

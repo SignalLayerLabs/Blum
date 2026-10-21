@@ -250,6 +250,81 @@ def _ordered_rows(rows: Iterable[TradingMLExample]) -> tuple[TradingMLExample, .
     )
 
 
+@dataclass(frozen=True)
+class ChronologicalCalibrationSplit:
+    train: tuple[TradingMLExample, ...]
+    calibration: tuple[TradingMLExample, ...]
+    evaluation: tuple[TradingMLExample, ...]
+    embargo: timedelta
+
+
+def chronological_calibration_split(
+    rows: Iterable[TradingMLExample],
+    *,
+    maximum_holding_horizon: timedelta,
+) -> ChronologicalCalibrationSplit:
+    """Separate fitting, sigmoid calibration and untouched numerical evaluation.
+
+    Both boundaries purge complete outcomes and an embargo covering the larger
+    of the configured holding horizon and the longest observed label horizon.
+    Simultaneous decisions always stay in one partition.
+    """
+    from dataclasses import replace
+    from app.services.market_clock import utc_naive
+
+    ordered = _ordered_rows(
+        tuple(
+            replace(
+                row,
+                decision_timestamp=utc_naive(row.decision_timestamp),
+                outcome_timestamp=utc_naive(row.outcome_timestamp),
+            )
+            for row in rows
+        )
+    )
+    _validate_examples(ordered)
+    if maximum_holding_horizon <= timedelta(0):
+        raise ValueError("A positive maximum holding horizon is required")
+    timestamps = sorted({row.decision_timestamp for row in ordered})
+    if len(timestamps) < 10:
+        raise InsufficientTrainingEvidenceError(
+            "Insufficient chronological calibration history"
+        )
+    calibration_start = timestamps[int(len(timestamps) * 0.6)]
+    evaluation_start = timestamps[int(len(timestamps) * 0.8)]
+    embargo = max(
+        maximum_holding_horizon,
+        max(row.outcome_timestamp - row.decision_timestamp for row in ordered),
+    )
+    train = tuple(
+        row
+        for row in ordered
+        if row.decision_timestamp < calibration_start
+        and row.outcome_timestamp < calibration_start - embargo
+    )
+    calibration = tuple(
+        row
+        for row in ordered
+        if calibration_start <= row.decision_timestamp < evaluation_start
+        and row.outcome_timestamp < evaluation_start - embargo
+    )
+    evaluation = tuple(
+        row for row in ordered if row.decision_timestamp >= evaluation_start
+    )
+    if len(train) < 40 or len(calibration) < 20 or len(evaluation) < 20:
+        raise InsufficientTrainingEvidenceError(
+            "Insufficient samples after horizon purge and embargo"
+        )
+    if any(
+        len({row.label_positive_r for row in group}) < 2
+        for group in (train, calibration)
+    ):
+        raise InsufficientTrainingEvidenceError(
+            "Fit and calibration each require both outcome classes"
+        )
+    return ChronologicalCalibrationSplit(train, calibration, evaluation, embargo)
+
+
 def _validate_examples(rows: tuple[TradingMLExample, ...]) -> None:
     if not rows:
         raise ValueError("At least one labeled trading ML example is required")
