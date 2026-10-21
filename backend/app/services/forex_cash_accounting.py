@@ -98,7 +98,7 @@ def convert_cash(amount, source, target, quotes, *, now):
 
 
 class ForexCashAccounting:
-    def manage(self, position, quotes, broker, execution, *, now):
+    def manage(self, position, quotes, broker, execution, *, now, completed_holding_bars=None):
         was_open = position.status == "OPEN"
         contract = deepcopy(position.contract_json)
         ledger = contract["accounting"]
@@ -196,6 +196,14 @@ class ForexCashAccounting:
                 if side == ForexDirection.LONG
                 else quote.ask <= position.target_price
             )
+            if contract.get("strategy_fingerprint") and contract.get("maximum_holding_bars"):
+                # A frozen replay horizon is a count of completed execution bars.
+                # Missing observations never become fabricated bars at a weekend,
+                # outage, or process restart. Protective price exits stay active.
+                time_stop = completed_holding_bars is not None and completed_holding_bars >= contract["maximum_holding_bars"]
+                contract["completed_holding_bars"] = completed_holding_bars
+            else:
+                time_stop = (now - position.opened_at).total_seconds() >= contract.get("expected_holding_minutes", 30) * 60
             reason = ledger.get("exit_reason") or (
                 "STOP_HIT"
                 if stop
@@ -204,8 +212,7 @@ class ForexCashAccounting:
                     if target
                     else (
                         "TIME_STOP"
-                        if (now - position.opened_at).total_seconds()
-                        >= contract.get("expected_holding_minutes", 30) * 60
+                        if time_stop
                         else None
                     )
                 )

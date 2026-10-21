@@ -135,9 +135,12 @@ class BlumForexScalpingExpertAgent:
         ) / max(config.pip_value_per_standard_lot * 0.01, 1e-9)
         expected_costs = spread_pips + 2 * slippage_pips + commission_pips
         net = price_action.expected_gross_pips - expected_costs
-        aligned = price_action.direction == context.directional_bias and price_action.direction in {ForexDirection.LONG, ForexDirection.SHORT}
+        canonical = bool(price_action.strategy_fingerprint and price_action.executable_strategy)
+        aligned = price_action.direction in {ForexDirection.LONG, ForexDirection.SHORT} and (
+            canonical or price_action.direction == context.directional_bias
+        )
         eligible = strategy.readiness in {strategy.readiness.PAPER_TRADE_ELIGIBLE, strategy.readiness.ALPHA_SIGNAL_ELIGIBLE}
-        direction = price_action.direction if aligned and eligible and net > 0 else ForexDirection.ABSTAIN
+        direction = price_action.direction if aligned and eligible and net > 0 and not price_action.blockers else ForexDirection.ABSTAIN
         setup_confidence = max(0.0, min(1.0, price_action.confidence))
         timeframe_confidence = 1.0 if aligned else 0.2
         data_confidence = max(0.0, min(1.0, context.confidence))
@@ -192,7 +195,7 @@ class BlumForexScalpingExpertAgent:
             expected_gross_pips=price_action.expected_gross_pips,
             expected_cost_pips=expected_costs,
             expected_net_pips=net,
-            expected_r=net / 5.0,
+            expected_r=net / max(abs((market.quote.bid + market.quote.ask) / 2 - price_action.stop_level) / config.pip_size, 1e-9),
             confidence=decision_confidence,
             supporting_evidence=price_action.technical_evidence,
             conflicting_evidence=tuple(item for item in (macro.veto_reason,) if item),
@@ -202,7 +205,16 @@ class BlumForexScalpingExpertAgent:
             actionability_status="PROPOSED" if direction != ForexDirection.ABSTAIN else "TRAINING_ONLY",
             knowledge_context=knowledge_context,
             evidence_lane=strategy.evidence_lane,
-            certified_for_copy_readiness=strategy.certified_for_copy_readiness,
+            certified_for_copy_readiness=bool(
+                strategy.certified_for_copy_readiness and canonical and not price_action.blockers
+                and price_action.strategy_fingerprint == strategy.strategy_fingerprint
+            ),
+            strategy_fingerprint=price_action.strategy_fingerprint,
+            executable_strategy=dict(price_action.executable_strategy),
+            execution_timeframe=price_action.execution_timeframe,
+            maximum_holding_bars=price_action.maximum_holding_bars,
+            trailing_stop=price_action.trailing_stop,
+            feature_schema_hash=price_action.feature_schema_hash,
         )
 
 

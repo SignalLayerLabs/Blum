@@ -49,6 +49,7 @@ from app.services.forex_contracts import (
 )
 from app.services.forex_execution import BlumForexExecutionSimulator
 from app.services.forex_learning import BlumForexLearningEngine
+from app.services.forex_strategy_signal import ForexStrategySignal, validated_spec
 from app.services.forex_reinforcement import ForexReinforcementPolicyService
 from app.services.financial_model_council import FinancialModelCouncil
 from app.services.forex_risk import BlumForexPortfolioRiskEngine, ForexPortfolioState
@@ -89,7 +90,18 @@ class BlumForexPositionManagerAgent:
                     if margin_state['breached']:
                         contract['accounting']['exit_reason'] = 'MARGIN_STOP_OUT'
                     position.contract_json = contract
-                result = ForexCashAccounting().manage(position, quotes, self.brokers.get(), self.execution, now=now)
+                completed_holding_bars = None
+                frozen = position.contract_json or {}
+                if frozen.get("strategy_fingerprint") and frozen.get("maximum_holding_bars"):
+                    from app.services.market_clock import eligible_bar
+                    rows = db.scalars(select(ReplayMarketBar).join(Asset, ReplayMarketBar.asset_id == Asset.id).where(
+                        Asset.ticker == position.pair,
+                        ReplayMarketBar.timeframe == frozen.get("execution_timeframe"),
+                        ReplayMarketBar.bar_timestamp > position.opened_at,
+                        ReplayMarketBar.bar_timestamp <= now,
+                    ).order_by(ReplayMarketBar.bar_timestamp).limit(8000)).all()
+                    completed_holding_bars = len({row.bar_timestamp for row in rows if eligible_bar(row, decision_at=position.opened_at, as_of=now, mode="execution")})
+                result = ForexCashAccounting().manage(position, quotes, self.brokers.get(), self.execution, now=now, completed_holding_bars=completed_holding_bars)
                 game = db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.game_id == position.contract_json['account_id']).with_for_update()) if position.contract_json.get('account_id') else db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active").order_by(desc(LiveForwardPaperGame.started_at)).limit(1).with_for_update())
                 if game and (game.configuration or {}).get("account_currency", "EUR") == position.contract_json.get("account_currency"):
                     game.current_capital += result["cash_delta"]
@@ -282,7 +294,7 @@ class BlumForexTraderCore:
         historical_knowledge_path: str | os.PathLike[str] | None = None,
     ) -> None:
         self.context = BlumForexMarketContextAgent()
-        self.price_action = BlumForexPriceActionAgent()
+        self.price_action = ForexStrategySignal()
         self.macro = BlumForexMacroAgent()
         self.scalper = BlumForexScalpingExpertAgent()
         self.contrarian = BlumForexContrarianRiskAgent()
@@ -304,7 +316,8 @@ class BlumForexTraderCore:
 
     def evaluate_input(self, market: AgentMarketInput, *, strategy: ForexStrategyEvidence) -> EvaluationOutcome:
         context = self.context.analyze(market)
-        price_action = self.price_action.analyze(market)
+        price_action = self.price_action.evaluate(market, strategy=strategy)
+        context = replace(context, blockers=tuple(dict.fromkeys((*context.blockers, *price_action.blockers))))
         macro = self.macro.analyze(market)
         proposal = self.scalper.propose(market, context, price_action, macro, strategy)
         historical = self.historical_knowledge.advise(
@@ -969,7 +982,7 @@ class ForexMarketInputRepository:
                 from app.services.forex_contracts import MarketFrame
                 frames[timeframe] = MarketFrame(
                     timeframe=timeframe, market_timestamp=rows[-1].bar_timestamp,
-                    acquired_at=rows[-1].acquired_at, provider=rows[-1].provider,
+                    acquired_at=max(row.acquired_at for row in rows), provider=rows[-1].provider,
                     opens=tuple(float(row.open if row.open is not None else row.close) for row in rows),
                     highs=tuple(float(row.high if row.high is not None else row.close) for row in rows),
                     lows=tuple(float(row.low if row.low is not None else row.close) for row in rows),
@@ -977,6 +990,8 @@ class ForexMarketInputRepository:
                     quality_score=min(float(row.data_quality_score or 0.0) for row in rows),
                     missing_intervals=tuple((rows[-1].source_metadata or {}).get("missing_intervals") or []),
                     adjustment_status=str((rows[-1].source_metadata or {}).get("adjustment_status") or "RAW"),
+                    bar_timestamps=tuple(row.bar_timestamp for row in rows),
+                    volumes=tuple(float(row.volume) if row.volume is not None else None for row in rows),
                 )
             if "1m" not in frames:
                 blockers.append({"pair": asset.ticker, "reason": "TIMEFRAME_UNAVAILABLE", "missing": [key for key in ("1h", "15m", "5m", "1m") if key not in frames]})
@@ -1145,7 +1160,13 @@ class ForexStrategyRepository:
             contextual_memory=contextual_memory,
             evidence_lane=str(selected.metrics.get("evidence_lane") or "certified_paper"),
             certified_for_copy_readiness=bool(selected.metrics.get("certified_for_copy_readiness", bool(promoted))),
+            executable_strategy=dict(selected.metrics["executable_strategy"]) if isinstance(selected.metrics.get("executable_strategy"), dict) else {},
+            strategy_fingerprint=str(selected.metrics.get("strategy_fingerprint") or ""),
+            required_feature_schema_hash=str(selected.metrics.get("required_feature_schema_hash") or ""),
+            holding_horizon_bars=selected.metrics.get("holding_horizon_bars"),
         )
+        if validated_spec(contract)[1]:
+            return {}
         return {pair: contract for pair in pairs}
 
     @staticmethod

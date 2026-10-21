@@ -99,6 +99,8 @@ class MarketFrame:
     quality_score: float
     missing_intervals: tuple[str, ...] = ()
     adjustment_status: str = "RAW"
+    bar_timestamps: tuple[datetime, ...] = ()
+    volumes: tuple[float | None, ...] = ()
 
     def validate(self) -> None:
         if self.timeframe not in {"1h", "15m", "5m", "1m"}:
@@ -170,7 +172,7 @@ class AgentMarketInput:
             "volatility_score": self.volatility_score,
             "macro_payload": self.macro_payload,
             "information_context_hash": self.information_context.hash if self.information_context else None,
-            "frames": {key: {"timestamp": value.market_timestamp.isoformat(), "closes": value.closes} for key, value in self.frames.items()},
+            "frames": {key: asdict(value) for key, value in self.frames.items()},
         }
         return sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
 
@@ -189,6 +191,10 @@ class ForexStrategyEvidence:
     contextual_memory: dict = field(default_factory=dict)
     evidence_lane: str = "certified_paper"
     certified_for_copy_readiness: bool = True
+    executable_strategy: dict = field(default_factory=dict)
+    strategy_fingerprint: str = ""
+    required_feature_schema_hash: str = ""
+    holding_horizon_bars: int | None = None
 
 
 @dataclass(frozen=True)
@@ -218,6 +224,13 @@ class PriceActionOutput:
     expected_gross_pips: float
     technical_evidence: tuple[str, ...]
     confidence: float
+    blockers: tuple[str, ...] = ()
+    strategy_fingerprint: str = ""
+    executable_strategy: dict = field(default_factory=dict)
+    execution_timeframe: str = ""
+    maximum_holding_bars: int | None = None
+    trailing_stop: float | None = None
+    feature_schema_hash: str = ""
 
 
 @dataclass(frozen=True)
@@ -257,6 +270,12 @@ class ForexTradeProposal:
     knowledge_context: dict = field(default_factory=dict)
     evidence_lane: str = "certified_paper"
     certified_for_copy_readiness: bool = True
+    strategy_fingerprint: str = ""
+    executable_strategy: dict = field(default_factory=dict)
+    execution_timeframe: str = ""
+    maximum_holding_bars: int | None = None
+    trailing_stop: float | None = None
+    feature_schema_hash: str = ""
 
 
 @dataclass(frozen=True)

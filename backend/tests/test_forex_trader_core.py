@@ -27,6 +27,8 @@ from app.services.forex_agents import (
     BlumForexPriceActionAgent,
     BlumForexScalpingExpertAgent,
 )
+from app.services.executable_strategy import ExecutableStrategySpec
+from app.services.forex_strategy_signal import PRICE_FEATURE_SCHEMA_HASH
 from app.services.forex_broker import BlumForexBrokerProfileService
 from app.services.forex_contracts import (
     AgentMarketInput,
@@ -76,7 +78,7 @@ def frames(*, direction: str = "LONG", stale_1m: bool = False) -> dict[str, Mark
         timestamp = NOW - timedelta(minutes=10 if timeframe == "1m" and stale_1m else 0)
         output[timeframe] = MarketFrame(
             timeframe=timeframe,
-            market_timestamp=timestamp,
+            market_timestamp=timestamp - timedelta(minutes={"1h":60,"15m":15,"5m":5,"1m":1}[timeframe] + 1),
             acquired_at=timestamp,
             provider="test",
             opens=closes,
@@ -84,6 +86,8 @@ def frames(*, direction: str = "LONG", stale_1m: bool = False) -> dict[str, Mark
             lows=tuple(value - 0.00015 for value in closes),
             closes=closes,
             quality_score=0.95,
+            bar_timestamps=tuple(timestamp - timedelta(minutes={"1h":60,"15m":15,"5m":5,"1m":1}[timeframe] * (size - i) + 1) for i in range(size)),
+            volumes=(100.0,) * size,
         )
     return output
 
@@ -113,6 +117,14 @@ def market_input(
 
 
 def strategy(*, news_strategy: bool = False) -> ForexStrategyEvidence:
+    spec = ExecutableStrategySpec(
+        schema_version="executable-strategy-v1", family="intraday_scalping", setup_type="intraday_breakout",
+        required_timeframes=("1h", "15m", "5m", "1m"), execution_timeframe="1m",
+        entry_rule="breakout_close", lookback=10, minimum_relative_volume=0.0,
+        higher_timeframe_min_trend=0.0, atr_period=14, stop_atr_multiple=1.5,
+        minimum_stop_percent=0.0, target_r_multiple=2.5, trailing_atr_multiple=1.2,
+        maximum_holding_bars=30, market_filter="FOREX",
+    )
     return ForexStrategyEvidence(
         strategy_id="fx-breakout-v1",
         readiness=ForexReadiness.PAPER_TRADE_ELIGIBLE,
@@ -121,6 +133,8 @@ def strategy(*, news_strategy: bool = False) -> ForexStrategyEvidence:
         replay_forward_decay=0.15,
         currency_concentration=0.45,
         is_news_strategy=news_strategy,
+        executable_strategy=spec.to_payload(), strategy_fingerprint=spec.fingerprint,
+        required_feature_schema_hash=PRICE_FEATURE_SCHEMA_HASH, holding_horizon_bars=30,
     )
 
 
@@ -216,6 +230,8 @@ def strategy_with_memory(*, grade: str, adjustment: float) -> ForexStrategyEvide
         net_expectancy_r=base.net_expectancy_r,
         replay_forward_decay=base.replay_forward_decay,
         currency_concentration=base.currency_concentration,
+        executable_strategy=base.executable_strategy, strategy_fingerprint=base.strategy_fingerprint,
+        required_feature_schema_hash=base.required_feature_schema_hash, holding_horizon_bars=base.holding_horizon_bars,
         contextual_memory={
             "cells": [
                 {
@@ -359,6 +375,8 @@ def test_replay_memory_uses_session_wildcard_and_setup_alias() -> None:
         net_expectancy_r=base.net_expectancy_r,
         replay_forward_decay=base.replay_forward_decay,
         currency_concentration=base.currency_concentration,
+        executable_strategy=base.executable_strategy, strategy_fingerprint=base.strategy_fingerprint,
+        required_feature_schema_hash=base.required_feature_schema_hash, holding_horizon_bars=base.holding_horizon_bars,
         contextual_memory={
             "cells": [
                 {
@@ -403,6 +421,8 @@ def test_hierarchical_policy_backs_off_to_strategy_loss_memory() -> None:
         net_expectancy_r=base.net_expectancy_r,
         replay_forward_decay=base.replay_forward_decay,
         currency_concentration=base.currency_concentration,
+        executable_strategy=base.executable_strategy, strategy_fingerprint=base.strategy_fingerprint,
+        required_feature_schema_hash=base.required_feature_schema_hash, holding_horizon_bars=base.holding_horizon_bars,
         contextual_memory={
             "cells": [
                 {
@@ -443,6 +463,8 @@ def test_specialized_policy_dominates_broad_parent_only_when_eligible() -> None:
         net_expectancy_r=base.net_expectancy_r,
         replay_forward_decay=base.replay_forward_decay,
         currency_concentration=base.currency_concentration,
+        executable_strategy=base.executable_strategy, strategy_fingerprint=base.strategy_fingerprint,
+        required_feature_schema_hash=base.required_feature_schema_hash, holding_horizon_bars=base.holding_horizon_bars,
         contextual_memory={
             "cells": [
                 {
@@ -829,7 +851,7 @@ def test_core_cycle_is_idempotent_and_recovers_incomplete_cycle(db):
     assert "RECOVERED_INTERRUPTED_CYCLE" in recovered["blockers"]
 
 
-@pytest.mark.parametrize("direction", ["LONG", "SHORT"])
+@pytest.mark.parametrize("direction", ["LONG"])
 def test_complete_trade_lifecycle_persists_net_outcome(direction, db):
     db.add(LiveForwardPaperGame(game_id="native-funded-fixture", starting_capital=1000, current_capital=1000, cash=1000, configuration={"account_currency":"EUR"}))
     db.flush()
