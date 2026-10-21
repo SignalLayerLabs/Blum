@@ -10,6 +10,27 @@ from app.core.database import Base
 JsonType = JSON().with_variant(JSONB, "postgresql")
 
 
+class AlphaDecisionRecord(Base):
+    __tablename__ = "alpha_decisions"
+    __table_args__ = (Index("ix_alpha_decisions_market_clock", "market_family", "decision_at", "id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    decision_uid: Mapped[str] = mapped_column(String(220), unique=True)
+    market_family: Mapped[str] = mapped_column(String(24))
+    asset_key: Mapped[str] = mapped_column(String(32))
+    action: Mapped[str] = mapped_column(String(24))
+    decision_at: Mapped[datetime] = mapped_column(DateTime)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    registered_at: Mapped[datetime] = mapped_column(DateTime)
+    account_id: Mapped[str] = mapped_column(ForeignKey("live_forward_paper_games.game_id", ondelete="RESTRICT"))
+    trial_uid: Mapped[str | None] = mapped_column(String(220))
+    manifest_json: Mapped[dict] = mapped_column(JsonType)
+    manifest_sha256: Mapped[str] = mapped_column(String(64))
+    native_order_type: Mapped[str | None] = mapped_column(String(24))
+    native_order_id: Mapped[int | None] = mapped_column(Integer)
+    native_order_uid: Mapped[str | None] = mapped_column(String(220))
+    status: Mapped[str] = mapped_column(String(32), default="REGISTERED")
+
+
 class InformationFeedbackOutbox(Base):
     __tablename__ = "information_feedback_outbox"
     __table_args__ = (
@@ -4920,6 +4941,7 @@ class ForexPendingOrder(Base):
     pair: Mapped[str] = mapped_column(String(32), index=True)
     status: Mapped[str] = mapped_column(String(40), default='SUBMITTED', index=True)
     decision_at: Mapped[datetime] = mapped_column(DateTime)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     requested_lots: Mapped[float] = mapped_column(Float)
     filled_lots: Mapped[float] = mapped_column(Float, default=0.0)

@@ -36,7 +36,14 @@ class ForexOrderLifecycle:
         self.execution = execution or BlumForexExecutionSimulator()
 
     def submit(
-        self, db, *, decision_id: int, order: ForexOrderRequest, expires_at: datetime
+        self,
+        db,
+        *,
+        decision_id: int,
+        order: ForexOrderRequest,
+        expires_at: datetime,
+        account_id: str | None = None,
+        submitted_at: datetime | None = None,
     ):
         decision = db.get(ForexDecision, decision_id)
         payload = asdict(order)
@@ -47,25 +54,39 @@ class ForexOrderLifecycle:
             )
         )
         if existing:
-            if existing.payload != payload or existing.expires_at != utc_naive(
-                expires_at
+            if (
+                (account_id is not None and existing.account_id != account_id)
+                or existing.payload != payload
+                or existing.expires_at != utc_naive(expires_at)
             ):
                 raise ValueError("FROZEN_ORDER_CHANGED")
             return existing
         if expires_at <= decision.decision_timestamp:
             raise ValueError("INVALID_ORDER_EXPIRY")
-        game = db.scalar(
-            select(LiveForwardPaperGame)
-            .where(LiveForwardPaperGame.status == "active")
-            .order_by(desc(LiveForwardPaperGame.started_at))
-            .limit(1)
+        game = (
+            db.scalar(
+                select(LiveForwardPaperGame).where(
+                    LiveForwardPaperGame.game_id == account_id,
+                    LiveForwardPaperGame.status == "active",
+                )
+            )
+            if account_id is not None
+            else db.scalar(
+                select(LiveForwardPaperGame)
+                .where(LiveForwardPaperGame.status == "active")
+                .order_by(desc(LiveForwardPaperGame.started_at))
+                .limit(1)
+            )
         )
+        if account_id is not None and game is None:
+            raise ValueError("BOUND_PAPER_ACCOUNT_REQUIRED")
         row = ForexPendingOrder(
             account_id=game.game_id if game else None,
             order_uid=f"{decision.decision_uid}:order-v2",
             decision_id=decision.id,
             pair=order.pair,
             decision_at=decision.decision_timestamp,
+            submitted_at=utc_naive(submitted_at or datetime.utcnow()),
             expires_at=utc_naive(expires_at),
             requested_lots=order.quantity_lots,
             filled_lots=0,

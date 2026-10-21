@@ -36,6 +36,7 @@ class PaperOrderLifecycleService:
         validation_id: int | None = None,
         candidate_id: int | None = None,
         expires_at: datetime | None = None,
+        submitted_at: datetime | None = None,
     ) -> PaperExecutionOrder:
         existing = db.scalar(select(PaperExecutionOrder).where(PaperExecutionOrder.duplicate_key == request.order_key))
         if existing is not None:
@@ -61,7 +62,7 @@ class PaperOrderLifecycleService:
             order_type=request.order_type.upper(),
             status="SUBMITTED",
             decision_timestamp=request.decision_timestamp,
-            submitted_at=datetime.utcnow(),
+            submitted_at=utc_naive(submitted_at or datetime.utcnow()),
             expires_at=expires_at,
             theoretical_price=request.theoretical_price,
             requested_quantity=request.quantity,

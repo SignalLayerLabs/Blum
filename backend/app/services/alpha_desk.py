@@ -15,7 +15,7 @@ import random
 from sqlalchemy import and_, desc, func, select, union_all
 
 from app.core.release import source_revision, source_content_hash
-from app.models import AlphaCallRegistration, ForexDecision, ForexPosition, LiveForwardPaperTrade
+from app.models import AlphaCallRegistration, AlphaDecisionRecord, ForexDecision, ForexPosition, LiveForwardPaperTrade
 from app.services.paper_forward_direction import is_forex_identity, normalize_side, paper_trade_evidence_is_eligible, recorded_account_currency, validate_trade_plan
 from app.services.persistence import database_persistence_status
 
@@ -78,6 +78,25 @@ def manifest(source):
 
 
 class AlphaCallRegistry:
+    def register_decision(self, db, decision, *, source_id, registered_at):
+        from app.services.information.contracts import digest as information_digest
+        from app.services.information.repository import insert_once
+
+        payload = decision.to_payload()
+        sha = information_digest(payload)
+        uid = "alpha:" + decision.decision_uid
+        insert_once(db, AlphaCallRegistration, {
+            "source_uid": uid, "source_type": "information", "source_id": source_id,
+            "market": decision.market_family, "asset": decision.asset_key,
+            "decision_at": decision.decision_at, "registered_at": registered_at,
+            "source_revision": source_revision(), "source_content_hash": source_content_hash(),
+            "manifest_json": payload, "manifest_sha256": sha,
+        }, ["source_uid"])
+        record = db.scalar(select(AlphaCallRegistration).where(AlphaCallRegistration.source_uid == uid).with_for_update())
+        if record.manifest_sha256 != sha or record.source_id != source_id:
+            raise ValueError("FROZEN_DECISION_CHANGED")
+        return record
+
     def register(self,db,source,*,registered_at=None):
         db.flush()
         frozen=manifest(source)
@@ -232,12 +251,14 @@ class AlphaDeskService:
         forex_ids=[r.source_id for r in records if r.source_type=='forex']
         papers={r.id:r for r in db.scalars(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.id.in_(paper_ids)))} if paper_ids else {}
         decisions={r.id:r for r in db.scalars(select(ForexDecision).where(ForexDecision.id.in_(forex_ids)))} if forex_ids else {}
+        information_ids = [r.source_id for r in records if r.source_type == "information"]
+        information = {r.id:r for r in db.scalars(select(AlphaDecisionRecord).where(AlphaDecisionRecord.id.in_(information_ids)))} if information_ids else {}
         positions=defaultdict(list)
         if forex_ids:
             for row in db.scalars(select(ForexPosition).where(ForexPosition.decision_id.in_(forex_ids))): positions[row.decision_id].append(row)
         journal=[]
         for record in records:
-            source=papers.get(record.source_id) if record.source_type=='paper' else decisions.get(record.source_id)
+            source=information.get(record.source_id) if record.source_type == "information" else papers.get(record.source_id) if record.source_type=='paper' else decisions.get(record.source_id)
             rows=positions[record.source_id] if record.source_type=='forex' else []
             journal.append(self._call(record,source,rows,now))
         markets={key:self._market([r for r in journal if r['market']==key]) for key in ('equity','forex')}
@@ -257,6 +278,8 @@ class AlphaDeskService:
             'policy':'Prospective registration only. Markets remain separate. Sample evidence has no production-promotion authority. Confidence is heuristic. Competitor superiority is unverified.'}
 
     def _call(self,record,source,positions,now):
+        if record.source_type == "information":
+            return self._information_call(record, source, now)
         blockers,stamp,ttl=provenance(record)
         if utc(record.registered_at)>now: blockers.append('FUTURE_REGISTRATION')
         frozen=mapping(record.manifest_json)
@@ -352,6 +375,49 @@ class AlphaDeskService:
             'net_return_percent':net_return,'paired_excess_percent':paired,'closed_at':closed_at.isoformat() if closed_at else None,
             'active_eligible':outcome=='PENDING' and not blockers and expected is not None and expected>0,
             'blockers':list(dict.fromkeys(blockers))}
+
+    @staticmethod
+    def _information_call(record, source, now):
+        from app.services.information.contracts import digest as information_digest
+        from app.services.information.decisions import decision_from_payload
+
+        frozen = record.manifest_json
+        blockers = []
+        try:
+            decision = decision_from_payload(frozen)
+            if source is None:
+                blockers.append("SOURCE_MISSING")
+            elif source.manifest_sha256 != record.manifest_sha256 or information_digest(source.manifest_json) != record.manifest_sha256:
+                blockers.append("SOURCE_CHANGED")
+            if information_digest(frozen) != record.manifest_sha256:
+                blockers.append("REGISTRY_INTEGRITY_FAILED")
+            if record.registered_at > now:
+                blockers.append("FUTURE_REGISTRATION")
+            action = decision.action
+        except (ValueError, TypeError, KeyError):
+            blockers.append("REGISTRY_INTEGRITY_FAILED")
+            action = "INVALID"
+        no_action = action in {"ABSTAIN", "WATCHLIST"}
+        status = action if no_action else getattr(source, "status", "MISSING")
+        geometry, expected = mapping(frozen.get("geometry")), mapping(frozen.get("expected_outcome"))
+        return {
+            "source_uid": record.source_uid, "market": record.market, "asset": record.asset,
+            "status": status, "outcome_status": "NO_ACTION" if no_action else "PENDING",
+            "direction": action, "decision_at": record.decision_at.isoformat(), "registered_at": record.registered_at.isoformat(),
+            "source_revision": record.source_revision, "source_content_hash": record.source_content_hash,
+            "input_sha256": record.manifest_sha256, "provider": None, "quote_at": None, "quote_age_seconds": None,
+            "entry": geometry.get("entry"), "stop": geometry.get("stop"), "target": geometry.get("target"),
+            "model": frozen.get("model_uid"), "confidence": expected.get("probability_positive_r"),
+            "confidence_semantics": "CONDITIONAL_CALIBRATED_PROBABILITY" if expected.get("status") == "CALIBRATED" else "UNAVAILABLE",
+            "expected_net_edge": expected.get("predicted_net_r"), "edge_units": "net_R",
+            "qualified_closed": False, "net_pnl": None, "net_r": None, "account_currency": None,
+            "net_return_percent": None, "paired_excess_percent": None, "closed_at": None,
+            "active_eligible": False, "blockers": blockers,
+            "native_order_uid": getattr(source, "native_order_uid", None),
+            "decision_effect": frozen.get("decision_effect"), "evidence_lane": frozen.get("evidence_lane"),
+            "context_hash": mapping(frozen.get("context")).get("hash"),
+            "qualification_status": "PROSPECTIVE_TRIAL_EVALUATION_REQUIRED",
+        }
 
     @staticmethod
     def _market(rows):

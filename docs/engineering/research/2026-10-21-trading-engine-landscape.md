@@ -1,0 +1,34 @@
+# Trading engine comparison — implementation evidence and remaining work
+
+Research date: 21 October 2026. This is an initial engineering comparison, not a claim to have audited every relevant GitHub repository or established that any project wins live after costs. Selection covers agent platforms, numerical research, reinforcement learning, execution and bias detection. Repository popularity is not financial evidence.
+
+The approved connected-engine specification remains the delivery contract. The additional request to match AI-Trader and learn from other projects extends the comparison; it does not turn this document, a dependency installation or a green test suite into financial success.
+
+## Inspected mechanisms
+
+| Project and pinned revision | Source inspected | Useful mechanism | BLUM implementation or acceptance requirement |
+| --- | --- | --- | --- |
+| [AI-Trader](https://github.com/HKUDS/AI-Trader/tree/d03ff6c056b32ced735adf7c19ed8175adb1c8df) | `service/server/worker.py`, `experiment_metrics.py`, README | Separate HTTP service and background worker; singleton worker lease with renewal; experiment snapshots | Task10 must reserve execution capacity, bound research and demonstrate fresh management. Task12 must compare full, costed account NAV against declared controls. Worker isolation is not yet proved by BLUM's deployment. |
+| [Qlib](https://github.com/microsoft/qlib/blob/54355232463878d2eebb91fe0ee5fa7fa1f5976c/qlib/workflow/online/manager.py) | OnlineManager's routines, simulation contract and history description | Reproduce which model was online at each historical step; distinguish dependent training from delayable work | Tasks7–8 implement publication cutoffs, frozen checkpoint attribution and separate schema state. Tasks10–11 still need recurring operational scheduling and historical/native parity. Never fit later labels and present them as a model available earlier. |
+| [TradingAgents](https://github.com/TauricResearch/TradingAgents/blob/e8f5503e9b86d5c2710b0c76b1f686703968c9df/tradingagents/graph/trading_graph.py) | Graph initialization, date validation, configuration signature exclusions and bounded graph settings | Explicit analyst channels, bounded reasoning and configuration-sensitive checkpoint identity | Keep source attribution and numerical advice separate from narrative confidence. Task9 freezes context/spec/policy/model/account before native submission; Task13 must verify recovery. This inspection does not establish that debate produces financial alpha. No external LLM service was enabled. |
+| [FinRL](https://github.com/AI4Finance-Foundation/FinRL/blob/c0018c25de864157dc8470f0047b0d10ec721715/finrl/train.py) | Data processing, environment construction, selectable RL trainers | Explicit environment, cost/reward contract and train/trade workflow | BLUM already has an optional FinRLX adviser. Task11 must use native execution/cost semantics for replay; Task12 compares actual account outcomes. Adding another RL algorithm before correcting the environment would not establish an improvement. No new RL dependency was installed. |
+| [Freqtrade](https://github.com/freqtrade/freqtrade/blob/0db79d391f646eafbdf3c0976dd55dc90b296522/freqtrade/optimize/analysis/lookahead.py) | LookaheadAnalysis: full versus cut indicator and signal comparison | Detect causal contamination through changes in actual outputs | Preserve existing future-label/event perturbation tests. Task11/15 must also compare the same decision under truncated histories and appended adverse future data, across indicators, orders and outcomes. Do not import its destructive model-directory cleanup into persistent BLUM checkpoints. |
+
+AI-Trader's inspected metric snapshot counts operation signals as `trade_count` and computes its window return from the latest stored profit divided by a constant initial capital. Those particular fields are not evidence of distinct executed trades or a paired window return. BLUM must count actual fills/closures and use matching account/benchmark endpoints, with open positions and costs included. This is a reason to inspect behavior before reusing a dashboard label.
+
+## Additional execution and batch-evaluation candidates
+
+| Project | Pinned revision | GitHub license metadata at inspection | Next technical question |
+| --- | --- | --- | --- |
+| [NautilusTrader](https://github.com/nautechsystems/nautilus_trader/blob/e831bbdbd3488b6db9a0483a649fb2204d4f2fec/crates/execution/src/engine/mod.rs) | `e831bbdbd3488b6db9a0483a649fb2204d4f2fec` | LGPL-3.0 | Inspected engine command/event routing, account/strategy identifiers and its documented process-local dispatch tracking. BLUM's decision/order claim must persist across restarts; a process-local deduplication set would not satisfy Task13. Deeper reconciliation and deterministic replay audit remains open. |
+| [vectorbt](https://github.com/polakowo/vectorbt/blob/dd8eb3a3fe9ed918b1cdaf177455759ae4ac68cb/vectorbt/portfolio/nb.py) | `dd8eb3a3fe9ed918b1cdaf177455759ae4ac68cb` | Metadata NOASSERTION; actual `LICENSE.md` states Apache-2.0 with Commons Clause | Inspected array/Numba execution interface, cash locking, partial sizing and roundoff discussion. Task11 can batch feature calculation while preserving chronological native execution. No dependency/source adopted; the license includes additional conditions and must not be treated as plain Apache-2.0. |
+
+LEAN and Kronos have separate earlier assessments in this directory. Kronos remains an optional challenger: the retained exploratory probe did not establish net trading advantage and produced invalid OHLC paths. Its generated prices cannot replace observations.
+
+AI-Trader's inspected `test_realtime_trade_price_guard.py` also checks that a submitted client price does not replace a server quote, and unavailable quotes create no signal/position/cash change. BLUM's later-observation and fresh-conversion gates remain necessary: neither an asserted price nor a generated forecast is an execution observation.
+
+## Reuse and evidence boundaries
+
+No upstream source code was copied into BLUM in this comparison. New implementations use BLUM's existing native ledgers. Preserve notices if later source reuse occurs. Inspected metadata reports MIT for Qlib/FinRL, Apache-2.0 for TradingAgents and GPL-3.0 for Freqtrade. AI-Trader's README advertises MIT but GitHub's license metadata was null at the pinned revision; verify the actual license grant before copying its source. The audit and required attribution are retained.
+
+Required release proof remains the complete USA and Forex chain: reachable source → as-of context → attributed decision → registered native order → later observation/fill or justified no-fill → net outcome → exactly-once learning → paired prospective evaluation. Unfinished operational, recovery and financial gates remain unfinished even where an analogous upstream mechanism exists.

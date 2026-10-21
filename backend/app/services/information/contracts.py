@@ -258,6 +258,115 @@ class OpportunityContext:
 
 
 @dataclass(frozen=True)
+class FrozenAlphaDecision:
+    decision_uid: str
+    trial_uid: str | None
+    market_family: MarketFamily
+    asset_key: str
+    decision_at: datetime
+    expires_at: datetime
+    context: OpportunityContext
+    executable_strategy: Mapping
+    strategy_fingerprint: str
+    model_uid: str | None
+    checkpoint_hash: str | None
+    action: str
+    reason: str
+    geometry: Mapping
+    sizing: Mapping
+    expected_outcome: Mapping
+    evidence_lane: str
+    policy_version: str
+    account_id: str
+    decision_effect: Mapping
+    native_binding: Mapping = field(default_factory=dict)
+
+    def __post_init__(self):
+        from dataclasses import fields
+        from app.services.executable_strategy import ExecutableStrategySpec
+        from app.services.paper_forward_direction import validate_trade_plan
+
+        for name in ("decision_at", "expires_at"):
+            object.__setattr__(self, name, utc_naive(getattr(self, name)))
+        if self.market_family not in {"equity", "forex"} or (
+            self.context.market_family,
+            self.context.asset_key,
+            self.context.decision_at,
+        ) != (self.market_family, self.asset_key, self.decision_at):
+            raise ValueError("Exact decision context required")
+        if self.expires_at <= self.decision_at or not all(
+            (
+                self.decision_uid,
+                self.reason,
+                self.account_id,
+                self.evidence_lane,
+                self.policy_version,
+            )
+        ):
+            raise ValueError(
+                "Decision identity, account, policy and valid clocks required"
+            )
+        if self.action not in {"LONG", "SHORT", "ABSTAIN", "WATCHLIST"}:
+            raise ValueError("Unsupported decision action")
+        if any(
+            f.name not in self.executable_strategy
+            for f in fields(ExecutableStrategySpec)
+        ):
+            raise ValueError("Complete executable strategy required")
+        spec = ExecutableStrategySpec.from_payload(self.executable_strategy)
+        if (
+            spec.fingerprint != self.strategy_fingerprint
+            or self.executable_strategy.get("strategy_fingerprint") != spec.fingerprint
+        ):
+            raise ValueError("Frozen strategy fingerprint mismatch")
+        if self.checkpoint_hash is not None and not re.fullmatch(
+            "[0-9a-f]{64}", self.checkpoint_hash
+        ):
+            raise ValueError("Invalid checkpoint hash")
+        if self.action in {"LONG", "SHORT"}:
+            validate_trade_plan(
+                self.action,
+                entry=self.geometry.get("entry"),
+                stop=self.geometry.get("stop"),
+                targets=[self.geometry.get("target")],
+            )
+            quantity = self.sizing.get(
+                "quantity_lots" if self.market_family == "forex" else "quantity"
+            )
+            if (
+                isinstance(quantity, bool)
+                or not isinstance(quantity, (float, int))
+                or not math.isfinite(quantity)
+                or quantity <= 0
+            ):
+                raise ValueError("Positive finite intended quantity required")
+        for name in (
+            "executable_strategy",
+            "geometry",
+            "sizing",
+            "expected_outcome",
+            "decision_effect",
+            "native_binding",
+        ):
+            object.__setattr__(self, name, freeze(getattr(self, name)))
+
+    def to_payload(self):
+        from dataclasses import fields
+
+        payload = {
+            f.name: thaw(getattr(self, f.name))
+            for f in fields(self)
+            if f.name not in {"context", "decision_at", "expires_at"}
+        }
+        return {
+            **payload,
+            "context": self.context.to_payload(),
+            "decision_at": self.decision_at.isoformat(),
+            "expires_at": self.expires_at.isoformat(),
+        }
+
+
+@dataclass(frozen=True)
 class MaturedAlphaOutcome:
     source_uid: str
     decision_uid: str

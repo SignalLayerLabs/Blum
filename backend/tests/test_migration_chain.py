@@ -96,12 +96,14 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "ascent_experiments",
         "ascent_evidence_use",
         "alpha_call_registrations",
+        "alpha_decisions",
         "trading_curriculum_states",
         "trading_curriculum_sources",
         "trading_curriculum_episodes",
     }
 
     assert required_tables.issubset(tables)
+    assert "submitted_at" in {column["name"] for column in inspect(engine).get_columns("forex_pending_orders")}
     alpha_indexes = {index['name'] for index in inspect(engine).get_indexes('alpha_call_registrations')}
     assert {'ix_alpha_calls_market_registered', 'ix_alpha_calls_source'}.issubset(alpha_indexes)
     paper_trade_columns = {
@@ -115,7 +117,7 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "accounting_recomputed_at",
     }.issubset(paper_trade_columns)
     with engine.connect() as connection:
-        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0050_information_feedback"
+        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0051_information_decisions"
 
     downgrade = subprocess.run(
         [sys.executable, "-m", "alembic", "downgrade", "base"],
