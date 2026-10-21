@@ -113,6 +113,8 @@ class BlumIntradayPaperEngine:
         self.paper = LiveForwardPaperTradingService()
         self.execution = PaperOrderLifecycleService()
         self.learning = IntradayPaperLearningService()
+        from app.services.information.native_policy import NativeInformationPolicy
+        self.information_policy = NativeInformationPolicy()
         self.no_trade_learning = IntradayNoTradeLearningService(evaluation_minutes=settings.intraday_no_trade_evaluation_minutes)
         self.quant_advisor = FinRLXQuantEngine()
         self.quant_overlay = FinRLXDecisionOverlay()
@@ -196,8 +198,14 @@ class BlumIntradayPaperEngine:
                         asset_type=asset.asset_type or "Stock",
                     )
                     decision = self._apply_quant_overlay(asset, decision)
+                    if normalize_market(decision.market) == "USA":
+                        decision = replace(decision, evidence={**decision.evidence,
+                            "executable_strategy":strategy.executable_strategy,
+                            "strategy_fingerprint":strategy.executable_strategy.get("strategy_fingerprint")})
+                        decision = self.information_policy.equity(db, decision=decision, context=data.information_context)
                     decisions.append({**json_safe(decision.to_dict()), "evidence_lane": evidence_lane})
                     if decision.status != INTRADAY_TRADE_CANDIDATE:
+                        self._freeze_information_intent(db, game=game, decision=decision)
                         self._count_rejection(run, decision.reason_code)
                         self.no_trade_learning.record(db, run=run, asset=asset, decision=decision)
                         continue
@@ -441,11 +449,18 @@ class BlumIntradayPaperEngine:
         trigger_timestamp = (decision.evidence.get("data_timestamps") or {}).get("1m") or decision.decision_timestamp.isoformat()
         strategy_fingerprint = str(decision.evidence.get("strategy_fingerprint") or f"validation-{decision.validation_id}")
         duplicate_key = f"intraday:{asset.ticker}:{strategy_fingerprint}:{trigger_timestamp}"
+        if decision.evidence.get("information_context"):
+            duplicate_key = f"{game.game_id}:{duplicate_key}"
         existing = db.scalar(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.duplicate_key == duplicate_key).limit(1))
         if existing:
             return existing, False
 
         feedback = self.paper.feedback_metadata(db, ticker=asset.ticker, setup_type=decision.setup_type)
+        if decision.evidence.get("information_context"):
+            feedback = {"model_version_used":(decision.evidence.get("information_advice") or {}).get("model_uid") or decision.strategy_id,
+                "weights_used":{}, "confidence_adjustment":0.,
+                "learning_memory_used":{"applied":False}, "strategy_memory_used":{"applied":False},
+                "research_priority_used":{"source":"frozen_information_policy"}}
         evidence_lane = str(decision.evidence.get("evidence_lane") or "certified_paper")
         trade_evidence_type = (
             PAPER_FORWARD_INTRADAY
@@ -495,6 +510,14 @@ class BlumIntradayPaperEngine:
         risk_per_share = max(0.0001, observed_entry - float(decision.stop_price or observed_entry))
         trade_side = LONG
         frozen = {
+            "decision_uid":"alpha-usa:"+duplicate_key,
+            "market":decision.market,
+            "information_context":decision.evidence.get("information_context"),
+            "information_advice":decision.evidence.get("information_advice"),
+            "executable_strategy":decision.evidence.get("executable_strategy"),
+            "strategy_fingerprint":strategy_fingerprint,
+            "features":(decision.evidence.get("information_policy") or {}).get("features") or {},
+            "evidence_lane":evidence_lane,
             "evidence_type": trade_evidence_type,
             "trading_mode": INTRADAY_MODE,
             "strategy": {
@@ -684,14 +707,52 @@ class BlumIntradayPaperEngine:
             quote_capacity_units=quote_capacity_units,
             allowed_sessions=(decision.session,),
         )
-        self.execution.submit(
-            db,
-            request,
-            paper_trade_id=trade.id,
-            validation_id=decision.validation_id,
-            expires_at=decision.decision_timestamp + timedelta(minutes=5),
-        )
+        if decision.evidence.get("information_context"):
+            from dataclasses import asdict
+            from app.services.information.decisions import InformationDecisionService
+            context_fields = asdict(request)
+            for key in ("order_key","ticker","side","order_type","decision_timestamp","theoretical_price","quantity","limit_price","stop_price","target_price"):
+                context_fields.pop(key, None)
+            registered = self._freeze_information_intent(db, game=game, decision=decision, trade=trade,
+                execution_context=context_fields)
+            InformationDecisionService(now_provider=lambda:decision.decision_timestamp,
+                paper_lifecycle=self.execution).submit(db, decision_uid=registered.decision_uid, as_of=decision.decision_timestamp)
+        else:
+            self.execution.submit(db, request, paper_trade_id=trade.id, validation_id=decision.validation_id,
+                expires_at=decision.decision_timestamp + timedelta(minutes=5))
         return trade, True
+
+    @staticmethod
+    def _freeze_information_intent(db, *, game, decision, trade=None, execution_context=None):
+        payload = decision.evidence.get("information_context")
+        if not payload:
+            return None
+        from app.services.information.contracts import FrozenAlphaDecision, digest
+        from app.services.information.feedback import context_from_payload
+        from app.services.information.decisions import InformationDecisionService
+        context = context_from_payload(payload)
+        uid = trade.frozen_decision_payload["decision_uid"] if trade else "alpha-usa:"+digest([game.game_id,decision.strategy_id,context.hash])
+        advice = decision.evidence.get("information_advice") or {}
+        registered = FrozenAlphaDecision(
+            decision_uid=uid, trial_uid=(game.configuration or {}).get("trial_uid"), market_family="equity",
+            asset_key=decision.ticker, decision_at=decision.decision_timestamp,
+            expires_at=decision.decision_timestamp+timedelta(minutes=5), context=context,
+            executable_strategy=decision.evidence["executable_strategy"], strategy_fingerprint=decision.evidence["strategy_fingerprint"],
+            model_uid=advice.get("model_uid"), checkpoint_hash=advice.get("model_hash"),
+            action="LONG" if trade is not None else "WATCHLIST" if decision.status == "INTRADAY_WATCHLIST" else "ABSTAIN",
+            reason=decision.explanation or decision.reason_code,
+            geometry={"entry":decision.entry_price,"stop":decision.stop_price,"target":decision.target_price},
+            sizing={"quantity":float((trade.frozen_decision_payload.get("accounting") or {}).get("quantity_units",0)) if trade else 0.,
+                    "risk_percent":trade.risk_percent if trade else 0.},
+            expected_outcome={**advice,"target_distance_bps":decision.expected_move_bps,
+                "target_distance_minus_cost_bps":decision.net_expectancy_bps},
+            evidence_lane=decision.evidence.get("evidence_lane") or "UNQUALIFIED_NATIVE_PAPER",
+            policy_version="native-information-policy-v1", account_id=game.game_id,
+            decision_effect={**(decision.evidence.get("information_policy") or {}),
+                "information_applied":bool((decision.evidence.get("information_policy") or {}).get("information_effects"))},
+            native_binding={"source_type":"paper","source_id":trade.id,"execution_context":execution_context or {}} if trade else {},
+        )
+        return InformationDecisionService(now_provider=lambda:decision.decision_timestamp).freeze(db, registered)
 
     def _manage_pending_orders(self, db: Session, *, game: LiveForwardPaperGame, now: datetime) -> dict:
         orders = db.scalars(

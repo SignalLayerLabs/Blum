@@ -276,6 +276,9 @@ class ForexTradeProposal:
     maximum_holding_bars: int | None = None
     trailing_stop: float | None = None
     feature_schema_hash: str = ""
+    information_advice: dict = field(default_factory=dict)
+    information_policy: dict = field(default_factory=dict)
+    regime: str = "unknown"
 
 
 @dataclass(frozen=True)

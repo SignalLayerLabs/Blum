@@ -29,6 +29,17 @@ AI-Trader's inspected `test_realtime_trade_price_guard.py` also checks that a su
 
 ## Reuse and evidence boundaries
 
+The next comparison batch adds concrete questions rather than new runtime dependencies:
+
+| Project / pinned revision | Inspection and mechanism | BLUM requirement |
+| --- | --- | --- |
+| [RD-Agent](https://github.com/microsoft/RD-Agent/blob/484776c211e4fbbeef03e0ec00d6bbee7362a4f4/rdagent/core/proposal.py) | Inspected typed hypothesis, experiment feedback and explicit failed-experiment representation; MIT metadata | Tasks11–12 retain hypothesis, observations, exceptions and failed trials. Successful code execution and positive research selection must remain distinct outcomes. |
+| [OpenBB](https://github.com/OpenBB-finance/OpenBB/blob/78020ee4b864ab50b8c1f56373877c2b4e7fb623/openbb_platform/core/openbb_core/provider/registry.py) | Inspected provider registration and extension loading; API license metadata unresolved | Extend the existing provider capability/status registry and bounded ingestion in Tasks4/10. Installing a provider framework does not supply data entitlements, source timestamps or historical vintages. No package adoption. |
+| [Zipline Reloaded](https://github.com/stefan-jansen/zipline-reloaded/blob/cf649ac06fddce76f6caa2403cd8494ac84f72ad/src/zipline/data/data_portal.py) | Inspected reader availability boundaries and separate adjustment reader for splits/dividends; Apache-2.0 metadata | Task11 must declare asset-universe/corporate-action semantics and avoid passing adjusted current-vintage history off as raw historical prices. Calendar and bar-availability filtering alone do not prove absence of survivorship bias. |
+| [QuantStats](https://github.com/ranaroussi/quantstats/blob/9ef4c6d0a4ffe7831f6ebba6a5824fd33a90c05a/quantstats/stats.py) | Inspected compounded-return handling and paired-observation helper interface; Apache-2.0 metadata | Task12 must distinguish a displayed carried-forward NAV from an actually observed return, and align strategy/control timestamps before computing paired excess. Missing observations cannot become independent zero-return evidence. |
+
+[FinGPT](https://github.com/AI4Finance-Foundation/FinGPT/tree/fdb04c9a273d1ccc3764b09b8e3ed1e708e57566) and [FinRobot](https://github.com/AI4Finance-Foundation/FinRobot/tree/2717499b8e30f242640af08c4ad9afd1113c2d45) have been identified and pinned with MIT / Apache-2.0 metadata respectively; their implementation audit is still pending. Do not describe their models, training data or agent workflows as adopted or validated in BLUM.
+
 No upstream source code was copied into BLUM in this comparison. New implementations use BLUM's existing native ledgers. Preserve notices if later source reuse occurs. Inspected metadata reports MIT for Qlib/FinRL, Apache-2.0 for TradingAgents and GPL-3.0 for Freqtrade. AI-Trader's README advertises MIT but GitHub's license metadata was null at the pinned revision; verify the actual license grant before copying its source. The audit and required attribution are retained.
 
 Required release proof remains the complete USA and Forex chain: reachable source → as-of context → attributed decision → registered native order → later observation/fill or justified no-fill → net outcome → exactly-once learning → paired prospective evaluation. Unfinished operational, recovery and financial gates remain unfinished even where an analogous upstream mechanism exists.

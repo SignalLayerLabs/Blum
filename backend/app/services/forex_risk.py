@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from fractions import Fraction
-from math import floor, gcd, lcm
+from math import floor, gcd, lcm, isfinite
 
 from app.services.forex_broker import ForexBrokerProfile
 from app.services.forex_contracts import ForexTradeProposal, pair_config
@@ -56,6 +56,7 @@ class BlumForexPortfolioRiskEngine:
         *,
         quotes=None,
         now=None,
+        execution_context=None,
     ) -> ForexRiskDecision:
         committed = state.open_positions + state.pending_orders
         exposures = self.currency_exposure(committed)
@@ -90,12 +91,46 @@ class BlumForexPortfolioRiskEngine:
             drawdown_multiplier,
             correlation_multiplier,
         )
-        effective_risk_percent = self.risk_per_trade_percent * sizing_multiplier
+        information_multiplier = proposal.information_policy.get("risk_multiplier", 1.0)
+        if (
+            isinstance(information_multiplier, bool)
+            or not isinstance(information_multiplier, (float, int))
+            or not isfinite(information_multiplier)
+        ):
+            return self._reject("REJECT_INFORMATION_RISK", exposures)
+        effective_risk_percent = (
+            self.risk_per_trade_percent
+            * sizing_multiplier
+            * max(0.0, min(1.0, information_multiplier))
+        )
         risk_amount = state.equity * effective_risk_percent / 100
         lot_step = common_lot_step(config.lot_step, broker.lot_step)
         from app.services.forex_cash_accounting import convert_cash
 
-        quote_risk = abs(proposal.entry - proposal.stop) * 100_000
+        from app.services.forex_contracts import ForexOrderRequest, ForexDirection
+        from app.services.forex_execution import BlumForexExecutionSimulator
+
+        request = ForexOrderRequest.from_proposal(proposal, quantity_lots=1.0)
+        request = replace(request, **(execution_context or {}))
+        quoted = (quotes or {}).get(proposal.pair)
+        sign = 1 if proposal.direction == ForexDirection.LONG else -1
+        if quoted is not None:
+            side_price = quoted.ask if sign == 1 else quoted.bid
+        else:
+            half_spread = (
+                broker.spread_pips.get(proposal.pair, 0.0)
+                * broker.session_spread_multiplier.get(request.session, 1.25)
+                * config.pip_size
+                / 2
+            )
+            side_price = proposal.entry + sign * half_spread
+        expected_fill = (
+            side_price
+            + sign
+            * BlumForexExecutionSimulator._slippage_pips(request, broker)
+            * config.pip_size
+        )
+        quote_risk = max(0.0, (expected_fill - proposal.stop) * sign) * 100_000
         if config.quote_currency == broker.account_currency:
             per_lot_risk = quote_risk
         elif quotes and now is not None:
@@ -122,8 +157,22 @@ class BlumForexPortfolioRiskEngine:
             if converted is None:
                 return self._reject("REJECT_ACCOUNT_CONVERSION", exposures)
             per_lot_notional = abs(converted["amount"])
-        lots = risk_amount / max(per_lot_risk, 1e-9)
+        lots = risk_amount / max(
+            per_lot_risk + broker.commission_per_lot_round_trip, 1e-9
+        )
         lots = max(0.0, floor(lots / lot_step + 1e-12) * lot_step)
+
+        def allocated_risk(quantity):
+            return per_lot_risk * quantity + 2 * max(
+                broker.minimum_commission,
+                broker.commission_per_lot_round_trip * quantity / 2,
+            )
+
+        if allocated_risk(lots) > risk_amount + 1e-9:
+            fixed_fee_lots = max(
+                0.0, risk_amount - 2 * broker.minimum_commission
+            ) / max(per_lot_risk, 1e-9)
+            lots = min(lots, floor(fixed_fee_lots / lot_step + 1e-12) * lot_step)
         if lots < max(config.minimum_lot, broker.minimum_lot):
             return self._reject("REJECT_MARGIN", exposures)
         margin = per_lot_notional * lots * broker.margin_requirement
@@ -162,8 +211,8 @@ class BlumForexPortfolioRiskEngine:
             return ForexRiskDecision(
                 "APPROVE_REDUCED_SIZE",
                 reduced_lots,
-                per_lot_risk * reduced_lots,
-                per_lot_risk * reduced_lots / state.equity * 100,
+                allocated_risk(reduced_lots),
+                allocated_risk(reduced_lots) / state.equity * 100,
                 per_lot_notional * reduced_lots * broker.margin_requirement,
                 self._apply(
                     exposures,
@@ -177,8 +226,8 @@ class BlumForexPortfolioRiskEngine:
         return ForexRiskDecision(
             "APPROVE_FULL_SIZE",
             lots,
-            per_lot_risk * lots,
-            per_lot_risk * lots / state.equity * 100,
+            allocated_risk(lots),
+            allocated_risk(lots) / state.equity * 100,
             margin,
             projected,
             (),

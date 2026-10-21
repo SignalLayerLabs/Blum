@@ -378,3 +378,33 @@ def test_registered_abstention_is_readable_and_does_not_count_as_a_trade(db):
     row = snapshot["journal"][0]
     assert row["status"] == "ABSTAIN" and row["outcome_status"] == "NO_ACTION"
     assert "SOURCE_MISSING" not in row["blockers"]
+
+
+def test_native_forex_cycle_registers_before_fill_and_matures_into_feedback(
+    db, tmp_path
+):
+    from datetime import datetime
+    from app.models import (
+        AlphaDecisionRecord,
+        ForexPendingOrder,
+        InformationFeedbackOutbox,
+    )
+    from app.services.information.feedback import InformationFeedback
+    from test_information_feedback import native_forex
+
+    position, context = native_forex(db)
+    record = db.scalar(select(AlphaDecisionRecord))
+    assert record is not None
+    order = db.scalar(select(ForexPendingOrder))
+    assert record.native_order_uid == order.order_uid
+    assert record.registered_at <= order.submitted_at < position.opened_at
+    assert record.manifest_json["context"]["hash"] == context.hash
+    service = InformationFeedback(artifact_root=tmp_path)
+    at = datetime.utcnow() + timedelta(minutes=1)
+    assert service.project(db, as_of=at)["new_examples"] == 1
+    db.commit()
+    publication = db.scalar(select(InformationFeedbackOutbox))
+    assert publication.decision_uid == record.decision_uid
+    db.commit()
+    assert service.publish_pending(db, as_of=at)["published"] == 1
+    assert service.trainer.current("forex").sample_count == 1

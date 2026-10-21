@@ -27,8 +27,21 @@ def proposal():
     )
 
 
+def cost_free_broker(**kwargs):
+    base = BlumForexBrokerProfileService().get()
+    return replace(
+        base,
+        account_currency="USD",
+        commission_per_lot_round_trip=0,
+        minimum_commission=0,
+        slippage_pips=0,
+        spread_pips={key: 0.0 for key in base.spread_pips},
+        **kwargs,
+    )
+
+
 def test_lot_rounding_cannot_exceed_the_cash_risk_budget():
-    broker = replace(BlumForexBrokerProfileService().get(), account_currency="USD")
+    broker = cost_free_broker()
     result = BlumForexPortfolioRiskEngine().evaluate(
         proposal(), ForexPortfolioState(equity=3320), broker
     )
@@ -41,7 +54,7 @@ def test_lot_rounding_cannot_exceed_the_cash_risk_budget():
 
 
 def test_reduced_size_reports_its_actual_margin_exposure_and_risk():
-    broker = replace(BlumForexBrokerProfileService().get(), account_currency="USD")
+    broker = cost_free_broker()
     state = ForexPortfolioState(equity=3320, pair_correlations={"EURUSD=X": 0.9})
     result = BlumForexPortfolioRiskEngine().evaluate(proposal(), state, broker)
     assert result.decision == "APPROVE_REDUCED_SIZE"
@@ -53,9 +66,7 @@ def test_reduced_size_reports_its_actual_margin_exposure_and_risk():
 
 
 def test_size_must_satisfy_both_pair_and_broker_lot_steps():
-    broker = replace(
-        BlumForexBrokerProfileService().get(), account_currency="USD", lot_step=0.025
-    )
+    broker = cost_free_broker(lot_step=0.025)
     result = BlumForexPortfolioRiskEngine().evaluate(
         proposal(), ForexPortfolioState(equity=3320), broker
     )
@@ -65,9 +76,7 @@ def test_size_must_satisfy_both_pair_and_broker_lot_steps():
 
 
 def test_reduction_cannot_submit_a_quantity_below_the_broker_minimum():
-    broker = replace(
-        BlumForexBrokerProfileService().get(), account_currency="USD", minimum_lot=0.05
-    )
+    broker = cost_free_broker(minimum_lot=0.05)
     state = ForexPortfolioState(equity=2000, pair_correlations={"EURUSD=X": 0.9})
     result = BlumForexPortfolioRiskEngine().evaluate(proposal(), state, broker)
     assert result.decision == "REJECT_CORRELATION"
@@ -81,3 +90,52 @@ def test_missing_account_conversion_cannot_authorize_cross_currency_risk():
     )
     assert result.decision == "REJECT_ACCOUNT_CONVERSION"
     assert result.quantity_lots == 0
+
+
+def test_native_risk_budget_includes_round_trip_commission_before_approval():
+    broker = replace(
+        cost_free_broker(), commission_per_lot_round_trip=6.0, minimum_commission=0.02
+    )
+    result = BlumForexPortfolioRiskEngine().evaluate(
+        proposal(), ForexPortfolioState(equity=3320), broker
+    )
+    # USD16.60 budget / (USD100 stop loss + USD6 round-trip fees) per lot.
+    assert result.quantity_lots == pytest.approx(0.15)
+    assert result.risk_amount == pytest.approx(15.90)
+    assert result.risk_percent == pytest.approx(15.90 / 3320 * 100)
+
+
+def test_minimum_commission_can_make_the_smallest_lot_unaffordable():
+    broker = replace(cost_free_broker(), minimum_commission=1.0)
+    result = BlumForexPortfolioRiskEngine().evaluate(
+        proposal(), ForexPortfolioState(equity=500), broker
+    )
+    # USD2.50 budget; minimum .01 lot risks USD1 plus USD2 commissions.
+    assert result.quantity_lots == 0
+    assert not result.decision.startswith("APPROVE")
+
+
+def test_native_risk_budget_includes_observed_spread_and_same_fill_slippage():
+    from app.services.forex_contracts import ForexQuote
+    from test_forex_trader_core import NOW
+
+    broker = replace(
+        cost_free_broker(), commission_per_lot_round_trip=6.0, slippage_pips=0.1
+    )
+    quote = ForexQuote(1.0999, 1.1001, NOW, "fixture")
+    result = BlumForexPortfolioRiskEngine().evaluate(
+        proposal(),
+        ForexPortfolioState(equity=3320),
+        broker,
+        quotes={"EURUSD=X": quote},
+        now=NOW,
+        execution_context={
+            "session": "LONDON",
+            "liquidity_score": 1.0,
+            "volatility_score": 0.5,
+            "event_impact": "LOW_IMPACT",
+        },
+    )
+    # Entry ask1.1001 + .1pip slippage; stop1.099 => USD111 loss/lot + USD6 fees.
+    assert result.quantity_lots == pytest.approx(0.14)
+    assert result.risk_amount == pytest.approx(16.38)

@@ -85,13 +85,22 @@ def native_forex(db, *, close=True):
     db.add(
         LiveForwardPaperGame(
             game_id="feedback-funding",
-            starting_capital=1000,
-            current_capital=1000,
-            cash=1000,
+            starting_capital=100_000,
+            current_capital=100_000,
+            cash=100_000,
             configuration={"account_currency": "EUR"},
         )
     )
     core = BlumForexTraderCore()
+    from app.services.information.model import InformationAdvice
+
+    class FrozenFixtureAdvisor:
+        def advise(self, *args, **kwargs):
+            return InformationAdvice(
+                "UNSUPPORTED_SCOPE", model_uid="fixture-checkpoint", model_hash="a" * 64
+            )
+
+    core.information_policy.advisor = FrozenFixtureAdvisor()
     core.run_cycle(
         db,
         inputs=[market],
@@ -100,10 +109,6 @@ def native_forex(db, *, close=True):
         cycle_key="feedback-submit",
     )
     decision = db.scalar(select(ForexDecision))
-    decision.proposal_json = {
-        **decision.proposal_json,
-        "information_advice": {"model_hash": "a" * 64},
-    }
     filled_at = NOW + timedelta(seconds=1)
     core.run_cycle(
         db,

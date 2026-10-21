@@ -173,6 +173,7 @@ def test_no_model_or_unsupported_group_has_no_probability(db, tmp_path, fitted):
         model_uid=row.model_uid,
     )
     assert unsupported.probability_positive_r is None
+    assert unsupported.model_hash == row.artifact_sha256
     assert unsupported.predicted_net_r is None
     absent = advisor.advise(
         db,

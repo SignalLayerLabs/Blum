@@ -641,7 +641,7 @@ def test_run_opens_only_promoted_triggered_candidate_with_adverse_fill():
         db.commit()
         clock["now"] = NOW + timedelta(minutes=4)
         filled = engine.run_once(db, trigger="test", assets=[asset])
-        trade = db.scalar(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.evidence_type == PAPER_FORWARD_INTRADAY))
+        trade = db.scalar(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.trading_mode == "INTRADAY_PAPER_FORWARD"))
         execution_order = db.scalar(select(PaperExecutionOrder).where(PaperExecutionOrder.paper_trade_id == trade.id))
         execution_fills = db.scalars(select(PaperExecutionFill).where(PaperExecutionFill.order_id == execution_order.id)).all()
         events = db.scalars(
@@ -659,7 +659,8 @@ def test_run_opens_only_promoted_triggered_candidate_with_adverse_fill():
     assert trade.entry_price is not None
     assert execution_fills
     assert sum(fill.spread_cost + fill.slippage_cost + fill.commission_cost for fill in execution_fills) > 0
-    assert trade.frozen_decision_payload["evidence_type"] == PAPER_FORWARD_INTRADAY
+    assert trade.frozen_decision_payload["evidence_type"] == PAPER_FORWARD_INTRADAY_EXPERIMENTAL
+    assert trade.frozen_decision_payload["evidence"]["certified_for_copy_readiness"] is False
     assert trade.frozen_decision_payload["strategy"]["fingerprint"]
     assert trade.frozen_decision_payload["strategy"]["executable_strategy"]["entry_rule"] == "breakout_close"
     assert trade.intraday_metadata["maximum_holding_minutes"] == 20
@@ -667,7 +668,7 @@ def test_run_opens_only_promoted_triggered_candidate_with_adverse_fill():
     assert "INTRADAY_TRADE_OPENED" in [event.event_type for event in events]
 
 
-def test_lifecycle_uses_only_later_one_minute_bar_and_closes_stop():
+def test_lifecycle_uses_only_later_one_minute_bar_and_closes_stop(tmp_path):
     with setup_db() as db:
         asset = seed_asset(db)
         seed_validation(db)
@@ -675,7 +676,7 @@ def test_lifecycle_uses_only_later_one_minute_bar_and_closes_stop():
         clock = {"now": NOW}
         engine = BlumIntradayPaperEngine(now_provider=lambda: clock["now"], refresh_missing=False, account_currency="USD")
         opened = engine.run_once(db, trigger="test", assets=[asset])
-        trade = db.scalar(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.evidence_type == PAPER_FORWARD_INTRADAY))
+        trade = db.scalar(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.trading_mode == "INTRADAY_PAPER_FORWARD"))
         frozen_payload = dict(trade.frozen_decision_payload)
         stop = float(trade.stop_loss)
 
@@ -727,6 +728,21 @@ def test_lifecycle_uses_only_later_one_minute_bar_and_closes_stop():
         assert incomplete["trades_closed"] == 0
         clock["now"] = NOW + timedelta(minutes=5)
         closed = engine.run_once(db, trigger="test", assets=[asset])
+        db.refresh(trade)
+        from app.models import AlphaDecisionRecord, InformationFeedbackOutbox
+        from app.services.information.feedback import InformationFeedback
+        registered = db.scalar(select(AlphaDecisionRecord).where(AlphaDecisionRecord.native_order_uid.is_not(None)))
+        assert registered is not None
+        assert registered.manifest_json["context"]["hash"] == frozen_payload["information_context"]["hash"]
+        feedback = InformationFeedback(artifact_root=tmp_path)
+        as_of = datetime.utcnow()+timedelta(minutes=1)
+        assert feedback.project(db, as_of=as_of)["new_examples"] == 1
+        db.commit()
+        outcome = db.scalar(select(InformationFeedbackOutbox))
+        assert outcome.decision_uid == registered.decision_uid
+        db.commit()
+        assert feedback.publish_pending(db, as_of=as_of)["published"] == 1
+        assert feedback.trainer.current("equity").sample_count == 1
         db.refresh(trade)
 
     assert opened["trades_opened"] == 0

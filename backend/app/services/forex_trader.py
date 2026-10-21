@@ -307,6 +307,8 @@ class BlumForexTraderCore:
         self.supervised_advisor = TradingMLInferenceService()
         self.quant_advisor = FinRLXQuantEngine()
         self.quant_overlay = FinRLXDecisionOverlay()
+        from app.services.information.native_policy import NativeInformationPolicy
+        self.information_policy = NativeInformationPolicy()
         settings = get_settings()
         self.historical_knowledge = ForexHistoricalKnowledgeService(
             historical_knowledge_path
@@ -366,6 +368,7 @@ class BlumForexTraderCore:
         now: datetime | None = None,
         cycle_key: str | None = None,
         trigger: str = "scheduled",
+        account_id: str | None = None,
     ) -> dict:
         now = now or datetime.utcnow()
         cycle_key = cycle_key or f"{now.strftime('%Y%m%d%H%M')}:{trigger}"
@@ -389,6 +392,11 @@ class BlumForexTraderCore:
         db.add(cycle)
         db.flush()
         quotes = {item.pair: item.quote for item in inputs}
+        account_query = select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active")
+        account_query = account_query.where(LiveForwardPaperGame.game_id == account_id) if account_id else account_query.order_by(desc(LiveForwardPaperGame.started_at)).limit(1)
+        account = db.scalar(account_query.with_for_update())
+        if account_id is not None and account is None:
+            raise ValueError("BOUND_PAPER_ACCOUNT_REQUIRED")
         managed = self.manager.manage(db, quotes, now=now)
         from app.services.forex_order_lifecycle import ForexOrderLifecycle
         advanced = ForexOrderLifecycle(brokers=self.brokers, execution=self.execution).process_batch(db, quotes=quotes, as_of=now)
@@ -548,6 +556,7 @@ class BlumForexTraderCore:
                     ),
                 )
             quant_payload["decision_overlay"] = quant_overlay.to_payload()
+            evaluation = self.information_policy.forex(db, evaluation=evaluation, context=market.information_context)
             decision.status = "APPROVED" if evaluation.approved else "REJECTED"
             decision.blockers = list(evaluation.blockers)
             decision.proposal_json = _jsonable(asdict(evaluation.proposal))
@@ -575,18 +584,22 @@ class BlumForexTraderCore:
             }
             if not evaluation.approved:
                 from app.services.alpha_desk import AlphaCallRegistry
-                AlphaCallRegistry().register(db, decision)
+                if self._freeze_information_decision(db, decision, market, evaluation, account, now) is None:
+                    AlphaCallRegistry().register(db, decision)
                 rejected.append({"pair": market.pair, "blockers": list(evaluation.blockers)})
                 blockers.extend(evaluation.blockers)
                 continue
-            state = self._portfolio_state(db, candidate_pair=market.pair)
-            risk = self.risk.evaluate(evaluation.proposal, state, self.brokers.get(), quotes=quotes, now=now)
-            decision.risk_json = _jsonable(asdict(risk))
+            state = self._portfolio_state(db, candidate_pair=market.pair, account_id=account.game_id if account else None)
+            risk = self.risk.evaluate(evaluation.proposal, state, self.brokers.get(), quotes=quotes, now=now,
+                execution_context={"session":market.session, "liquidity_score":market.liquidity_score,
+                    "volatility_score":market.volatility_score,"event_impact":market.macro_event_impact})
+            decision.risk_json = {**_jsonable(asdict(risk)), "account_id": account.game_id if account else None}
             if not risk.decision.startswith("APPROVE"):
                 decision.status = "REJECTED"
                 decision.blockers = list(risk.blockers)
                 from app.services.alpha_desk import AlphaCallRegistry
-                AlphaCallRegistry().register(db, decision)
+                if self._freeze_information_decision(db, decision, market, evaluation, account, now) is None:
+                    AlphaCallRegistry().register(db, decision)
                 rejected.append({"pair": market.pair, "blockers": list(risk.blockers)})
                 blockers.extend(risk.blockers)
                 evidence = self.learning.record_outcome(db, decision_id=decision.id, outcome="RISK_BLOCK_CORRECT", payload={
@@ -601,19 +614,28 @@ class BlumForexTraderCore:
                 continue
             from app.services.alpha_desk import AlphaCallRegistry
             decision.proposal_json = {**decision.proposal_json, 'strategy_readiness': strategy.readiness.value,
-                'strategy_sample_size': strategy.sample_size, 'evidence_lane': strategy.evidence_lane,
-                'certified_for_copy_readiness': strategy.certified_for_copy_readiness,
+                'strategy_sample_size': strategy.sample_size, 'evidence_lane': evaluation.proposal.evidence_lane,
+                'certified_for_copy_readiness': evaluation.proposal.certified_for_copy_readiness,
                 'replay_forward_decay': strategy.replay_forward_decay, 'currency_concentration': strategy.currency_concentration}
-            AlphaCallRegistry().register(db, decision)
+            frozen = self._freeze_information_decision(db, decision, market, evaluation, account, now)
+            if frozen is None:
+                AlphaCallRegistry().register(db, decision)
             request = ForexOrderRequest.from_proposal(
                 evaluation.proposal,
                 quantity_lots=risk.quantity_lots,
                 market=market,
             )
             from app.services.forex_order_lifecycle import ForexOrderLifecycle
-            pending_order = ForexOrderLifecycle(brokers=self.brokers, execution=self.execution).submit(
-                db, decision_id=decision.id, order=request,
-                expires_at=now + timedelta(minutes=max(1, min(5, evaluation.proposal.expected_holding_minutes))))
+            if frozen is not None:
+                from app.models import ForexPendingOrder
+                from app.services.information.decisions import InformationDecisionService
+                submitted = InformationDecisionService(now_provider=lambda:now,
+                    forex_lifecycle=ForexOrderLifecycle(brokers=self.brokers, execution=self.execution)).submit(db, decision_uid=frozen.decision_uid, as_of=now)
+                pending_order = db.scalar(select(ForexPendingOrder).where(ForexPendingOrder.order_uid == submitted["order_uid"]))
+            else:
+                pending_order = ForexOrderLifecycle(brokers=self.brokers, execution=self.execution).submit(
+                    db, decision_id=decision.id, order=request, account_id=account.game_id if account else None,
+                    expires_at=now + timedelta(minutes=max(1, min(5, evaluation.proposal.expected_holding_minutes))))
             decision.status = "SUBMITTED"
             decision.execution_json = {"order_uid": pending_order.order_uid, "status": "SUBMITTED", "filled_quantity_lots": 0.0}
             approved.append({"pair": market.pair, "decision_uid": decision_uid})
@@ -638,16 +660,51 @@ class BlumForexTraderCore:
         return self._cycle_payload(cycle)
 
     @staticmethod
-    def _portfolio_state(db: Session, *, candidate_pair: str | None = None) -> ForexPortfolioState:
-        rows = db.scalars(select(ForexPosition).where(ForexPosition.status == "OPEN").limit(5)).all()
+    def _freeze_information_decision(db, native, market, evaluation, account, now):
+        proposal = evaluation.proposal
+        if market.information_context is None or not proposal.executable_strategy or account is None:
+            return None
+        from app.services.information.contracts import FrozenAlphaDecision
+        from app.services.information.decisions import InformationDecisionService
+        approved = native.status == "APPROVED" and str((native.risk_json or {}).get("decision", "")).startswith("APPROVE")
+        advice = proposal.information_advice
+        frozen = FrozenAlphaDecision(
+            decision_uid=native.decision_uid, trial_uid=(account.configuration or {}).get("trial_uid"),
+            market_family="forex", asset_key=market.pair, decision_at=native.decision_timestamp,
+            expires_at=now+timedelta(minutes=max(1,min(5,proposal.expected_holding_minutes))),
+            context=market.information_context, executable_strategy=proposal.executable_strategy,
+            strategy_fingerprint=proposal.strategy_fingerprint, model_uid=advice.get("model_uid"),
+            checkpoint_hash=advice.get("model_hash"), action=proposal.direction.value if approved else "ABSTAIN",
+            reason=proposal.reason_to_trade if approved and proposal.reason_to_trade else ";".join(native.blockers or ["NO_NATIVE_RISK_APPROVAL"]),
+            geometry={"entry":proposal.entry,"stop":proposal.stop,"target":proposal.target},
+            sizing={"quantity_lots":(native.risk_json or {}).get("quantity_lots",0), "risk_percent":(native.risk_json or {}).get("risk_percent",0)},
+            expected_outcome={**advice, "target_distance_minus_cost_pips":proposal.expected_net_pips},
+            evidence_lane=proposal.evidence_lane, policy_version="native-information-policy-v1", account_id=account.game_id,
+            decision_effect={**proposal.information_policy,"information_applied":bool(proposal.information_policy.get("information_effects"))},
+            native_binding={"source_type":"forex", "source_id":native.id, "execution_context":{
+                "session":market.session, "liquidity_score":market.liquidity_score,
+                "volatility_score":market.volatility_score,"event_impact":market.macro_event_impact}},
+        )
+        return InformationDecisionService(now_provider=lambda:now).freeze(db, frozen)
+
+    @staticmethod
+    def _portfolio_state(db: Session, *, candidate_pair: str | None = None, account_id: str | None = None) -> ForexPortfolioState:
+        positions_query = select(ForexPosition).where(ForexPosition.status == "OPEN")
+        if account_id is not None:
+            positions_query = positions_query.where(ForexPosition.contract_json["account_id"].as_string() == account_id)
+        rows = db.scalars(positions_query.limit(5)).all()
         payload = tuple({"pair": row.pair, "direction": row.direction,
             "notional": float((row.contract_json.get('accounting') or {}).get('entry_notional_account') or row.current_price * row.quantity_lots * 100_000)
                 * float((row.contract_json.get('accounting') or {}).get('remaining_quantity_lots', row.quantity_lots)) / row.quantity_lots}
             for row in rows if row.quantity_lots > 0)
         today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        daily = db.scalar(select(func.coalesce(func.sum(ForexPosition.net_pnl), 0.0)).where(ForexPosition.status == "CLOSED", ForexPosition.closed_at >= today)) or 0.0
+        daily_query = select(func.coalesce(func.sum(ForexPosition.net_pnl), 0.0)).where(ForexPosition.status == "CLOSED", ForexPosition.closed_at >= today)
+        if account_id is not None:
+            daily_query = daily_query.where(ForexPosition.contract_json["account_id"].as_string() == account_id)
+        daily = db.scalar(daily_query) or 0.0
         margin = sum(row.margin_used for row in rows)
-        game = db.scalar(select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active").order_by(desc(LiveForwardPaperGame.started_at)).limit(1))
+        game_query = select(LiveForwardPaperGame).where(LiveForwardPaperGame.status == "active")
+        game = db.scalar(game_query.where(LiveForwardPaperGame.game_id == account_id) if account_id else game_query.order_by(desc(LiveForwardPaperGame.started_at)).limit(1))
         from app.models import ForexPendingOrder
         pending = []
         if game:

@@ -26,8 +26,16 @@ def decision_from_payload(payload):
 
 
 class InformationDecisionService:
-    def __init__(self, *, now_provider=datetime.utcnow):
+    def __init__(
+        self,
+        *,
+        now_provider=datetime.utcnow,
+        forex_lifecycle=None,
+        paper_lifecycle=None
+    ):
         self.now_provider = now_provider
+        self.forex_lifecycle = forex_lifecycle
+        self.paper_lifecycle = paper_lifecycle
 
     def freeze(self, db, decision: FrozenAlphaDecision):
         from app.services.alpha_desk import AlphaCallRegistry
@@ -136,7 +144,7 @@ class InformationDecisionService:
                 target_price=decision.geometry["target"],
                 **thaw(decision.native_binding.get("execution_context") or {}),
             )
-            native = ForexOrderLifecycle().submit(
+            native = (self.forex_lifecycle or ForexOrderLifecycle()).submit(
                 db,
                 decision_id=source.id,
                 order=order,
@@ -163,7 +171,7 @@ class InformationDecisionService:
                 target_price=decision.geometry["target"],
                 **thaw(decision.native_binding.get("execution_context") or {}),
             )
-            native = PaperOrderLifecycleService().submit(
+            native = (self.paper_lifecycle or PaperOrderLifecycleService()).submit(
                 db,
                 request,
                 paper_trade_id=source.id,

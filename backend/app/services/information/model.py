@@ -343,7 +343,11 @@ class InformationOutcomeAdvisor:
         support = metadata.get("calibration_support", {}).get(key, {})
         if not support.get("supported"):
             return InformationAdvice(
-                "UNSUPPORTED_SCOPE", loaded.row.model_uid, calibration_support=support
+                "UNSUPPORTED_SCOPE",
+                loaded.row.model_uid,
+                calibration_support=support,
+                model_hash=loaded.row.artifact_sha256,
+                feature_schema_hash=loaded.model.schema_hash,
             )
         probabilities, predicted_rs = loaded.model.predict((sample,))
         p, r = float(probabilities[0]), float(predicted_rs[0])
