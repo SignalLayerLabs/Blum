@@ -32,7 +32,14 @@ def _utc(value):
 class OnlineFeatureEncoder:
     """Fixed coordinates; new categories and missing values need no refitting."""
 
+    def __init__(self, schema=None):
+        self.feature_names = (schema or FeatureSchema.current()).feature_names
+
     def transform(self, frame):
+        # Old persisted encoders have no feature_names attribute. Their fixed
+        # v1 coordinates stay identical when a new schema is introduced.
+        names = getattr(self, "feature_names", FeatureSchema.current().feature_names)
+        categorical = (*CATEGORICAL_FEATURES, "strategy_fingerprint")
         records = []
         for row in (
             frame.to_dicts()
@@ -40,7 +47,7 @@ class OnlineFeatureEncoder:
             else frame.to_dict(orient="records")
         ):
             record = {}
-            for name in NUMERIC_FEATURES:
+            for name in (item for item in names if item not in categorical):
                 value = row.get(name)
                 if value is None or isinstance(value, float) and math.isnan(value):
                     record["missing:" + name] = 1.0
@@ -49,7 +56,7 @@ class OnlineFeatureEncoder:
                     record["numeric:" + name] = math.copysign(
                         math.log1p(abs(value)), value
                     )
-            for name in CATEGORICAL_FEATURES:
+            for name in (item for item in names if item in categorical):
                 record[
                     "category:"
                     + name
@@ -84,11 +91,11 @@ def _fingerprint(row):
     ).hexdigest()
 
 
-def _fresh_state(seed):
+def _fresh_state(seed, schema):
     return TradingModelBundle(
-        schema_hash=FeatureSchema.current().hash,
-        feature_names=FeatureSchema.current().feature_names,
-        preprocessor=OnlineFeatureEncoder(),
+        schema_hash=schema.hash,
+        feature_names=schema.feature_names,
+        preprocessor=OnlineFeatureEncoder(schema),
         classifier=SGDClassifier(
             loss="log_loss",
             random_state=seed,
@@ -126,13 +133,25 @@ def _fresh_state(seed):
     }
 
 
-def update_shadow(root, rows, *, seed, as_of=None, market_family=None):
+def update_shadow(root, rows, *, seed, as_of=None, market_family=None, schema=None):
+    schema = schema or FeatureSchema.current()
+    numeric = tuple(
+        name
+        for name in schema.feature_names
+        if name not in (*CATEGORICAL_FEATURES, "strategy_fingerprint")
+    )
     now = _utc(as_of or datetime.now(timezone.utc))
     families = {row.market_family for row in rows} or {market_family}
     if len(families) != 1 or not families.issubset({"equity", "forex"}):
         raise ValueError("Online update requires one valid market family")
     family = next(iter(families))
     for row in rows:
+        if schema.hash == FeatureSchema.information().hash and (
+            row.features.get("information_feature_schema_hash")
+            != schema.source_schema_hash
+            or not row.features.get("strategy_fingerprint")
+        ):
+            raise ValueError("INFORMATION_SCHEMA_REQUIRED")
         if _utc(row.outcome_timestamp) > now or _utc(row.outcome_timestamp) <= _utc(
             row.decision_timestamp
         ):
@@ -145,7 +164,7 @@ def update_shadow(root, rows, *, seed, as_of=None, market_family=None):
             raise ValueError("Invalid cost-adjusted online label")
         if not math.isfinite(row.sample_weight) or row.sample_weight <= 0:
             raise ValueError("Online sample weight must be positive and finite")
-        for name in NUMERIC_FEATURES:
+        for name in numeric:
             value = row.features.get(name)
             if value is not None and (
                 isinstance(value, bool) or not math.isfinite(float(value))
@@ -154,7 +173,7 @@ def update_shadow(root, rows, *, seed, as_of=None, market_family=None):
     root.mkdir(parents=True, exist_ok=True)
     contract = {
         "version": STATE_VERSION,
-        "schema_hash": FeatureSchema.current().hash,
+        "schema_hash": schema.hash,
         "sklearn": sklearn.__version__,
         "seed": seed,
         "market_family": family,
@@ -188,7 +207,7 @@ def update_shadow(root, rows, *, seed, as_of=None, market_family=None):
                 if not rows:
                     db.commit()
                     return None
-                bundle, stats = _fresh_state(seed)
+                bundle, stats = _fresh_state(seed, schema)
                 artifact = None
             pending = {}
             for row in rows:
@@ -219,7 +238,9 @@ def update_shadow(root, rows, *, seed, as_of=None, market_family=None):
             ):
                 group = list(group_iter)
                 examples = tuple(item[1][0] for item in group)
-                matrix = bundle.preprocessor.transform(_feature_frame(examples))
+                matrix = bundle.preprocessor.transform(
+                    _feature_frame(examples, feature_names=schema.feature_names)
+                )
                 eligible = (
                     stats["last_outcome"] is None
                     or datetime.fromisoformat(stats["last_outcome"]) <= decision
@@ -268,7 +289,11 @@ def update_shadow(root, rows, *, seed, as_of=None, market_family=None):
                 )
                 bundle.regressor.partial_fit(
                     matrix,
-                    np.clip([row.realized_net_r for row in examples], -3, 5),
+                    (
+                        np.clip([row.realized_net_r for row in examples], -3, 5)
+                        if schema.hash == FeatureSchema.current().hash
+                        else [row.realized_net_r for row in examples]
+                    ),
                     sample_weight=weights,
                 )
                 for uid, (row, fingerprint) in group:
@@ -343,7 +368,9 @@ def update_shadow(root, rows, *, seed, as_of=None, market_family=None):
             "duplicate_samples": len(rows) - len(pending),
             "last_outcome_at": stats["last_outcome"],
             "encoding": "fixed_hash_log_numeric_l2_v2",
-            "regression_target_clip": [-3, 5],
+            "regression_target_clip": (
+                [-3, 5] if schema.hash == FeatureSchema.current().hash else None
+            ),
             "asset_count": len(stats["assets"]),
             "regime_count": len(stats["regimes"]),
             "setup_count": len(stats["setups"]),

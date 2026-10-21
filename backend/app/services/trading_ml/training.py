@@ -85,9 +85,18 @@ class SearchResult:
 class OnlineShadowTrainer:
     """Fast incremental learner that never receives decision authority."""
 
-    def __init__(self, artifact_root: str | Path, *, seed: int = 17) -> None:
+    def __init__(
+        self,
+        artifact_root: str | Path,
+        *,
+        seed: int = 17,
+        schema: FeatureSchema | None = None,
+    ) -> None:
         self.artifact_root = Path(artifact_root)
         self.seed = seed
+        self.schema = schema or FeatureSchema.current()
+        if self.schema.hash != FeatureSchema.current().hash:
+            self.artifact_root /= self.schema.hash
 
     def partial_fit(
         self, examples: Iterable[TradingMLExample], *, as_of=None
@@ -97,14 +106,20 @@ class OnlineShadowTrainer:
             raise ValueError("Online training requires at least one example")
         from .online import update_shadow
 
-        return update_shadow(self.artifact_root, rows, seed=self.seed, as_of=as_of)
+        return update_shadow(
+            self.artifact_root, rows, seed=self.seed, as_of=as_of, schema=self.schema
+        )
 
     def current(self, market_family: str) -> TrainingResult | None:
         """Load a verified checkpoint without consuming any training examples."""
         from .online import update_shadow
 
         return update_shadow(
-            self.artifact_root, (), seed=self.seed, market_family=market_family
+            self.artifact_root,
+            (),
+            seed=self.seed,
+            market_family=market_family,
+            schema=self.schema,
         )
 
 

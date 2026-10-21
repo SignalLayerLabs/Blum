@@ -38,7 +38,8 @@ class TradingMLFeatureBuilder:
     def from_equity(self, prediction: HistoricalPrediction, outcome: PredictionOutcome) -> TradingMLExample:
         context = _without_future_data(_mapping(prediction.point_in_time_context))
         payload = _mapping(prediction.prediction_payload)
-        decision_timestamp = _decision_timestamp(prediction.created_at, prediction.analysis_date)
+        decision_timestamp = _decision_timestamp(prediction.created_at, prediction.analysis_date,
+                                                 context.get("decision_timestamp") or context.get("market_timestamp"))
         outcome_timestamp = _outcome_timestamp(outcome.evaluation_date, outcome.created_at)
         _require_link(prediction.id, outcome.prediction_id, "prediction outcome")
         _require_match(prediction.ticker, outcome.ticker, "equity ticker")
@@ -66,7 +67,7 @@ class TradingMLFeatureBuilder:
             source_object_type="historical_prediction",
             source_object_id=str(prediction.id),
             market_family="equity",
-            evidence_lane="PAPER_FORWARD",
+            evidence_lane="REPLAY_EVIDENCE",
             decision_timestamp=decision_timestamp,
             outcome_timestamp=outcome_timestamp,
             asset_key=prediction.ticker,
@@ -76,7 +77,7 @@ class TradingMLFeatureBuilder:
             realized_net_r=realized,
             label_positive_r=int(realized > 0),
             benchmark_excess=_number(_first((outcome.metrics_payload or {},), "benchmark_excess")),
-            sample_weight=_weight("PAPER_FORWARD"),
+            sample_weight=_weight("REPLAY_EVIDENCE"),
         )
 
     def from_forex(self, decision: ForexDecision, evidence: ForexLearningEvidence) -> TradingMLExample:
@@ -275,13 +276,22 @@ def _later_than(left: datetime, right: datetime) -> bool:
     return left > right
 
 
-def _decision_timestamp(created_at: datetime | None, analysis_date: date | datetime | None) -> datetime:
-    if created_at is not None:
-        return created_at
+def _decision_timestamp(created_at: datetime | None, analysis_date: date | datetime | None, frozen_clock=None) -> datetime:
+    from app.services.market_clock import utc_naive
+    frozen = _parse_timestamp(frozen_clock)
+    if frozen is not None:
+        frozen = utc_naive(frozen)
+        day = analysis_date.date() if isinstance(analysis_date, datetime) else analysis_date
+        if day is not None and frozen.date() > day:
+            raise FutureFeatureDataError("Frozen decision clock exceeds historical analysis date")
+        if day is None or frozen.date() == day:
+            return frozen
     if isinstance(analysis_date, datetime):
-        return analysis_date
+        return utc_naive(analysis_date)
     if isinstance(analysis_date, date):
         return datetime.combine(analysis_date, time.min)
+    if created_at is not None:
+        return utc_naive(created_at)
     raise UnlabeledFeatureDataError("prediction has no decision timestamp")
 
 
