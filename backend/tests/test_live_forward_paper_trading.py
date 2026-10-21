@@ -192,10 +192,15 @@ def test_live_forward_duplicate_prevention_by_decision_key():
         assert db.scalar(select(func.count(LiveForwardPaperTrade.id)).where(LiveForwardPaperTrade.ticker == "NVDA")) == 1
 
 
-def test_live_forward_freezes_decision_without_future_prices():
+@pytest.mark.parametrize("verified_cutoff", [True, False])
+def test_live_forward_freezes_decision_without_future_prices(verified_cutoff):
     with setup_db() as db:
         seed_asset(db)
-        db.add(ModelVersion(version="live-test-v1", weights={**BASE_SIGNAL_WEIGHTS, "sentiment": 0.5}, previous_weights=BASE_SIGNAL_WEIGHTS, is_active=True))
+        published = datetime.utcnow() - timedelta(days=1)
+        provenance = {"contract_version": "legacy-direction-v1", "available_at": published.isoformat(),
+                      "outcome_cutoff": (published - timedelta(days=1)).isoformat()} if verified_cutoff else {}
+        db.add(ModelVersion(version="live-test-v1", weights={**BASE_SIGNAL_WEIGHTS, "sentiment": 0.5}, previous_weights=BASE_SIGNAL_WEIGHTS,
+                            is_active=True, created_at=published, training_window=provenance))
         db.commit()
         service = LiveForwardPaperTradingService()
         game = service.active_or_create_live_game(db)
@@ -204,10 +209,11 @@ def test_live_forward_freezes_decision_without_future_prices():
         trade = db.scalar(select(LiveForwardPaperTrade).where(LiveForwardPaperTrade.ticker == "NVDA"))
 
         assert trade is not None
-        assert trade.model_version_used == "live-test-v1"
+        assert trade.model_version_used == ("live-test-v1" if verified_cutoff else "base-static")
         assert trade.frozen_decision_payload["no_future_data_policy"].startswith("Frozen payload")
         assert "future_prices" not in trade.frozen_decision_payload
-        assert trade.weights_used["sentiment"] > BASE_SIGNAL_WEIGHTS["sentiment"]
+        if verified_cutoff:
+            assert trade.weights_used["sentiment"] > BASE_SIGNAL_WEIGHTS["sentiment"]
 
 
 def test_live_forward_open_update_close_and_lesson_creation():

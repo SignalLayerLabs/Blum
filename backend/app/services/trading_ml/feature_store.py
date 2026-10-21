@@ -72,12 +72,14 @@ class TradingMLFeatureStoreProjector:
         max_rows_per_projection: int = 5_000,
         max_partition_rows: int = 1_000,
         manifest_lock_timeout_seconds: float = _DEFAULT_MANIFEST_LOCK_TIMEOUT_SECONDS,
+        schema: FeatureSchema | None = None,
     ) -> None:
         if max_rows_per_projection <= 0 or max_partition_rows <= 0:
             raise ValueError("projection and partition limits must be positive")
         if manifest_lock_timeout_seconds <= 0:
             raise ValueError("manifest lock timeout must be positive")
         self.root = Path(root)
+        self.schema = schema or FeatureSchema.current()
         self._repository = repository or TradingMLDatasetRepository()
         self._max_rows_per_projection = max_rows_per_projection
         self._max_partition_rows = max_partition_rows
@@ -127,7 +129,9 @@ class TradingMLFeatureStoreProjector:
             manifest["evidence_lane_counts"] = self._evidence_lane_counts(
                 manifest["partitions"]
             )
-            manifest["dataset_hash"] = self._dataset_hash(manifest["partitions"])
+            manifest["dataset_hash"] = quality_adjusted_hash(
+                self._dataset_hash(manifest["partitions"]), "all", manifest
+            )
             self._write_manifest(manifest)
             committed_cursor = self._cursor_for(manifest, market_family)
         return ProjectionResult(
@@ -187,7 +191,9 @@ class TradingMLFeatureStoreProjector:
             manifest["evidence_lane_counts"] = self._evidence_lane_counts(
                 manifest["partitions"]
             )
-            manifest["dataset_hash"] = self._dataset_hash(manifest["partitions"])
+            manifest["dataset_hash"] = quality_adjusted_hash(
+                self._dataset_hash(manifest["partitions"]), "all", manifest
+            )
             self._write_manifest(manifest)
         return ProjectionResult(
             rows_written=sum(partition["rows"] for partition in committed_partitions),
@@ -215,7 +221,7 @@ class TradingMLFeatureStoreProjector:
             if partition["market_family"] == market_family
         ]
         if not paths:
-            frame = pl.LazyFrame(schema=_POLARS_SCHEMA)
+            frame = pl.LazyFrame(schema=_polars_schema(self.schema))
         else:
             frame = pl.scan_parquet(paths)
         # Keep old immutable files for audit while excluding their rejected data.
@@ -225,6 +231,9 @@ class TradingMLFeatureStoreProjector:
                 FOREX_HISTORY_TRANSFORM_VERSION, literal=True
             )
         )
+        quarantined = list(manifest.get("quarantined_native_sources", {}))
+        if quarantined:
+            frame = frame.filter(~pl.col("source_uid").is_in(quarantined))
         if predicate is not None:
             frame = frame.filter(predicate)
         if columns is not None:
@@ -236,13 +245,66 @@ class TradingMLFeatureStoreProjector:
 
         return json.loads(json.dumps(self._load_manifest()))
 
+    def append_examples(
+        self, examples, *, publication_uid: str, content_hash: str
+    ) -> dict:
+        """Idempotent publication from the committed native outcome outbox."""
+        examples = tuple(examples)
+        if (
+            not examples
+            or len(examples) > self._max_rows_per_projection
+            or not publication_uid
+            or not content_hash
+        ):
+            raise ValueError("A bounded identified native publication is required")
+        families = {row.market_family for row in examples}
+        if len(families) != 1:
+            raise ValueError("Publish each market independently")
+        with _manifest_update_lock(
+            self.root, timeout_seconds=self._manifest_lock_timeout_seconds
+        ):
+            manifest = self._load_manifest()
+            publications = manifest.setdefault("native_publications", {})
+            if publication_uid in publications:
+                if publications[publication_uid] != content_hash:
+                    raise ValueError("NATIVE_PUBLICATION_CHANGED")
+                return {"rows_written": 0}
+            partitions = self._write_partitions(examples, next(iter(families)))
+            committed = _merge_partitions(manifest["partitions"], partitions)
+            manifest["partitions"].extend(committed)
+            publications[publication_uid] = content_hash
+            manifest["evidence_lane_counts"] = self._evidence_lane_counts(
+                manifest["partitions"]
+            )
+            manifest["dataset_hash"] = quality_adjusted_hash(
+                self._dataset_hash(manifest["partitions"]), "all", manifest
+            )
+            self._write_manifest(manifest)
+            return {"rows_written": sum(row["rows"] for row in committed)}
+
+    def quarantine_source(self, publication_uid, *, conflict_hash, market_family):
+        with _manifest_update_lock(
+            self.root, timeout_seconds=self._manifest_lock_timeout_seconds
+        ):
+            manifest = self._load_manifest()
+            manifest.setdefault("quarantined_native_sources", {})[publication_uid] = {
+                "conflict_hash": conflict_hash,
+                "market_family": market_family,
+            }
+            manifest["dataset_hash"] = quality_adjusted_hash(
+                self._dataset_hash(manifest["partitions"]), "all", manifest
+            )
+            self._write_manifest(manifest)
+
     def online_page(
         self, *, market_family: MarketFamily, cursor: dict | None, limit: int
     ) -> dict:
         """Consume bounded immutable parts in commit order, including old backlog."""
         if limit <= 0:
             raise ValueError("Online page limit must be positive")
-        partitions = self._load_manifest()["partitions"]
+        manifest = self._load_manifest()
+        partitions = manifest["partitions"]
+        quarantined = list(manifest.get("quarantined_native_sources", {}))
         index = int((cursor or {}).get("partition_index", 0))
         offset = int((cursor or {}).get("row_offset", 0))
 
@@ -289,6 +351,8 @@ class TradingMLFeatureStoreProjector:
                     FOREX_HISTORY_TRANSFORM_VERSION, literal=True
                 )
             )
+            if quarantined:
+                accepted = accepted.filter(~pl.col("source_uid").is_in(quarantined))
             rows.extend(accepted.to_dicts())
             considered += raw.height
             rejected += raw.height - accepted.height
@@ -324,7 +388,9 @@ class TradingMLFeatureStoreProjector:
         for year, month, monthly_examples in _examples_by_month(examples):
             for start in range(0, len(monthly_examples), self._max_partition_rows):
                 chunk = monthly_examples[start : start + self._max_partition_rows]
-                rows = [_row_from_example(example) for example in chunk]
+                rows = [
+                    _row_from_example(example, schema=self.schema) for example in chunk
+                ]
                 content_hash = _content_hash(rows)
                 directory = (
                     self.root
@@ -339,7 +405,7 @@ class TradingMLFeatureStoreProjector:
                 if not target.exists():
                     temporary = directory / f".{filename}.{uuid4().hex}.tmp"
                     try:
-                        _frame_from_rows(rows).write_parquet(
+                        _frame_from_rows(rows, schema=self.schema).write_parquet(
                             temporary, compression="zstd"
                         )
                         verified = pl.read_parquet(temporary)
@@ -372,8 +438,8 @@ class TradingMLFeatureStoreProjector:
         path = self.root / _MANIFEST_NAME
         if not path.exists():
             return {
-                "schema_version": FeatureSchema.current().version,
-                "schema_hash": FeatureSchema.current().hash,
+                "schema_version": self.schema.version,
+                "schema_hash": self.schema.hash,
                 "dataset_hash": _dataset_hash(()),
                 "partitions": [],
                 "source_cursors": {},
@@ -382,7 +448,7 @@ class TradingMLFeatureStoreProjector:
             }
         with path.open("r", encoding="utf-8") as handle:
             manifest = json.load(handle)
-        if manifest.get("schema_hash") != FeatureSchema.current().hash:
+        if manifest.get("schema_hash") != self.schema.hash:
             raise RuntimeError(
                 "Feature-store schema hash does not match the active feature contract"
             )
@@ -514,7 +580,14 @@ def _cursor_last_id(cursor: dict[str, object]) -> int:
         return 0
 
 
-def _row_from_example(example: TradingMLExample) -> dict:
+def _row_from_example(example: TradingMLExample, *, schema=None) -> dict:
+    schema = schema or FeatureSchema.current()
+    if (
+        schema.source_schema_hash is not None
+        and example.features.get("information_feature_schema_hash")
+        != schema.source_schema_hash
+    ):
+        raise ValueError("INFORMATION_SCHEMA_REQUIRED")
     row: dict[str, object] = {
         "source_uid": _source_uid(example),
         "source_object_type": example.source_object_type,
@@ -530,14 +603,28 @@ def _row_from_example(example: TradingMLExample) -> dict:
         "label_positive_r": example.label_positive_r,
         "benchmark_excess": example.benchmark_excess,
         "sample_weight": example.sample_weight,
-        "feature_schema_version": FeatureSchema.current().version,
-        "feature_schema_hash": FeatureSchema.current().hash,
+        "feature_schema_version": schema.version,
+        "feature_schema_hash": schema.hash,
         "feature_hash": _feature_hash(example),
     }
-    for name in NUMERIC_FEATURES:
-        row[name] = example.features.get(name)
-    for name in CATEGORICAL_FEATURES:
-        row[name] = example.features.get(name, "unknown")
+    for name in schema.feature_names:
+        categorical = name in (*CATEGORICAL_FEATURES, "strategy_fingerprint")
+        value = (
+            example.features.get(name, "unknown")
+            if categorical
+            else example.features.get(name)
+        )
+        # Match the declared Parquet representation before content hashing.
+        # Keep the historical v1 serialization unchanged for existing parts.
+        row[name] = (
+            float(value)
+            if schema.source_schema_hash is not None
+            and not categorical
+            and value is not None
+            else value
+        )
+    if schema.source_schema_hash is not None:
+        row["information_feature_schema_hash"] = schema.source_schema_hash
     return row
 
 
@@ -603,8 +690,17 @@ def quality_adjusted_hash(
     partition_hash: str, market_family: str, manifest: dict
 ) -> str:
     if market_family == "forex" and manifest.get("external_sources"):
-        return hashlib.sha256(
+        partition_hash = hashlib.sha256(
             f"{FOREX_HISTORY_TRANSFORM_VERSION}:{partition_hash}".encode()
+        ).hexdigest()
+    quarantined = sorted(
+        (uid, record["conflict_hash"])
+        for uid, record in manifest.get("quarantined_native_sources", {}).items()
+        if market_family == "all" or record["market_family"] == market_family
+    )
+    if quarantined:
+        return hashlib.sha256(
+            json.dumps([partition_hash, quarantined], separators=(",", ":")).encode()
         ).hexdigest()
     return partition_hash
 
@@ -653,5 +749,20 @@ _POLARS_SCHEMA = {
 }
 
 
-def _frame_from_rows(rows: list[dict]) -> pl.DataFrame:
-    return pl.DataFrame(rows, schema=_POLARS_SCHEMA, strict=False)
+def _polars_schema(schema):
+    result = dict(_POLARS_SCHEMA)
+    for name in schema.feature_names:
+        result[name] = (
+            pl.String
+            if name in (*CATEGORICAL_FEATURES, "strategy_fingerprint")
+            else pl.Float64
+        )
+    if schema.source_schema_hash is not None:
+        result["information_feature_schema_hash"] = pl.String
+    return result
+
+
+def _frame_from_rows(rows: list[dict], *, schema=None) -> pl.DataFrame:
+    return pl.DataFrame(
+        rows, schema=_polars_schema(schema or FeatureSchema.current()), strict=False
+    )

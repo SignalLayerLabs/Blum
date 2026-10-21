@@ -174,4 +174,4 @@ def test_trading_ml_settings_have_evidence_bound_defaults():
 
 
 def test_migration_head_includes_alpha_desk_indexes():
-    assert migration_head() == "0049_information_evidence"
+    assert migration_head() == "0050_information_feedback"

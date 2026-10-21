@@ -67,6 +67,8 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "information_evidence",
         "information_links",
         "information_provider_states",
+        "information_feedback_outbox",
+        "information_feedback_cursors",
         "forex_pending_orders",
         "forex_order_fills",
         "forex_learning_evidence",
@@ -113,7 +115,7 @@ def test_full_migration_chain_reaches_head_on_sqlite(tmp_path):
         "accounting_recomputed_at",
     }.issubset(paper_trade_columns)
     with engine.connect() as connection:
-        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0049_information_evidence"
+        assert connection.execute(text("select version_num from alembic_version")).scalar_one() == "0050_information_feedback"
 
     downgrade = subprocess.run(
         [sys.executable, "-m", "alembic", "downgrade", "base"],

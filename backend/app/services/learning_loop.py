@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 import hashlib
+import json
 import math
 import random
 import traceback
@@ -10,10 +11,12 @@ from statistics import mean, stdev
 from uuid import uuid4
 
 import pandas as pd
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.services.information.memory import decision_clock, state_available, scope_matches, scoped_predicates
+from app.services.information.outbox import claim_once
 from app.models import (
     Asset,
     FundamentalSnapshot,
@@ -297,6 +300,8 @@ class LearningLoopService:
             )
             db.add(outcome)
             db.flush()
+            outcome_payload = {**outcome_payload, "_source_uid": f"prediction_outcome:{outcome.id}",
+                               "_decision_uid": f"historical_prediction:{prediction.id}"}
             outcomes.append(outcome_payload)
 
             analysis = self.mistakes.analyze(context, prediction_payload, frame_prediction, outcome_payload)
@@ -669,6 +674,7 @@ class PredictionEngine:
                     "aggregate_score": aggregate_score,
                 },
                 deterministic_blockers=deterministic_blockers,
+                decision_timestamp=decision_clock(context),
                 asset_key=str((context.get("asset") or {}).get("ticker") or "unknown"),
                 setup_type=str(context.get("setup_type") or "unknown"),
                 regime=str((context.get("market_context") or {}).get("market_regime") or "unknown"),
@@ -699,9 +705,12 @@ class PredictionEngine:
         )
         feedback["base_confidence"] = base_confidence
         feedback["final_confidence"] = confidence
+        requested_timeframe = context.get("timeframe")
+        if requested_timeframe is not None and requested_timeframe not in TIMEFRAMES:
+            raise ValueError("Unsupported legacy forecast horizon")
         timeframes = {
             timeframe: self.timeframe_prediction(timeframe, config, context, signal_scores, aggregate_score, dominant_direction, confidence)
-            for timeframe, config in TIMEFRAMES.items()
+            for timeframe, config in TIMEFRAMES.items() if requested_timeframe is None or timeframe == requested_timeframe
         }
         return {
             "asset": context["asset"],
@@ -726,7 +735,8 @@ class PredictionEngine:
         }
 
     def feedback_context(self, db: Session | None, context: dict, signal_scores: dict, sample_metadata: dict) -> dict:
-        model_version_used, weights_used, weight_source = active_weight_context(db)
+        model_version_used, weights_used, weight_source = active_weight_context(db, as_of=decision_clock(context),
+            contract_version=context.get("strategy_fingerprint") or "legacy-direction-v1")
         signal_memory = signal_performance_context(db, context, signal_scores)
         strategy_memory = strategy_memory_context(db, context)
         research_priority = research_priority_context(db, sample_metadata)
@@ -1079,12 +1089,49 @@ class MistakeAnalyzer:
         }
 
 
+def legacy_outcome_clock(outcome):
+    from app.services.information.memory import clock
+    value = outcome.get("evaluation_date") or outcome.get("evaluated_at")
+    stamp = clock(value)
+    if stamp is not None and (isinstance(value, date) and not isinstance(value, datetime) or isinstance(value, str) and len(value) == 10):
+        stamp += timedelta(days=1)
+    return stamp
+
+
+def legacy_outcome_matured(outcome):
+    cutoff = legacy_outcome_clock(outcome)
+    realized = outcome.get("realized_return")
+    return isinstance(realized, (int, float)) and not isinstance(realized, bool) and math.isfinite(realized) and outcome.get("outcome_label") != "inconclusive" and cutoff is not None and cutoff < datetime.utcnow()
+
+
+def legacy_memory_scope(context, outcome, *, pooled=False):
+    scope = {"setup_type": context.get("setup_type") or "legacy_direction_forecast",
+        "strategy_fingerprint": context.get("strategy_fingerprint") or "legacy-direction-v1",
+        "timeframe": outcome["timeframe"], "holding_horizon": outcome.get("horizon_days") or TIMEFRAMES.get(outcome["timeframe"], {}).get("horizon_days"),
+        "regime": context["market_context"]["market_regime"]}
+    if pooled:
+        scope.update(pooled_group="listed-equity-signals-v1", pool_justification="Same deterministic signal definition, regime and horizon; retained research prior.")
+    else:
+        scope["asset_key"] = context["asset"]["ticker"]
+    return scope
+
+
+def legacy_memory_provenance(context, outcome, scope):
+    return {"available_at": datetime.utcnow().isoformat(), "outcome_cutoff": legacy_outcome_clock(outcome).isoformat(),
+            "scope": scope, "consumer_version": "verified-legacy-memory-v2", "evidence_lane": "REPLAY_EVIDENCE"}
+
+
 class StrategyMemoryService:
     def update_from_outcome(self, db: Session, context: dict, prediction: dict, outcome: dict, analysis: dict) -> list[dict]:
+        if not legacy_outcome_matured(outcome) or not claim_once(
+            db, consumer_version="legacy-strategy-memory-v2", source_uid=outcome.get("_source_uid"),
+            decision_uid=outcome.get("_decision_uid"), payload=json_safe({"outcome": outcome, "prediction": prediction})):
+            return []
+        scope = legacy_memory_scope(context, outcome)
         lessons = lessons_for(context, prediction, outcome, analysis)
         updates = []
         for lesson in lessons:
-            key = stable_key(lesson["category"], lesson["lesson"])
+            key = "verified-v2:" + stable_key(lesson["category"], lesson["lesson"] + json.dumps(scope, sort_keys=True))
             row = db.scalar(select(StrategyMemory).where(StrategyMemory.memory_key == key).limit(1))
             if row is None:
                 row = StrategyMemory(memory_key=key, category=lesson["category"], lesson=lesson["lesson"], conditions=lesson["conditions"])
@@ -1096,6 +1143,7 @@ class StrategyMemoryService:
                 row.negative_count = int(row.negative_count or 0) + 1
             row.reliability_score = memory_reliability(int(row.positive_count or 0), int(row.negative_count or 0), int(row.sample_count or 0))
             row.evidence = merge_evidence(row.evidence, context, prediction, outcome, analysis)
+            row.evidence = {**row.evidence, **legacy_memory_provenance(context, outcome, scope)}
             row.last_seen_at = datetime.utcnow()
             row.updated_at = datetime.utcnow()
             updates.append({"memory_key": row.memory_key, "category": row.category, "lesson": row.lesson, "reliability_score": row.reliability_score})
@@ -1103,17 +1151,20 @@ class StrategyMemoryService:
 
     def update_signal_performance(self, db: Session, context: dict, prediction_payload: dict, outcomes: list[dict]) -> None:
         signals = prediction_payload["prediction"].get("signal_scores", {})
+        outcomes = [outcome for outcome in outcomes if legacy_outcome_matured(outcome) and claim_once(db,
+                        consumer_version="legacy-signal-performance-v2", source_uid=outcome.get("_source_uid"),
+                        decision_uid=outcome.get("_decision_uid"), payload=json_safe({"outcome": outcome, "signals": signals}))]
         for signal_name, score in signals.items():
             for outcome in outcomes:
                 timeframe = outcome["timeframe"]
                 regime = context["market_context"]["market_regime"]
                 row = db.scalar(
                     select(SignalPerformance)
-                    .where(SignalPerformance.signal_name == signal_name, SignalPerformance.timeframe == timeframe, SignalPerformance.market_regime == regime)
+                    .where(SignalPerformance.signal_name == "verified-v2:" + signal_name, SignalPerformance.timeframe == timeframe, SignalPerformance.market_regime == regime)
                     .limit(1)
                 )
                 if row is None:
-                    row = SignalPerformance(signal_name=signal_name, timeframe=timeframe, market_regime=regime)
+                    row = SignalPerformance(signal_name="verified-v2:" + signal_name, timeframe=timeframe, market_regime=regime)
                     db.add(row)
                 row.sample_count = int(row.sample_count or 0) + 1
                 if outcome.get("direction_correct") is True:
@@ -1138,6 +1189,7 @@ class StrategyMemoryService:
                 row.reliability_score = round(clamp(35 + correct_rate * 55 + min(10, max(-8, (row.average_return or 0))) - false_penalty), 2)
                 row.weight_adjustment = round((row.reliability_score - 50) / 500, 4)
                 row.evidence = {
+                    **legacy_memory_provenance(context, outcome, legacy_memory_scope(context, outcome, pooled=True)),
                     "returns": returns,
                     "drawdowns": drawdowns,
                     "last_signal_score": score,
@@ -1152,6 +1204,7 @@ class ModelScoreService:
         rows = db.scalars(select(SignalPerformance).order_by(desc(SignalPerformance.updated_at)).limit(600)).all()
         previous = active_model_version(db)
         anti = self.anti_overfitting_report(db)
+        rows = [row for row in rows if row.signal_name.startswith("verified-v2:") and state_available(row, row.evidence, datetime.utcnow())]
         eligible_rows = [row for row in rows if int(row.sample_count or 0) >= MIN_MODEL_VERSION_SIGNAL_SAMPLE]
         if (
             int(anti.get("sample_count", 0) or 0) < MIN_MODEL_VERSION_OUTCOMES
@@ -1173,7 +1226,7 @@ class ModelScoreService:
         previous_weights = previous.weights if previous else BASE_SIGNAL_WEIGHTS
         new_weights = dict(BASE_SIGNAL_WEIGHTS)
         for signal_name in new_weights:
-            matching = [row for row in rows if row.signal_name == signal_name and row.sample_count >= MIN_MODEL_VERSION_SIGNAL_SAMPLE]
+            matching = [row for row in rows if row.signal_name.removeprefix("verified-v2:") == signal_name and row.sample_count >= MIN_MODEL_VERSION_SIGNAL_SAMPLE]
             if not matching:
                 continue
             avg_reliability = mean(row.reliability_score for row in matching)
@@ -1193,7 +1246,9 @@ class ModelScoreService:
             model_name="BLUM Learning Loop",
             weights=new_weights,
             previous_weights=previous_weights,
-            training_window={"source": "historical_predictions", "evaluation_mode": settings.learning_evaluation_mode},
+            training_window={"source": "historical_predictions", "evaluation_mode": settings.learning_evaluation_mode,
+                             "contract_version": "legacy-direction-v1", "available_at": datetime.utcnow().isoformat(),
+                             "outcome_cutoff": max(row.evidence["outcome_cutoff"] for row in eligible_rows)},
             validation_metrics=LearningDashboardService().aggregate_metrics(db),
             anti_overfitting_report=anti,
             change_log="Adaptive signal reliability weights recalculated from point-in-time historical outcomes. Source code unchanged.",
@@ -1879,10 +1934,10 @@ def active_model_version(db: Session) -> ModelVersion | None:
     return db.scalar(select(ModelVersion).where(ModelVersion.is_active.is_(True)).order_by(desc(ModelVersion.created_at)).limit(1))
 
 
-def active_weight_context(db: Session | None) -> tuple[str, dict, str]:
+def active_weight_context(db: Session | None, *, as_of=None, contract_version="legacy-direction-v1") -> tuple[str, dict, str]:
     if db is not None:
         row = active_model_version(db)
-        if row and isinstance(row.weights, dict) and row.weights:
+        if row and isinstance(row.weights, dict) and row.weights and state_available(row, row.training_window, as_of) and row.training_window.get("contract_version") == contract_version:
             return row.version, model_weights_with_fallback(row.weights), "active_model_version"
     return "base-static", normalize_weights(BASE_SIGNAL_WEIGHTS), "base_signal_weights"
 
@@ -1980,18 +2035,21 @@ def model_weights_with_fallback(weights: dict) -> dict:
 
 
 def signal_performance_context(db: Session | None, context: dict, signal_scores: dict) -> dict:
-    if db is None or not signal_scores:
+    predicates = scoped_predicates(SignalPerformance, context)
+    if db is None or not signal_scores or predicates is None:
         return {"rows": [], "confidence_delta": 0.0}
     regime = context.get("market_context", {}).get("market_regime", "Unknown")
     rows = db.scalars(
         select(SignalPerformance)
-        .where(SignalPerformance.signal_name.in_(list(signal_scores.keys())), SignalPerformance.market_regime == regime)
+        .where(*predicates, or_(SignalPerformance.signal_name.in_(list(signal_scores.keys())), SignalPerformance.signal_name.in_(["verified-v2:"+name for name in signal_scores])), SignalPerformance.market_regime == regime)
         .order_by(desc(SignalPerformance.sample_count), desc(SignalPerformance.updated_at))
         .limit(80)
     ).all()
     grouped: dict[str, list[SignalPerformance]] = defaultdict(list)
     for row in rows:
-        grouped[row.signal_name].append(row)
+        if not state_available(row, row.evidence, decision_clock(context)) or not scope_matches(row.evidence, context):
+            continue
+        grouped[row.signal_name.removeprefix("verified-v2:")].append(row)
     payloads = []
     deltas = []
     for signal_name, signal_rows in grouped.items():
@@ -2020,12 +2078,15 @@ def signal_performance_context(db: Session | None, context: dict, signal_scores:
 
 
 def strategy_memory_context(db: Session | None, context: dict) -> dict:
-    if db is None:
+    predicates = scoped_predicates(StrategyMemory, context)
+    if db is None or predicates is None:
         return {"rows": [], "confidence_delta": 0.0}
-    rows = db.scalars(select(StrategyMemory).order_by(desc(StrategyMemory.reliability_score), desc(StrategyMemory.updated_at)).limit(120)).all()
+    rows = db.scalars(select(StrategyMemory).where(*predicates).order_by(desc(StrategyMemory.reliability_score), desc(StrategyMemory.updated_at)).limit(120)).all()
     applicable = []
     deltas = []
     for row in rows:
+        if not state_available(row, row.evidence, decision_clock(context)) or not scope_matches(row.evidence, context):
+            continue
         if not strategy_memory_matches(row, context):
             continue
         sample_count = int(row.sample_count or 0)

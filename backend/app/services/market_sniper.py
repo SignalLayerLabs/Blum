@@ -912,15 +912,24 @@ def update_r_metrics(db: Session, simulations: list[dict]) -> None:
 
 
 def update_signal_reliability_matrix(db: Session, rows: list[tuple[HistoricalPrediction, PredictionOutcome]], simulations: list[dict]) -> None:
+    from app.services.information.outbox import claim_once
+    from app.services.information.contracts import digest
     by_prediction = {item["prediction_id"]: item for item in simulations if item.get("prediction_id")}
     row_cache: dict[tuple[str, str, str, str, str, str, str, str], SignalReliabilityMatrix] = {}
     for prediction, outcome in rows:
         sim = by_prediction.get(prediction.id)
         if not sim:
             continue
+        if prediction.id is None or outcome.id is None or outcome.realized_return is None or outcome.outcome_label == "inconclusive":
+            continue
         signal_scores = ((prediction.prediction_payload or {}).get("prediction") or {}).get("signal_scores", {})
         setup_type = sim["setup_type"]
         r_value = safe_float(sim.get("realized_r_multiple"))
+        if not claim_once(db, consumer_version="legacy-sniper-reliability-v2:"+digest([setup_type, outcome.timeframe])[:12],
+            source_uid=f"prediction_outcome:{outcome.id}", decision_uid=f"historical_prediction:{prediction.id}",
+            payload={"setup_type": setup_type, "timeframe": outcome.timeframe, "r_value": r_value,
+                     "realized_return": outcome.realized_return, "signal_scores": signal_scores}):
+            continue
         for signal_name, signal_score in signal_scores.items():
             key = {
                 "signal_name": signal_name,

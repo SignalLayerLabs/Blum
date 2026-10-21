@@ -14,6 +14,7 @@ from sklearn.metrics import brier_score_loss, log_loss
 
 from app.services.market_clock import utc_naive
 from app.services.trading_ml.contracts import (
+    CATEGORICAL_FEATURES,
     FeatureSchema,
     TradingMLExample,
     InsufficientTrainingEvidenceError,
@@ -264,7 +265,7 @@ def information_example(context, baseline, *, strategy_fingerprint):
     setup, regime = str(baseline.get("setup_type") or "unknown"), str(
         baseline.get("regime") or "unknown"
     )
-    features = {
+    raw = {
         **dict(baseline.get("features") or {}),
         **dict(context.features),
         "market_family": context.market_family,
@@ -273,6 +274,24 @@ def information_example(context, baseline, *, strategy_fingerprint):
         "strategy_fingerprint": strategy_fingerprint,
         "information_feature_schema_hash": FEATURE_SCHEMA_HASH,
     }
+    if context.coverage.get("feature_schema_hash") != FEATURE_SCHEMA_HASH:
+        raise ValueError("INFORMATION_SCHEMA_REQUIRED")
+    # Freeze exactly the typed vector that Parquet and the online consumer use.
+    # Nested proposal/audit payloads are lineage, not additional model features.
+    features = {}
+    for name in FeatureSchema.information().feature_names:
+        value = raw.get(name)
+        if name in (*CATEGORICAL_FEATURES, "strategy_fingerprint"):
+            features[name] = str(value) if value is not None else "unknown"
+        else:
+            features[name] = (
+                float(value)
+                if isinstance(value, (int, float))
+                and not isinstance(value, bool)
+                and math.isfinite(value)
+                else None
+            )
+    features["information_feature_schema_hash"] = FEATURE_SCHEMA_HASH
     return TradingMLExample(
         "information_context",
         context.context_uid,

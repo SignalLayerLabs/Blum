@@ -1044,8 +1044,8 @@ class LiveForwardPaperTradingService:
             return True
         return bool(db.scalar(select(LiveForwardPaperTrade.id).where(LiveForwardPaperTrade.duplicate_key == duplicate_key).limit(1)))
 
-    def feedback_metadata(self, db: Session, *, ticker: str | None, setup_type: str) -> dict:
-        model_version, weights, source = active_weight_context(db)
+    def feedback_metadata(self, db: Session, *, ticker: str | None, setup_type: str, as_of: datetime | None = None) -> dict:
+        model_version, weights, source = active_weight_context(db, as_of=as_of or datetime.utcnow())
         signal_rows = db.scalars(select(SignalPerformance).order_by(desc(SignalPerformance.updated_at)).limit(6)).all()
         strategy_rows = db.scalars(select(StrategyMemory).order_by(desc(StrategyMemory.last_seen_at)).limit(6)).all()
         return {

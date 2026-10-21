@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
@@ -91,6 +91,20 @@ def seed_asset_history(db: Session) -> Asset:
     return asset
 
 
+def known_memory_provenance():
+    # Synthetic state explicitly published before every decision in these tests.
+    return {"available_at": "2020-01-01T00:00:00", "outcome_cutoff": "2019-12-31T00:00:00",
+            "contract_version": "legacy-direction-v1", "scope": {
+                "asset_key": "NVDA", "timeframe": "mid", "holding_horizon": 63,
+                "setup_type": "legacy_direction_forecast", "regime": "Bull Expansion",
+                "strategy_fingerprint": "legacy-direction-v1"}}
+
+
+def scoped_prediction_context():
+    return {**prediction_context(), "timeframe": "mid", "holding_horizon": 63,
+            "setup_type": "legacy_direction_forecast", "strategy_fingerprint": "legacy-direction-v1"}
+
+
 def test_active_model_version_weights_change_future_prediction_output():
     with setup_db() as db:
         base = PredictionEngine().predict(prediction_context())
@@ -104,6 +118,8 @@ def test_active_model_version_weights_change_future_prediction_output():
                 weights=learned_weights,
                 previous_weights=BASE_SIGNAL_WEIGHTS,
                 is_active=True,
+                created_at=datetime(2020, 1, 1),
+                training_window=known_memory_provenance(),
             )
         )
         db.commit()
@@ -145,7 +161,7 @@ def test_learning_mode_metadata_is_mutually_exclusive():
 
 def test_signal_performance_changes_confidence():
     with setup_db() as db:
-        context = prediction_context()
+        context = scoped_prediction_context()
         base = PredictionEngine().predict(context, db=db)
         db.add(
             SignalPerformance(
@@ -158,6 +174,8 @@ def test_signal_performance_changes_confidence():
                 false_negative_count=0,
                 reliability_score=78.0,
                 weight_adjustment=0.05,
+                created_at=datetime(2020, 1, 1), updated_at=datetime(2020, 1, 1),
+                evidence=known_memory_provenance(),
             )
         )
         db.commit()
@@ -172,7 +190,7 @@ def test_signal_performance_changes_confidence():
 
 def test_strategy_memory_changes_confidence():
     with setup_db() as db:
-        context = prediction_context()
+        context = scoped_prediction_context()
         base = PredictionEngine().predict(context, db=db)
         db.add(
             StrategyMemory(
@@ -184,6 +202,8 @@ def test_strategy_memory_changes_confidence():
                 sample_count=8,
                 positive_count=6,
                 negative_count=2,
+                created_at=datetime(2020, 1, 1), updated_at=datetime(2020, 1, 1),
+                evidence=known_memory_provenance(),
             )
         )
         db.commit()
@@ -238,6 +258,8 @@ def test_run_single_sample_persists_weights_memory_research_priority_and_audit()
                 weights={**BASE_SIGNAL_WEIGHTS, "momentum": 0.5},
                 previous_weights=BASE_SIGNAL_WEIGHTS,
                 is_active=True,
+                created_at=datetime(2020, 1, 1),
+                training_window=known_memory_provenance(),
             )
         )
         db.commit()
@@ -293,6 +315,8 @@ def test_paper_trade_payload_includes_feedback_loop_metadata():
                 weights={**BASE_SIGNAL_WEIGHTS, "momentum": 0.5},
                 previous_weights=BASE_SIGNAL_WEIGHTS,
                 is_active=True,
+                created_at=datetime(2020, 1, 1),
+                training_window=known_memory_provenance(),
             )
         )
         db.commit()

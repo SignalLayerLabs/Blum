@@ -10,6 +10,35 @@ from app.core.database import Base
 JsonType = JSON().with_variant(JSONB, "postgresql")
 
 
+class InformationFeedbackOutbox(Base):
+    __tablename__ = "information_feedback_outbox"
+    __table_args__ = (
+        UniqueConstraint("consumer_version", "source_uid", name="uq_information_feedback_source"),
+        Index("ix_information_feedback_status_id", "status", "id"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    consumer_version: Mapped[str] = mapped_column(String(80))
+    source_uid: Mapped[str] = mapped_column(String(220))
+    decision_uid: Mapped[str] = mapped_column(String(220))
+    market_family: Mapped[str] = mapped_column(String(24))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    conflict_hash: Mapped[str | None] = mapped_column(String(64))
+    payload_json: Mapped[dict] = mapped_column(JsonType)
+    status: Mapped[str] = mapped_column(String(32), default="PENDING")
+    source_updated_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    feature_published_at: Mapped[datetime | None] = mapped_column(DateTime)
+    model_published_at: Mapped[datetime | None] = mapped_column(DateTime)
+    quarantine_published_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class InformationFeedbackCursor(Base):
+    __tablename__ = "information_feedback_cursors"
+    source: Mapped[str] = mapped_column(String(80), primary_key=True)
+    source_updated_at: Mapped[datetime] = mapped_column(DateTime)
+    source_id: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class AlphaCallRegistration(Base):
     __tablename__ = "alpha_call_registrations"
     __table_args__ = (

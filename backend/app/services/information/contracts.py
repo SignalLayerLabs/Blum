@@ -255,3 +255,66 @@ class OpportunityContext:
             "max_available_at": self.max_available_at.isoformat(),
             "hash": self.hash,
         }
+
+
+@dataclass(frozen=True)
+class MaturedAlphaOutcome:
+    source_uid: str
+    decision_uid: str
+    market_family: MarketFamily
+    asset_key: str
+    decision_at: datetime
+    outcome_at: datetime
+    realized_net_r: float
+    evidence_lane: str
+    context: OpportunityContext
+    executable_strategy: Mapping
+    strategy_fingerprint: str
+    checkpoint_hash: str | None
+    cost_breakdown: Mapping
+    benchmark_reference: Mapping
+    account_return: float | None = None
+
+    def __post_init__(self):
+        from dataclasses import fields
+        from math import isfinite
+        from app.services.executable_strategy import ExecutableStrategySpec
+
+        for name in ("decision_at", "outcome_at"):
+            object.__setattr__(self, name, utc_naive(getattr(self, name)))
+        if not self.source_uid or not self.decision_uid or not self.evidence_lane:
+            raise ValueError(
+                "Native source, decision and original evidence lane required"
+            )
+        if (
+            self.outcome_at <= self.decision_at
+            or isinstance(self.realized_net_r, bool)
+            or not isfinite(self.realized_net_r)
+        ):
+            raise ValueError("Only terminal finite net outcomes can mature")
+        if (
+            self.context.decision_at,
+            self.context.market_family,
+            self.context.asset_key,
+        ) != (self.decision_at, self.market_family, self.asset_key):
+            raise ValueError("Outcome must match the exact frozen context")
+        if any(
+            field.name not in self.executable_strategy
+            for field in fields(ExecutableStrategySpec)
+        ):
+            raise ValueError("Complete frozen executable strategy required")
+        spec = ExecutableStrategySpec.from_payload(self.executable_strategy)
+        if (
+            spec.fingerprint != self.strategy_fingerprint
+            or self.executable_strategy.get("strategy_fingerprint")
+            != self.strategy_fingerprint
+        ):
+            raise ValueError("Frozen strategy fingerprint mismatch")
+        if self.checkpoint_hash is not None and (
+            len(self.checkpoint_hash) != 64
+            or any(c not in "0123456789abcdef" for c in self.checkpoint_hash)
+        ):
+            raise ValueError("Checkpoint hash must identify the frozen artifact")
+        for name in ("executable_strategy", "cost_breakdown", "benchmark_reference"):
+            digest(getattr(self, name))
+            object.__setattr__(self, name, freeze(getattr(self, name)))

@@ -23,6 +23,7 @@ from app.services.dashboard_snapshots import DashboardSnapshotService
 from .contracts import (
     CATEGORICAL_FEATURES,
     NUMERIC_FEATURES,
+    FeatureSchema,
     InsufficientTrainingEvidenceError,
     TradingMLExample,
 )
@@ -685,6 +686,14 @@ class TradingMLLearningWorker:
 
 
 def _example_from_store_row(row: dict) -> TradingMLExample:
+    schema = FeatureSchema.information() if row.get("feature_schema_hash") == FeatureSchema.information().hash else FeatureSchema.current()
+    if row.get("feature_schema_hash") not in {None, schema.hash}:
+        raise ValueError("FEATURE_SCHEMA_MISMATCH")
+    features = {name: row.get(name) for name in schema.feature_names}
+    if schema.source_schema_hash is not None:
+        if row.get("information_feature_schema_hash") != schema.source_schema_hash:
+            raise ValueError("INFORMATION_SCHEMA_REQUIRED")
+        features["information_feature_schema_hash"] = schema.source_schema_hash
     return TradingMLExample(
         source_object_type=str(row["source_object_type"]),
         source_object_id=str(row["source_object_id"]),
@@ -695,9 +704,7 @@ def _example_from_store_row(row: dict) -> TradingMLExample:
         asset_key=str(row["asset_key"]),
         setup_type=str(row["setup_type"]),
         regime=str(row["regime"]),
-        features={
-            name: row.get(name) for name in (*NUMERIC_FEATURES, *CATEGORICAL_FEATURES)
-        },
+        features=features,
         realized_net_r=float(row["realized_net_r"]),
         label_positive_r=int(row["label_positive_r"]),
         benchmark_excess=(
