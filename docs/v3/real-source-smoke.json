@@ -1,0 +1,12 @@
+{
+  "scope": "Functional real-source integration only; not validated trading performance.",
+  "source_sha256": "6ab7f3af855c859ac7b097f37f797961b160ad149ef15673ddd0aae0cc349bc2",
+  "accepted": 120,
+  "rejected": 0,
+  "job_status": "SUCCEEDED",
+  "development_observations": 96,
+  "holdout_opened": false,
+  "paper_opening_cash": "10000",
+  "paper_history_relabelled": false,
+  "forex": "Contract fixtures tested; external real-data provider access remains unverified in this network-restricted executor."
+}

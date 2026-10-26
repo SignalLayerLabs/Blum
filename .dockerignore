@@ -5,6 +5,11 @@ node_modules/
 .git/
 .env
 .upload-venv/
+.venv-v3/
+.superpowers/
+var/
+web_v3/node_modules/
+web_v3/.next/
 frontend/node_modules/
 frontend/.next/
 backend/app/static/*
