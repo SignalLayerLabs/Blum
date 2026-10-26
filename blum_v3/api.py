@@ -103,6 +103,17 @@ def create_app(*,repository: Repository | None=None,token: str | None=None,clock
     @app.get('/health')
     def health():return dict(status='ready',version=__version__,mode='research_and_paper',broker_execution=False)
 
+    from .release import release_identity,readiness
+
+    @app.get('/startup/status')
+    def startup_status():
+        return readiness(repository,Path(os.environ.get('BLUM_WEB_PATH','web_v3/out')),os.environ.get('BLUM_WORKER_PID'))
+
+    @app.get('/api/runtime/release')
+    def deployed_release():
+        state=startup_status()
+        return {**release_identity(),**state,'backend_ready':all(state[k] for k in ['api_ready','ui_ready','worker_ready'])}
+
     private=[Depends(authorized)]
 
     @app.get('/api/v3/schema',dependencies=private)

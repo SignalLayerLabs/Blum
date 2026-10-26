@@ -1,3 +1,9 @@
+import os
+if os.environ.get('BLUM_RELEASE_CHANNEL')=='v3':
+    from verify_v3_deployment import main
+    main()
+    raise SystemExit(0)
+
 """Verify source revision, JSON APIs, readiness and public read-only boundary."""
 import argparse
 import json

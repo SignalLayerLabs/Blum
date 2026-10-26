@@ -1,8 +1,8 @@
-FROM node:20-bookworm-slim AS frontend
-WORKDIR /workspace/frontend
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
-COPY frontend ./
+FROM node:24-bookworm-slim AS frontend
+WORKDIR /workspace/web_v3
+COPY web_v3/package.json web_v3/package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY web_v3 ./
 RUN npm run build
 
 FROM python:3.12-bookworm
@@ -41,7 +41,13 @@ COPY backend ./backend
 COPY scripts ./scripts
 ARG BLUM_SOURCE_REVISION=unavailable
 RUN python -c 'import json,os; from pathlib import Path; Path("backend/app/data/build_revision.json").write_text(json.dumps({"source_revision":os.environ.get("BLUM_SOURCE_REVISION","unavailable")}))'
-COPY --from=frontend /workspace/frontend/out ./backend/app/static
+COPY --from=frontend /workspace/web_v3/out ./web_v3/out
+COPY --from=frontend /workspace/web_v3/out ./backend/app/static
+COPY pyproject.toml Dockerfile ./
+COPY blum_v3 ./blum_v3
+RUN python -m venv /opt/blum-v3 && /opt/blum-v3/bin/pip install --no-cache-dir .
+RUN python -c 'import json,os; from pathlib import Path; Path("blum_v3/build_revision.json").write_text(json.dumps({"source_revision":os.environ.get("BLUM_SOURCE_REVISION","unavailable")}))'
+ENV BLUM_RELEASE_CHANNEL=v3 BLUM_WEB_PATH=/app/web_v3/out
 
 ENV BLUM_FINRLX_ENABLED=true \
     BLUM_FINRLX_RUNNER_COMMAND=/app/scripts/finrlx_runner.py \

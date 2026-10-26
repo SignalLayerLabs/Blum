@@ -30,7 +30,9 @@ gh run list --repo SignalLayerLabs/Blum --workflow deploy.yml
 
 Deployment builds the web product, sets the HF source revision, transfers LFS and fast-forwards HF main. It waits for readiness and the baked backend revision, then publishes Cloudflare and checks all five pages, JSON snapshots and mutation denial.
 
-## Cloudflare gateway
+## Legacy v2 gateway reference
+
+The commands in this section apply only to a reviewed full v2 rollback with its matching backend and legacy Wrangler assets configuration. For the active v3 channel use the production workflow and the V3 cutover section below.
 
 `cloudflare/wrangler.jsonc` serves `frontend/out` using an assets binding and the typed Worker. Keep `NEXT_PUBLIC_API_BASE` empty for same-origin requests. Public requests are GET/HEAD on the shared reviewed route list. Unvetted legacy GET handlers are private because some write even when persist=false. Persistence/rebuild queries are rejected. Client credentials/cookies are stripped; APIs stream with no-store. Redirects and non-JSON API responses fail explicitly. Asset detail APIs send Accept: application/json so they do not shadow HTML pages at the same path.
 
@@ -46,7 +48,9 @@ npm --prefix cloudflare run deploy -- --var "SOURCE_REVISION:$(git rev-parse HEA
 
 Wrangler authentication is required for publication. A custom domain can be added later. This release does not alter unrelated DNS. Worker observability is enabled. Financial state is not stored in edge cache or a parallel Worker database.
 
-## HF runtime and readiness
+## Legacy v2 runtime and readiness reference
+
+These v2 readiness fields apply to a full legacy rollback. The active release uses the v3 identity and required worker readiness described below.
 
 The image remains FastAPI + CPU ML + PostgreSQL with the static product. BLUM_SOURCE_REVISION is passed as a Docker build argument and baked into backend/app/data/build_revision.json. A runtime variable change cannot label an older baked image as the current release.
 
@@ -93,3 +97,15 @@ Report outages and missing evidence explicitly. Do not fill unavailable charts o
 New decisions register within their original database transactions. The read-only `/api/alpha/desk` never backfills legacy records or starts financial execution. Migration 0045 is additive. Source fingerprints establish recorded code content, not semantic data validity or model outperformance. See [Alpha Desk](../research/alpha-desk.md).
 
 Migration 0046 adds market-window and source-join indexes only. The background snapshot producer must publish `registered_alpha_desk_summary` after upgrade. Until it does, the public desk correctly reports unavailable; GET never launches a calculation. Verify the stored evaluation clock, expiry and per-market window metadata after deploy, then test sequential and concurrent reads. Do not interpret a successful historical snapshot as a currently executable plan.
+
+## V3 production cutover
+
+The production build now uses `web_v3/out`. The HF image retains the existing PostgreSQL restore, migrations, persistent bucket and logical/physical backup loop, then starts the v3 API and one supervised paper worker. Legacy application writers do not start. V3 tables have the `v3_` prefix; legacy tables remain intact and are not promoted into new accounts or prospective records. This existing single-replica PostgreSQL arrangement is retained; multi-replica operation still requires an external database.
+
+V3 uses the private runtime `BLUM_OPERATOR_TOKEN`, falling back to the existing `BLUM_ASCENT_ADMIN_KEY`. Enter that existing operator key in the workspace connection form. No key is placed in public assets, release JSON, GitHub logs or Worker configuration. Missing keys stop startup. To rotate the key, change the private HF runtime secret and restart the Space deliberately.
+
+The Worker now forwards caller Bearer authentication, JSON bodies and stable command identities only on `/api/v3/`; it strips cookies and denies anonymous requests and cross-origin commands. No origin credential is injected for visitors. Legacy mutation/read routes remain unavailable on the v3 channel. Public `/api/release` verifies version3.0.0, exact baked source revision, protected v3/scripts content, database, assets and the required worker. UI HTML is not cached across releases.
+
+Both `Verify BLUM` and `Verify Blum v3` must pass for current main. Actions publishes the HF backend first, waits for v3 readiness, then publishes Cloudflare and verifies actual HTML, release identity and anonymous read/command rejection. Verification never submits financial commands. Duplicate successful-workflow triggers are serialized by the production concurrency group.
+
+For rollback, deploy a reviewed GitHub revert of the production-wiring change, restoring the prior Docker/start/gateway configuration together. Keep the database and bucket: the additive v3 tables can remain while the legacy app resumes. Never run both writer generations simultaneously. An emergency Worker-only rollback is appropriate only when the selected assets remain compatible with the origin. Do not roll back assets to v2 while the origin serves only v3 APIs.

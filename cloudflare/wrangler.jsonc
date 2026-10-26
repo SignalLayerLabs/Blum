@@ -7,13 +7,14 @@
   "workers_dev": true,
   "preview_urls": false,
   "assets": {
-    "directory": "../frontend/out",
+    "directory": "../web_v3/out",
     "binding": "ASSETS",
     "run_worker_first": true,
     "html_handling": "force-trailing-slash",
     "not_found_handling": "404-page"
   },
   "vars": {
+    "RELEASE_CHANNEL": "v3",
     "BACKEND_ORIGIN": "https://italianhype-blum.hf.space",
     "SOURCE_REVISION": "unavailable",
     "SOURCE_CONTENT_HASH": "unavailable"

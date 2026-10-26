@@ -243,4 +243,8 @@ if [[ "${START_EMBEDDED_BACKUP_LOOP}" == "true" ]]; then
 fi
 
 cd /app
+if [[ "${BLUM_RELEASE_CHANNEL:-v2}" == "v3" ]]; then
+  echo "Starting Blum v3 API and supervised paper worker; legacy writers disabled."
+  exec /opt/blum-v3/bin/python -m blum_v3.runtime
+fi
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT}"
