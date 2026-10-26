@@ -2,7 +2,7 @@ FROM node:24-bookworm-slim AS web
 WORKDIR /web
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY web_v3/package*.json ./
-RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
+RUN npm ci --ignore-scripts
 COPY web_v3 ./
 RUN npm run build
 

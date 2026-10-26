@@ -28,22 +28,22 @@ Without a worker, requests remain queued; opening a page never starts research o
 
 Request equity or FX daily history from Research, or import an attributed JSON file with `instrument`, `provenance` and `rows`. The instrument declares symbol, market (`equity` or `forex`), quote/base currencies and tick/lot increments. Each row has UTC-aware `timestamp`, `available_at`, coherent positive OHLC, optional volume and optional joint bid/ask. Provenance declares provider, rights, first-seen clock, availability policy and source revision.
 
-The authenticated `/api/v3/schema` endpoint exposes exact request schemas. No example market prices are bundled as a working dataset. Existing accepted v2 equity prices can be independently reviewed and imported with their original dates; old quarantined Forex and reasoning archives are not new training evidence.
+The authenticated `/api/v3/schema` endpoint exposes exact request schemas. No example market prices are bundled as a working dataset. Existing accepted v2 equity prices can be independently reviewed and imported with their original dates; old quarantined Forex and reasoning archives are not new training evidence. Intake rejects future provenance/observations and overlapping availability paths against the acceptance clock.
 
 1. Import and inspect accepted/excluded observations.
 2. Register a hypothesis, source, trial family, strategy and cost settings. At least 30 accepted bars are required.
 3. Let the worker produce development results. The final 20% remains sealed.
 4. Inspect NAV, the predeclared benchmark, costs, exclusions and stress scenarios. Opening confirmation consumes that source's partition for new tuning.
-5. Open a paper account and optionally attach a completed frozen experiment. A new account starts a new epoch; historical replay does not become a forward record.
+5. Open a paper account, submit manual orders or optionally attach a completed frozen experiment. A new account starts a new epoch; historical replay does not become a forward record. Manual orders participate in paper cycles even without a strategy subscription.
 6. Refresh the source to observe subsequent paper decisions and fills. Orders require an eligible observation strictly after the decision. No new data means no fabricated execution.
 
-Equity paper begins long/cash; FX permits long/short. The default account envelope is 1x gross exposure, 20% per instrument, 2% daily loss and 10% drawdown limits. These are configurable paper research limits, not real-money sizing advice. A different account currency needs an eligible observed FX conversion source. Unlike currencies are never summed into an unsupported aggregate.
+Equity paper begins long/cash; FX permits long/short. The default account envelope is 1x gross exposure, 20% per instrument, 2% daily loss and 10% drawdown limits, rechecked when adding risk at settlement. These are configurable paper research limits, not real-money sizing advice. A different account currency needs an eligible observed FX conversion source. Unlike currencies and incompatible contracts sharing a ticker are never silently merged. Observation capacity is reserved durably across competing orders. Ordinary stops retain activation after partial execution; declared financing accrues through idempotent journal records.
 
 ## Evidence limits
 
 `BAR_RESEARCH` supports attributed historical analysis. `MODELED_PAPER` uses actual observations plus declared fill/cost scenarios, including optional declared financing. Price-return comparisons exclude uncertified dividends and actions. The source gate checks weekends; it does not certify every exchange holiday or corporate action. Native dependency compatibility checks are optional, and the declared bar scenario is the explicit default execution backend.
 
-`QUOTE_QUALIFIED_PAPER` is not granted by this implementation: independent prospective quotes, complete financing/convertibility and reconciliation evidence remain required. Historical calibration, a large sample count or a language-model score is not a prospective trading advantage. Reports leave DSR/PBO unavailable when the required independent trial distribution/ranking experiment is absent.
+`QUOTE_QUALIFIED_PAPER` is not granted by this implementation: independent prospective quotes, complete financing/convertibility and reconciliation evidence remain required. Historical calibration, a large sample count or a language-model score is not a prospective trading advantage. Reports leave DSR/PBO unavailable when the required independent trial distribution/ranking experiment is absent. Confirmation is consumed by instrument/time interval before evaluation starts, independently of provenance refreshes; adding alternatives updates trial counts and invalidates outdated multiplicity intervals without computing research on GET.
 
 ## Production and recovery
 

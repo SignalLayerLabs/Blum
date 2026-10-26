@@ -119,7 +119,7 @@ def create_app(*,repository: Repository | None=None,token: str | None=None,clock
 
     @app.post('/api/v3/datasets',dependencies=private,status_code=201)
     def import_dataset(body: DatasetInput):
-        source=accept_dataset(body.instrument,body.rows,body.provenance);repository.save_dataset(source)
+        source=accept_dataset(body.instrument,body.rows,body.provenance,clock=clock);repository.save_dataset(source)
         return dict(dataset_id=source.dataset_id,accepted=len(source.bars),rejected=len(source.rejected),warnings=source.warnings)
 
     @app.post('/api/v3/history',dependencies=private,status_code=202)
@@ -158,6 +158,9 @@ def create_app(*,repository: Repository | None=None,token: str | None=None,clock
 
     @app.post('/api/v3/accounts/{account_id}/orders',dependencies=private,status_code=201)
     def order(account_id: str,body: OrderInput,key: str=Depends(idempotency)):
+        request_payload=body.model_dump(mode='json')
+        previous=portfolios.replay_submission(account_id,key,request_payload)
+        if previous is not None:return previous
         source=repository.dataset(body.dataset_id);visible=[b for b in source.bars if b.available_at<=clock()]
         if not visible:raise ValueError('no_observable_market_reference')
         bar=visible[-1];account=portfolios.snapshot(account_id);fx=None
@@ -166,7 +169,7 @@ def create_app(*,repository: Repository | None=None,token: str | None=None,clock
         price=(bar.close/source.instrument.tick_size).to_integral_value(rounding=ROUND_FLOOR)*source.instrument.tick_size
         return portfolios.submit_order(account_id,instrument=source.instrument,side=body.side,quantity=body.quantity,reference_price=price,
             reference_at=bar.available_at,decision_at=clock(),source_ref=source.dataset_id,key=key,
-            kind=body.kind,limit_price=body.limit_price,stop_price=body.stop_price,expires_at=body.expires_at,reduce_only=body.reduce_only,fx=fx)
+            kind=body.kind,limit_price=body.limit_price,stop_price=body.stop_price,expires_at=body.expires_at,reduce_only=body.reduce_only,fx=fx,request_payload=request_payload)
 
     @app.post('/api/v3/accounts/{account_id}/orders/{order_id}/cancel',dependencies=private)
     def cancel_order(account_id: str,order_id: str,key: str=Depends(idempotency)):return portfolios.cancel_order(account_id,order_id,key=key)

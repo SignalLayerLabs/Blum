@@ -20,3 +20,17 @@ test('request never puts credentials in URL and mutation has an idempotency key'
  assert.equal(captured.options.headers.Authorization,'Bearer secret');
  assert.ok(captured.options.headers['Idempotency-Key']);
 });
+
+test('missing valuations separate chart segments instead of drawing a fictitious path',async()=>{
+ const {curveSegments}=await import('../lib/view.mjs');
+ const segments=curveSegments([{nav:'100'},{nav:'101'},{nav:null},{nav:'103'}]);
+ assert.deepEqual(segments.map(s=>s.map(p=>p.index)),[[0,1],[3]]);
+});
+
+test('an ambiguous network failure retries the same command identity',async()=>{
+ let attempts=0;const keys=[];
+ const result=await request('/accounts','unit',{method:'POST',body:{cash:'100'}},async(url,options)=>{
+  keys.push(options.headers['Idempotency-Key']);if(attempts++===0)throw new TypeError('network unavailable');return new Response('{"id":"accepted-once"}');
+ });
+ assert.equal(result.id,'accepted-once');assert.equal(keys.length,2);assert.equal(keys[0],keys[1]);
+});

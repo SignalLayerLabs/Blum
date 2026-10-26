@@ -17,7 +17,7 @@ jobs:
           POSTGRES_PASSWORD: ephemeral_ci_only
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U blum -d blum_v3_test'
+          --health-cmd "pg_isready -U blum -d blum_v3_test"
           --health-interval 5s --health-timeout 3s --health-retries 15
     env:
       BLUM_TEST_POSTGRES_URL: postgresql://blum:ephemeral_ci_only@localhost:5432/blum_v3_test
@@ -40,17 +40,29 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
-      - run: npm install --prefix web_v3 --ignore-scripts
-      - name: Record generated dependency lock
-        run: node -e "console.log('BLUM_WEB_LOCK_BEGIN'); console.log(require('fs').readFileSync('web_v3/package-lock.json').toString('base64')); console.log('BLUM_WEB_LOCK_END')"
+      - run: npm ci --prefix web_v3 --ignore-scripts
       - run: npm --prefix web_v3 test
       - run: npm --prefix web_v3 run typecheck
       - run: npm --prefix web_v3 run build
         env:
           NEXT_TELEMETRY_DISABLED: '1'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install browser verification runtime
+        run: |
+          pip install -e '.[test]' playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          git lfs install --local
+          git lfs pull --include=backend/app/data/historical_prices_seed.csv.gz
+      - name: Real-source browser workflow
+        run: python scripts/verify_v3_browser.py
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: blum-v3-web
+          include-hidden-files: true
           path: |
             web_v3/out
             web_v3/package-lock.json
+            .artifacts/v3-browser

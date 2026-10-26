@@ -20,6 +20,8 @@ events = Table('v3_events', metadata, Column('id', String(64), primary_key=True)
 commands = Table('v3_commands', metadata, Column('scope', String(100), primary_key=True), Column('key', String(128), primary_key=True), Column('fingerprint', String(64), nullable=False), Column('result', Text, nullable=False))
 experiments = Table('v3_experiments', metadata, Column('id', String(64), primary_key=True), Column('payload', Text, nullable=False), Column('status', String(32), nullable=False))
 families = Table('v3_families', metadata, Column('id', String(100), primary_key=True), Column('payload', Text, nullable=False))
+research_locks = Table('v3_research_locks',metadata,Column('id',String(64),primary_key=True))
+consumed_holdouts = Table('v3_consumed_holdouts',metadata,Column('id',String(64),primary_key=True),Column('payload',Text,nullable=False))
 jobs = Table('v3_jobs', metadata, Column('id', String(64), primary_key=True), Column('payload', Text, nullable=False), Column('status', String(32), nullable=False), Column('available_at', String(40), nullable=False))
 subscriptions = Table('v3_paper_subscriptions', metadata, Column('id', String(64), primary_key=True), Column('payload', Text, nullable=False))
 legacy_evidence = Table('v3_legacy_evidence',metadata,Column('id',String(64),primary_key=True),Column('payload',Text,nullable=False))
@@ -102,6 +104,15 @@ class Repository:
                 raise ValueError('idempotency_conflict')
             return json.loads(row['result'])
         return None
+
+    @staticmethod
+    def lock_research(conn,instrument_id):
+        if conn.dialect.name=='postgresql':
+            from sqlalchemy.dialects.postgresql import insert as upsert
+        else:
+            from sqlalchemy.dialects.sqlite import insert as upsert
+        conn.execute(upsert(research_locks).values(id=instrument_id).on_conflict_do_nothing(index_elements=['id']))
+        conn.execute(select(research_locks.c.id).where(research_locks.c.id==instrument_id).with_for_update()).scalar_one()
 
     @staticmethod
     def remember(conn, scope: str, key: str, payload, result):

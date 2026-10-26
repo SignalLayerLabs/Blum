@@ -16,7 +16,12 @@ class FillOutcome(Contract):
     liquidity_basis: str = ''
 
 
-def simulate_order(order: dict, bar: Bar, profile: ExecutionProfile, *, eligible_index=0) -> FillOutcome:
+def observation_capacity(instrument: Instrument,bar: Bar,profile: ExecutionProfile) -> D:
+    raw=(bar.volume or D(0))*profile.participation if instrument.market=='equity' else profile.fx_capacity
+    return (raw/instrument.lot_size).to_integral_value(rounding=ROUND_FLOOR)*instrument.lot_size
+
+
+def simulate_order(order: dict, bar: Bar, profile: ExecutionProfile, *, eligible_index=0,capacity_remaining=None) -> FillOutcome:
     effective_decision=max(utc(order['decision_at']),utc(order.get('triggered_at',order['decision_at'])))
     if bar.timestamp <= effective_decision:
         return FillOutcome(status='WAITING',reason='not_after_decision')
@@ -59,6 +64,7 @@ def simulate_order(order: dict, bar: Bar, profile: ExecutionProfile, *, eligible
     else:
         capacity=profile.fx_capacity
         basis='declared_otc_capacity'
+    if capacity_remaining is not None:capacity=min(capacity,max(D(0),decimal(capacity_remaining)))
     quantity=(min(decimal(order['remaining']),capacity)/instrument.lot_size).to_integral_value(rounding=ROUND_FLOOR)*instrument.lot_size
     if quantity<=0: return FillOutcome(status='WAITING',reason='capacity_below_lot',liquidity_basis=basis)
     fee=max(profile.minimum_commission,quantity*px*profile.commission_bps/D(10000))

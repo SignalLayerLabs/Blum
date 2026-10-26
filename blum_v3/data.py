@@ -7,10 +7,12 @@ from typing import Iterable
 
 from pydantic import ValidationError
 
-from .domain import AcceptedDataset, Bar, Instrument, Provenance, Rejection, identity
+from .domain import AcceptedDataset, Bar, Instrument, Provenance, Rejection, identity,now,utc
 
 
-def accept_dataset(instrument: Instrument, rows: Iterable[dict], provenance: Provenance) -> AcceptedDataset:
+def accept_dataset(instrument: Instrument, rows: Iterable[dict], provenance: Provenance,*,clock=now) -> AcceptedDataset:
+    acceptance_clock=utc(clock())
+    if provenance.first_seen_at>acceptance_clock:raise ValueError('future_provenance')
     groups: dict = defaultdict(list)
     rejected: list[Rejection] = []
     warnings = {'Calendar checked for weekends only; exchange holidays and corporate actions are not certified.'}
@@ -22,7 +24,7 @@ def accept_dataset(instrument: Instrument, rows: Iterable[dict], provenance: Pro
             bar = Bar.model_validate(raw)
             if bar.timestamp.weekday() >= 5:
                 raise ValueError('unsupported_weekend_session')
-            if bar.available_at > provenance.first_seen_at:
+            if bar.available_at > provenance.first_seen_at or bar.available_at>acceptance_clock:
                 raise ValueError('availability_after_source_observation')
             groups[bar.timestamp].append((index, bar))
         except (ValidationError, ValueError, TypeError):
@@ -35,6 +37,9 @@ def accept_dataset(instrument: Instrument, rows: Iterable[dict], provenance: Pro
             rejected.extend(Rejection(row=index, reason='conflicting_key') for index, _ in group)
             continue
         bar = group[0][1]
+        if accepted and (bar.available_at<=accepted[-1].available_at or accepted[-1].available_at>bar.timestamp):
+            rejected.extend(Rejection(row=index,reason='noncausal_availability') for index,_ in group)
+            continue
         accepted.append(bar)
         duplicates += len(group) - 1
         if bar.volume is None:

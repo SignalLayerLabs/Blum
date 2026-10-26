@@ -91,22 +91,31 @@ class PortfolioService:
         conn.execute(insert(events).values(id=event['id'],account_id=state['id'],sequence=state['version'],payload=encode(event)))
         conn.execute(update(accounts).where(accounts.c.id==state['id']).values(payload=encode(state),version=state['version']))
 
-    def _change(self, account_id, key, payload, kind, operation):
+    def _change(self, account_id, key, payload, kind, operation,*,fingerprint_payload=None):
+        command=payload if fingerprint_payload is None else fingerprint_payload
         with self.repository.transaction(account_id) as conn:
-            replay=self.repository.replay_command(conn,account_id,key,payload)
+            replay=self.repository.replay_command(conn,account_id,key,command)
             if replay is not None: return replay
             state=self._state(conn,account_id)
             result,postings=operation(state)
             event_payload=(dict(payload)|{'reason':result['reason']}) if kind=='ORDER_REJECTED' else payload
             self._persist(conn,state,kind,event_payload,postings)
             result=json.loads(encode(result))
-            self.repository.remember(conn,account_id,key,payload,result)
+            self.repository.remember(conn,account_id,key,command,result)
             return result
+
+    def replay_submission(self,account_id,key,payload):
+        with self.repository.engine.connect() as conn:result=self.repository.replay_command(conn,account_id,key,payload)
+        if result is not None and result.get('status')=='REJECTED':raise ValueError(result['reason'])
+        return result
 
     def submit_order(self, account_id: str, *, instrument: Instrument, side: str, quantity,
                      reference_price, decision_at, key: str, reference_at, source_ref: str,
                      kind='MARKET', limit_price=None, stop_price=None, expires_at=None,
-                     reduce_only=False, fx=None) -> dict:
+                     reduce_only=False, fx=None,request_payload=None) -> dict:
+        if request_payload is not None:
+            previous=self.replay_submission(account_id,key,request_payload)
+            if previous is not None:return previous
         qty,price=decimal(quantity),decimal(reference_price)
         decision,observed=utc(decision_at),utc(reference_at)
         if qty<=0: raise ValueError('positive_quantity_required')
@@ -136,6 +145,10 @@ class PortfolioService:
             rate=conversion_rate(instrument,state['currency'],fx,decision)
             nav=value_portfolio(state,decision)
             position=state['positions'].get(instrument.symbol)
+            if position is not None and Instrument.model_validate(position['instrument'])!=instrument:
+                raise ValueError('instrument_contract_conflict')
+            if any(o['status'] not in TERMINAL and o['instrument']['symbol']==instrument.symbol and Instrument.model_validate(o['instrument'])!=instrument for o in state['orders'].values()):
+                raise ValueError('instrument_contract_conflict')
             current=decimal(position['quantity']) if position else D(0)
             delta=qty if side=='BUY' else -qty
             reducing=current*delta<0 and qty<=abs(current)
@@ -167,17 +180,17 @@ class PortfolioService:
                 reduce_only=bool(reducing),conversion_rate=str(rate),fx=fx,status='ACCEPTED',reserved=str(reserve))
             state['orders'][order['id']]=order
             return order,[]
-        try:result=self._change(account_id,key,payload,'ORDER_ACCEPTED',submit)
+        try:result=self._change(account_id,key,payload,'ORDER_ACCEPTED',submit,fingerprint_payload=request_payload)
         except ValueError as error:
             reason=str(error)
             if reason not in {'market_family_mismatch','decision_before_account_epoch','missing_conversion','stale_or_future_conversion','unavailable_nav',
-                'reduce_only_would_increase_risk','quantity_already_reserved_for_exit','equity_short_disabled','account_not_open_for_risk','loss_limit','instrument_limit','gross_limit','insufficient_available_cash'}:raise
+                'reduce_only_would_increase_risk','quantity_already_reserved_for_exit','equity_short_disabled','account_not_open_for_risk','loss_limit','instrument_limit','gross_limit','insufficient_available_cash','instrument_contract_conflict'}:raise
             def reject(state):
                 denied=json.loads(encode(payload))|dict(id=uuid4().hex,account_id=account_id,status='REJECTED',reason=reason,
                     reserved='0',remaining=str(qty),filled='0',conversion_rate='0')
                 state['orders'][denied['id']]=denied
                 return denied,[]
-            self._change(account_id,key,payload,'ORDER_REJECTED',reject)
+            self._change(account_id,key,payload,'ORDER_REJECTED',reject,fingerprint_payload=request_payload)
             raise
         if result['status']=='REJECTED':raise ValueError(result['reason'])
         return result
@@ -191,10 +204,10 @@ class PortfolioService:
             return order,[]
         return self._change(account_id,key,dict(order_id=order_id,expired=expired),'ORDER_CANCELED',cancel)
 
-    def apply_fill(self, account_id, order_id, *, quantity,price,fee,at,fill_id,fx=None):
+    def apply_fill(self, account_id, order_id, *, quantity,price,fee,at,fill_id,fx=None,liquidity_key=None,capacity=None):
         qty,px,cost=decimal(quantity),decimal(price),decimal(fee); timestamp=utc(at)
         if qty<=0 or px<=0 or cost<0: raise ValueError('invalid_fill')
-        payload=dict(order_id=order_id,quantity=qty,price=px,fee=cost,at=timestamp,fx=fx)
+        payload=dict(order_id=order_id,quantity=qty,price=px,fee=cost,at=timestamp,fx=fx,liquidity_key=liquidity_key,capacity=capacity)
         def fill(state):
             if order_id not in state['orders']: raise KeyError('order_not_found')
             order=state['orders'][order_id]
@@ -203,6 +216,12 @@ class PortfolioService:
             if order['expires_at'] and timestamp>utc(order['expires_at']): raise ValueError('order_expired')
             remaining=decimal(order['remaining'])
             if qty>remaining: raise ValueError('fill_exceeds_remaining_quantity')
+            if liquidity_key is not None:
+                if capacity is None or decimal(capacity)<0:raise ValueError('invalid_observation_capacity')
+                usage=state.setdefault('liquidity_usage',{}).get(liquidity_key,dict(quantity='0',capacity=str(capacity)))
+                if decimal(usage['capacity'])!=decimal(capacity):raise ValueError('observation_capacity_profile_changed')
+                if decimal(usage['quantity'])+qty>decimal(capacity):raise ValueError('observation_capacity_exhausted')
+                state['liquidity_usage'][liquidity_key]=dict(quantity=str(decimal(usage['quantity'])+qty),capacity=str(capacity))
             instrument=Instrument.model_validate(order['instrument'])
             if not aligned(qty,instrument.lot_size) or not aligned(px,instrument.tick_size): raise ValueError('fill_increment')
             rate=conversion_rate(instrument,state['currency'],fx,timestamp)
@@ -216,6 +235,7 @@ class PortfolioService:
             release=decimal(order['reserved'])*qty/remaining
             if decimal(state['cash'])+cash_delta < reserved(state)-release: raise ValueError('fill_exceeds_available_cash')
             position=state['positions'].get(instrument.symbol,dict(instrument=instrument.model_dump(mode='json'),quantity='0',average_cost='0',mark=None))
+            if Instrument.model_validate(position['instrument'])!=instrument:raise ValueError('instrument_contract_conflict')
             old=decimal(position['quantity']); avg=decimal(position['average_cost']); new=old+delta
             old_book=decimal(position.get('book_value',str(old*avg)))
             if order['reduce_only'] and (old*delta>=0 or qty>abs(old)): raise ValueError('reduce_only_position_changed')
@@ -227,16 +247,23 @@ class PortfolioService:
             book_delta=(notional if delta>0 else -notional)+realized
             new_book=old_book+book_delta
             new_avg=new_book/new if new else D(0)
-            if not order['reduce_only']:
+            actually_reducing=old*delta<0 and qty<=abs(old)
+            if not actually_reducing:
+                if state['status']!='READY':raise ValueError('account_not_open_for_risk')
+                if (self.clock()-timestamp).total_seconds()>3*86400:raise ValueError('fill_risk_stale_observation')
                 projected_cash=decimal(state['cash'])+cash_delta
                 other_values=[]
                 for symbol,other in state['positions'].items():
                     if symbol==instrument.symbol or decimal(other['quantity'])==0:continue
                     mark=other.get('mark')
-                    if not mark or utc(mark['at'])>timestamp:raise ValueError('fill_risk_unavailable_mark')
+                    if not mark or not 0<=(timestamp-utc(mark['at'])).total_seconds()<=3*86400:raise ValueError('fill_risk_unavailable_mark')
                     other_values.append(decimal(other['quantity'])*decimal(mark['price'])*conversion_rate(Instrument.model_validate(other['instrument']),state['currency'],mark.get('fx'),timestamp))
                 projected_nav=projected_cash+new*base_price+sum(other_values,D(0))
                 risk=RiskProfile.model_validate(state['risk'])
+                pre_fill_nav=decimal(state['cash'])+old*base_price+sum(other_values,D(0))
+                high=max(decimal(state['high_water']),pre_fill_nav)
+                day_base=decimal(state['marks'][-1]['nav']) if state['day']!=timestamp.date().isoformat() and state['marks'] else decimal(state['day_open_nav'])
+                if projected_nav<=high*(1-risk.drawdown_limit) or projected_nav<=day_base*(1-risk.daily_loss_limit):raise ValueError('fill_risk_loss_limit')
                 pending_same=D(0);pending_gross=D(0)
                 for pending in state['orders'].values():
                     if pending['status'] in TERMINAL or pending['reduce_only']:continue
@@ -246,7 +273,7 @@ class PortfolioService:
                     if pending['instrument']['symbol']==instrument.symbol:pending_same+=exposure
                 if projected_nav<=0 or abs(new)*base_price+pending_same>projected_nav*risk.instrument_limit or abs(new)*base_price+sum(map(abs,other_values),D(0))+pending_gross>projected_nav*risk.gross_limit:
                     raise ValueError('fill_risk_limit')
-            position.update(quantity=str(new),average_cost=str(new_avg),book_value=str(new_book),mark=dict(price=str(px),at=timestamp.isoformat(),source_ref=fill_id,fx=fx))
+            position.update(quantity=str(new),average_cost=str(new_avg),book_value=str(new_book),financing_clock=timestamp.isoformat(),mark=dict(price=str(px),at=timestamp.isoformat(),source_ref=fill_id,fx=fx))
             state['positions'][instrument.symbol]=position
             state['cash']=str(decimal(state['cash'])+cash_delta)
             state['fees']=str(decimal(state['fees'])+account_fee)
@@ -264,22 +291,29 @@ class PortfolioService:
         def trigger(state):
             order=state['orders'].get(order_id)
             if order is None:raise KeyError('order_not_found')
-            if order['status'] in TERMINAL or order['kind']!='STOP_LIMIT':raise ValueError('order_not_triggerable')
+            if order['status'] in TERMINAL or order['kind'] not in {'STOP','STOP_LIMIT'}:raise ValueError('order_not_triggerable')
             if timestamp<=utc(order['decision_at']) or timestamp>self.clock() or not source_ref:raise ValueError('invalid_trigger_clock')
-            order.update(kind='LIMIT',original_kind='STOP_LIMIT',triggered_at=timestamp.isoformat())
+            original=order['kind']
+            order.update(kind='LIMIT' if original=='STOP_LIMIT' else 'MARKET',original_kind=original,triggered_at=timestamp.isoformat())
             return order,[]
         return self._change(account_id,key,dict(order_id=order_id,at=timestamp,source_ref=source_ref),'STOP_LIMIT_TRIGGERED',trigger)
 
-    def apply_financing(self,account_id,*,amount,at,source_ref,key):
+    def apply_financing(self,account_id,*,amount,at,source_ref,key,instrument=None,accrual_start=None):
         cost=decimal(amount).quantize(MONEY_QUANTUM);timestamp=utc(at)
         def finance(state):
             if timestamp<utc(state['epoch']) or timestamp>self.clock() or not source_ref:raise ValueError('invalid_financing_clock')
+            if instrument is not None:
+                position=state['positions'].get(instrument.symbol)
+                if position is None or Instrument.model_validate(position['instrument'])!=instrument:raise ValueError('instrument_contract_conflict')
+                previous=utc(position.get('financing_clock',position['mark']['at']))
+                if accrual_start is None or previous!=utc(accrual_start) or timestamp<=previous:raise ValueError('financing_accrual_conflict')
+                position['financing_clock']=timestamp.isoformat()
             state['cash']=str(decimal(state['cash'])-cost)
             state['financing']=str(decimal(state.get('financing','0'))+cost)
             if decimal(state['cash'])<reserved(state):state['status']='HALTED'
             postings=[dict(book='cash',amount=str(-cost),currency=state['currency']),dict(book='financing',amount=str(cost),currency=state['currency'])]
             return dict(cash=state['cash'],financing=state['financing']),postings
-        return self._change(account_id,key,dict(amount=cost,at=timestamp,source_ref=source_ref),'FINANCING_RECORDED',finance)
+        return self._change(account_id,key,dict(amount=cost,at=timestamp,source_ref=source_ref,instrument=instrument,accrual_start=accrual_start),'FINANCING_RECORDED',finance)
 
     def mark(self,account_id,marks: dict,*,key):
         def apply(state):

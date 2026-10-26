@@ -6,7 +6,7 @@ from uuid import uuid4
 from sqlalchemy import select,insert,update
 
 from .domain import Instrument,decimal,encode,identity,now,utc
-from .execution import simulate_order
+from .execution import simulate_order,observation_capacity
 from .orders import ExecutionProfile
 from .portfolio import PortfolioService,TERMINAL
 from .storage import Repository,subscriptions
@@ -30,27 +30,44 @@ class PaperService:
             if progress is not None and progress() is False:raise InterruptedError('job_no_longer_owned')
             if bar.available_at>self.clock() or bar.available_at<=utc(state['epoch']): continue
             state=self.portfolios.snapshot(account_id)
-            relevant=[o for o in state['orders'].values() if o['status'] not in TERMINAL and o['instrument']['symbol']==source.instrument.symbol and bar.timestamp>utc(o['decision_at'])]
+            position=state['positions'].get(source.instrument.symbol)
+            if position and Instrument.model_validate(position['instrument'])==source.instrument and decimal(position['quantity'])!=0 and settings.financing_bps_per_day is not None:
+                start=utc(position.get('financing_clock',position['mark']['at']))
+                if bar.available_at>start:
+                    fx=resolve_conversion(self.repository,source.instrument,state['currency'],bar.available_at)
+                    rate=conversion_rate(source.instrument,state['currency'],fx,bar.available_at)
+                    days=decimal((bar.available_at-start).total_seconds())/D(86400)
+                    amount=abs(decimal(position['quantity']))*decimal(position['mark']['price'])*rate*settings.financing_bps_per_day*days/D(10000)
+                    self.portfolios.apply_financing(account_id,amount=amount,at=bar.available_at,source_ref=settings.source,
+                        key='financing:'+identity(dict(instrument=source.instrument,start=start,end=bar.available_at)),instrument=source.instrument,accrual_start=start)
+                    state=self.portfolios.snapshot(account_id)
+            relevant=[o for o in state['orders'].values() if o['status'] not in TERMINAL and Instrument.model_validate(o['instrument'])==source.instrument and bar.timestamp>utc(o['decision_at'])]
             bar_id=identity(dict(instrument=source.instrument,bar=bar))
+            liquidity_key=identity(dict(instrument=source.instrument,start=bar.timestamp))
+            capacity=observation_capacity(source.instrument,bar,settings)
             for order in relevant:
                 fill_id=identity(dict(order=order['id'],bar=bar_id))
                 if fill_id in order.get('fill_ids',[]):continue
                 effective=utc(order.get('triggered_at',order['decision_at']))
                 eligible_index=sum(b.timestamp>effective for b in source.bars if b.available_at<bar.available_at)
-                outcome=simulate_order(order,bar,settings,eligible_index=eligible_index)
+                latest=self.portfolios.snapshot(account_id)
+                used=decimal(latest.get('liquidity_usage',{}).get(liquidity_key,{}).get('quantity','0'))
+                outcome=simulate_order(order,bar,settings,eligible_index=eligible_index,capacity_remaining=capacity-used)
+                if order['kind']=='STOP' and outcome.reason not in {'not_after_decision','latency','stop_not_reached','order_expired'}:
+                    self.portfolios.trigger_order(account_id,order['id'],at=bar.available_at,source_ref=bar_id,key='trigger:'+order['id']+bar_id)
                 if outcome.status=='EXPIRED': self.portfolios.cancel_order(account_id,order['id'],key='expire:'+order['id']+bar_id,expired=True)
                 elif outcome.status=='TRIGGERED':self.portfolios.trigger_order(account_id,order['id'],at=bar.available_at,source_ref=bar_id,key='trigger:'+order['id']+bar_id)
                 elif outcome.quantity:
                     try:
                         fx=resolve_conversion(self.repository,source.instrument,state['currency'],outcome.at)
                         self.portfolios.apply_fill(account_id,order['id'],quantity=outcome.quantity,price=outcome.price,fee=outcome.fee,at=outcome.at,
-                            fill_id=fill_id,fx=fx)
+                            fill_id=fill_id,fx=fx,liquidity_key=liquidity_key,capacity=str(capacity))
                         fills+=1
                     except ValueError as error: exclusions[str(error)]=exclusions.get(str(error),0)+1
                 else: exclusions[outcome.reason]=exclusions.get(outcome.reason,0)+1
             current=self.portfolios.snapshot(account_id)
             position=current['positions'].get(source.instrument.symbol)
-            if position and (not position.get('mark') or utc(position['mark']['at'])<=bar.available_at):
+            if position and Instrument.model_validate(position['instrument'])==source.instrument and (not position.get('mark') or utc(position['mark']['at'])<=bar.available_at):
                 try:fx=resolve_conversion(self.repository,source.instrument,current['currency'],bar.available_at)
                 except ValueError:fx=None
                 self.portfolios.mark(account_id,{source.instrument.symbol:dict(price=str(bar.close),at=bar.available_at,source_ref=bar_id,fx=fx)},key='paper-mark:'+bar_id)
@@ -79,7 +96,7 @@ class PaperService:
         with self.repository.engine.connect() as conn: return [json.loads(row) for row in conn.scalars(select(subscriptions.c.payload))]
 
     def cycle(self,*,progress=None):
-        results=[];available=self.repository.list_datasets()
+        results=[];available=self.repository.list_datasets();handled=set()
         for sub in self.list():
             if sub['status']!='ACTIVE':continue
             candidates=[d for d in available if d['instrument']==sub['instrument'] and d['last']]
@@ -87,13 +104,19 @@ class PaperService:
             dataset_id=max(candidates,key=lambda d:d['last'])['dataset_id'];source=self.repository.dataset(dataset_id)
             config=ReplayConfig.model_validate(sub['config'])
             result=self.step(sub['account_id'],dataset_id,profile=config.execution.model_dump(mode='json'),progress=progress)
+            handled.add((sub['account_id'],identity(sub['instrument'])))
             visible=tuple(b for b in source.bars if b.available_at<=self.clock())
             if not visible:continue
             bar=visible[-1]
             if bar.available_at<=utc(sub['created_at']) or (sub['last_decision_at'] and bar.available_at<=utc(sub['last_decision_at'])):
                 results.append(result);continue
             account=self.portfolios.snapshot(sub['account_id']);nav=account['nav']
-            if nav is not None and not any(o['status'] not in TERMINAL for o in account['orders'].values()):
+            decision_key='strategy:'+identity(dict(subscription=sub['id'],bar=bar))
+            request_payload=dict(subscription_id=sub['id'],observation=identity(bar))
+            previous=None
+            try:previous=self.portfolios.replay_submission(sub['account_id'],decision_key,request_payload)
+            except ValueError as error:result['decision_blocker']=str(error);previous={'status':'REJECTED'}
+            if previous is None and nav is not None and not any(o['status'] not in TERMINAL for o in account['orders'].values()):
                 target=target_weight(visible,market=source.instrument.market,strategy=config.strategy,lookback=config.lookback,weight=config.weight)
                 qty=decimal(account['positions'].get(source.instrument.symbol,{}).get('quantity','0'))
                 try:
@@ -108,10 +131,26 @@ class PaperService:
                     try:
                         self.portfolios.submit_order(sub['account_id'],instrument=source.instrument,side='BUY' if delta>0 else 'SELL',quantity=abs(delta),
                             reference_price=(bar.close/source.instrument.tick_size).to_integral_value(rounding=ROUND_FLOOR)*source.instrument.tick_size,
-                            decision_at=self.clock(),reference_at=bar.available_at,source_ref=dataset_id,key='strategy:'+identity(dict(subscription=sub['id'],bar=bar)),
-                            reduce_only=qty*delta<0,expires_at=self.clock()+timedelta(days=7),fx=fx)
+                            decision_at=self.clock(),reference_at=bar.available_at,source_ref=dataset_id,key=decision_key,
+                            reduce_only=qty*delta<0,expires_at=self.clock()+timedelta(days=7),fx=fx,request_payload=request_payload)
                     except ValueError as error:result['decision_blocker']=str(error)
             sub.update(last_decision_at=bar.available_at.isoformat(),dataset_id=dataset_id)
             with self.repository.transaction() as conn:conn.execute(update(subscriptions).where(subscriptions.c.id==sub['id']).values(payload=encode(sub)))
             results.append(result)
+        for account in self.portfolios.list_accounts():
+            instruments={identity(o['instrument']):o['instrument'] for o in account['orders'].values() if o['status'] not in TERMINAL}
+            instruments.update({identity(p['instrument']):p['instrument'] for p in account['positions'].values() if decimal(p['quantity'])!=0})
+            for instrument_id,instrument in instruments.items():
+                if (account['id'],instrument_id) in handled:continue
+                candidates=[d for d in available if d['instrument']==instrument and d['last']]
+                if not candidates:continue
+                latest=max(candidates,key=lambda d:(d['last'],d['dataset_id']))
+                results.append(self.step(account['id'],latest['dataset_id'],progress=progress))
         return results
+
+    def instruments_to_refresh(self):
+        values={identity(sub['instrument']):sub['instrument'] for sub in self.list() if sub['status']=='ACTIVE'}
+        for account in self.portfolios.list_accounts():
+            values.update({identity(o['instrument']):o['instrument'] for o in account['orders'].values() if o['status'] not in TERMINAL})
+            values.update({identity(p['instrument']):p['instrument'] for p in account['positions'].values() if decimal(p['quantity'])!=0})
+        return list(values.values())

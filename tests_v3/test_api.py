@@ -21,7 +21,7 @@ def setup(tmp_path):
     from blum_v3.storage import Repository
     source=dataset(length=40)
     repo=Repository('sqlite:///'+str(tmp_path/'api.db'));repo.save_dataset(source)
-    clock=lambda:source.bars[-1].available_at+timedelta(minutes=1)
+    clock=lambda:source.provenance.first_seen_at+timedelta(minutes=1)
     client=TestClient(create_app(repository=repo,token='unit-secret',clock=clock),backend_options={'loop_factory':socket_free_loop})
     return client,repo,source
 

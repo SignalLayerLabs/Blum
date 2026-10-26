@@ -36,7 +36,7 @@ def main():
             if not args.once:
                 epoch=int(time.time());jobs.enqueue('paper_cycle',{},key='scheduled-paper:'+str(epoch//60))
                 if args.refresh_sources:
-                    symbols={(s['instrument']['symbol'],s['instrument']['market']) for s in PaperService(repo).list() if s['status']=='ACTIVE'}
+                    symbols={(s['symbol'],s['market']) for s in PaperService(repo).instruments_to_refresh()}
                     for symbol,market in sorted(symbols)[:25]:
                         jobs.enqueue('history',dict(symbol=symbol,market=market,range_days=90),key=f'scheduled-source:{symbol}:{market}:{epoch//3600}')
             worked=runner.run_once()

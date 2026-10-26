@@ -33,15 +33,20 @@ def postgres_repository():
 def test_postgres_serializes_competing_account_writers(postgres_repository):
     from blum_v3.portfolio import PortfolioService
     from blum_v3.domain import Instrument,now
+    from blum_v3.storage import Repository
     repo=postgres_repository();svc=PortfolioService(repo);at=now()
+    independent=Repository(repo.engine.url.render_as_string(hide_password=False),production=True)
+    other=PortfolioService(independent)
     account=svc.open_account(name='Concurrent account',market='equity',currency='USD',cash='10000',key='epoch')['id']
     instrument=Instrument(symbol='SPY',market='equity',quote_currency='USD')
     def submit(key):
-        try:svc.submit_order(account,instrument=instrument,side='BUY',quantity='15',reference_price='100',decision_at=now(),reference_at=at,source_ref='unit',key=key);return 'accepted'
+        writer=svc if key=='one' else other
+        try:writer.submit_order(account,instrument=instrument,side='BUY',quantity='15',reference_price='100',decision_at=now(),reference_at=at,source_ref='unit',key=key);return 'accepted'
         except ValueError:return 'denied'
     with ThreadPoolExecutor(2) as workers:results=list(workers.map(submit,['one','two']))
     assert sorted(results)==['accepted','denied']
     assert D(svc.snapshot(account)['reserved_cash'])==D('1530')
+    independent.engine.dispose()
 
 
 def test_postgres_archive_restores_consistent_projection(postgres_repository,tmp_path):
