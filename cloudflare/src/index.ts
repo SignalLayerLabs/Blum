@@ -1,3 +1,4 @@
+import {handleV3} from './v3.ts';
 import publicRoutes from '../../backend/app/data/public_api_routes.json' with {type: 'json'};
 // Cloudflare serves the product assets. Financial state remains in the Engine.
 const PUBLIC_PATHS = publicRoutes.map(template => new RegExp('^' + template.replace(/\{[^}]+\}/g, '[^/]+') + '$'));
@@ -119,6 +120,7 @@ async function releaseStatus(request: Request, env: Env): Promise<Response> {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    if (env.RELEASE_CHANNEL === 'v3') return handleV3(request, env);
     if (!['GET', 'HEAD'].includes(request.method)) {
       const response = json(env, {detail: 'PUBLIC_OBSERVATORY_READ_ONLY'}, 405);
       response.headers.set('Allow', 'GET, HEAD');
