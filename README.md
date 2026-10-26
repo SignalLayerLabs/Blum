@@ -14,6 +14,8 @@ pinned: false
 
 # BLUM Financial Research
 
+The **v3 research and paper workspace** is implemented independently in `blum_v3/` and `web_v3/`. Start with the [v3 operator guide](docs/v3/README.md) for its API, worker, source intake, experiments, paper portfolios and recovery commands. It uses a separate journal and database namespace; the existing deployment remains on v2 until an explicit, verified cutover. Historical research is not a validated prospective track record.
+
 Open-source financial research for tracing market ideas from evidence to paper outcomes. The supported markets are equities, ETFs and Forex, with separate evaluation for equities/ETFs and Forex.
 
 **[Open the public observatory](https://blum.signallayerlabs.workers.dev)** · [Project presentation](.github/README.md) · [Documentation](docs/README.md) · [GitHub releases](https://github.com/SignalLayerLabs/Blum/releases)

@@ -1,0 +1,14 @@
+export type Market='equity'|'forex';
+export type Dataset={dataset_id:string;instrument:{symbol:string;market:Market;quote_currency:string};bars:number;rejected:number;warnings:string[];provider:string;evidence_tier:string;last:string|null};
+export type Curve={at:string;nav:string|null;cash?:string}[];
+export type Order={id:string;side:string;quantity:string;remaining:string;filled:string;reference_price:string;status:string;kind:string;instrument:{symbol:string};decision_at:string};
+export type Account={id:string;name:string;market:Market;currency:string;cash:string;nav:string|null;reserved_cash:string;available_cash:string;status:string;fees:string;realized_pnl:string;drawdown:string|null;
+ positions:Record<string,{quantity:string;average_cost:string;mark:{price:string;at:string}|null}>;orders:Record<string,Order>;marks:{at:string;nav:string}[]};
+export type Metrics={return_percent:number|null;max_drawdown_percent:number|null;benchmark_excess_percent?:number|null;path_status:string};
+export type Report={curve:Curve;metrics:Metrics;fees:string;currency:string;market:Market;mean_gross_exposure:number;fills:{at:string;side:string;quantity:string;price:string;fee:string}[];
+ exclusions:Record<string,number>;benchmark:{name:string;metrics:Metrics;curve:Curve};stress:Record<string,Metrics>;qualification:{status:string;reasons:string[]};
+ paired_interval?:{status:string;lower_percent:number|null;upper_percent:number|null;method?:string};learning?:{status:string;examples:number;scores?:Record<string,{mse:number;baseline_mse:number}>}};
+export type Experiment={id:string;status:string;created_at:string;frozen_hash:string;frozen:{dataset_id:string;family_id:string;hypothesis:string;source_market:Market;config:{strategy:string;lookback:number;weight:string}};
+ holdout:{opened:boolean;bars:number;first_available_at:string};report:Report|null;confirmation:Report|null;family_trial_count?:number};
+export type Job={id:string;kind:string;status:string;attempt:number;created_at:string;error:string|null;input:Record<string,string>};
+export type Overview={version:string;datasets:Dataset[];accounts:Account[];experiments:Experiment[];jobs:Job[];generated_at:string;broker_execution:boolean};

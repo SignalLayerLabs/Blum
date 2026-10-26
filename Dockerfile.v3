@@ -1,0 +1,18 @@
+FROM node:24-bookworm-slim AS web
+WORKDIR /web
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY web_v3/package*.json ./
+RUN npm ci --ignore-scripts
+COPY web_v3 ./
+RUN npm run build
+
+FROM python:3.12-slim-bookworm
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 BLUM_ENV=production BLUM_WEB_PATH=/app/web_v3/out
+WORKDIR /app
+COPY pyproject.toml ./
+COPY blum_v3 ./blum_v3
+RUN pip install --no-cache-dir . && useradd --uid 1000 --create-home blum
+COPY --from=web /web/out ./web_v3/out
+USER blum
+EXPOSE 7860
+CMD ["blum", "serve", "--host", "0.0.0.0", "--port", "7860"]

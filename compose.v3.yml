@@ -1,0 +1,41 @@
+name: blum-v3
+services:
+  database:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: blum_v3
+      POSTGRES_USER: blum
+      POSTGRES_PASSWORD: ${BLUM_DB_PASSWORD:?Set BLUM_DB_PASSWORD}
+    volumes:
+      - blum-v3-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U blum -d blum_v3"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.v3
+    environment:
+      BLUM_DATABASE_URL: postgresql+psycopg://blum:${BLUM_DB_PASSWORD:?Set BLUM_DB_PASSWORD}@database/blum_v3
+      BLUM_OPERATOR_TOKEN: ${BLUM_OPERATOR_TOKEN:?Set BLUM_OPERATOR_TOKEN}
+    ports: ["127.0.0.1:7860:7860"]
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.v3
+    command: [blum, worker, --refresh-sources]
+    environment:
+      BLUM_DATABASE_URL: postgresql+psycopg://blum:${BLUM_DB_PASSWORD:?Set BLUM_DB_PASSWORD}@database/blum_v3
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  blum-v3-postgres:

@@ -4,7 +4,13 @@ __pycache__/
 .env
 .env.*
 !.env.example
+!.env.v3.example
 .venv/
+.venv-v3/
+.superpowers/
+web_v3/.next/
+web_v3/out/
+var/
 .upload-venv/
 node_modules/
 frontend/node_modules/
