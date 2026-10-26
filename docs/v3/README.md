@@ -10,7 +10,7 @@ Python 3.12 and Node 24 are required. Use a separate database from v2.
 python -m venv .venv
 . .venv/bin/activate
 pip install -e '.[test]'
-npm install --prefix web_v3
+npm ci --prefix web_v3 --ignore-scripts
 npm --prefix web_v3 run build
 export BLUM_OPERATOR_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 blum serve
