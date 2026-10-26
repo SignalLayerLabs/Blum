@@ -1,7 +1,7 @@
 name: Deploy verified main
 on:
   workflow_run:
-    workflows: [Verify BLUM, Verify Blum v3]
+    workflows: [Verify BLUM]
     types: [completed]
     branches: [main]
   workflow_dispatch:
